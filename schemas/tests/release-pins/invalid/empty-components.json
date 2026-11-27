@@ -1,0 +1,11 @@
+{
+  "format_version": 1,
+  "pin_set": "example-synthetic",
+  "status": "experimental",
+  "created": "2026-11-27",
+  "notes": "Synthetic example. Commit values are placeholders and do not refer to real revisions.",
+  "components": [],
+  "schema_versions": {
+    "asset-recipe.schema.json": "0.1.0"
+  }
+}

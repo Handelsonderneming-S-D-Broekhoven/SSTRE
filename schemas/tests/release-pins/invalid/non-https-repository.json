@@ -1,0 +1,37 @@
+{
+  "format_version": 1,
+  "pin_set": "example-synthetic",
+  "status": "experimental",
+  "created": "2026-11-27",
+  "notes": "Synthetic example. Commit values are placeholders and do not refer to real revisions.",
+  "components": [
+    {
+      "name": "engine",
+      "repository": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-Engine",
+      "commit": "0000000000000000000000000000000000000001",
+      "upstream": {
+        "repository": "https://github.com/example/upstream-engine",
+        "commit": "0000000000000000000000000000000000000002"
+      }
+    },
+    {
+      "name": "asset-compiler",
+      "repository": "git@github.com:example/synthetic.git",
+      "commit": "0000000000000000000000000000000000000003"
+    },
+    {
+      "name": "manifests",
+      "repository": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-Manifests",
+      "commit": "0000000000000000000000000000000000000004"
+    },
+    {
+      "name": "toolkit",
+      "repository": "https://github.com/Handelsonderneming-S-D-Broekhoven/Remaster-Toolkit",
+      "commit": "0000000000000000000000000000000000000005",
+      "tag": "v0.0.0-example"
+    }
+  ],
+  "schema_versions": {
+    "asset-recipe.schema.json": "0.1.0"
+  }
+}

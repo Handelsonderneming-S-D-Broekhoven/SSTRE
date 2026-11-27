@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.1.0",
+  "generated_at": "2026-11-27T00:00:00Z",
+  "generator": {
+    "name": "synthetic-fixture-generator",
+    "version": "0.0.0",
+    "revision": "0000000000000000000000000000000000000000"
+  },
+  "sources": [
+    {
+      "source_id": "synthetic.archive_a",
+      "edition": "unknown",
+      "relpath": "synthetic/archive_a.zip",
+      "container": "gro_zip",
+      "sha256": "2868849022c526fc02fc5f15549b2e9edc58842681a0f56945a4585e413770f1",
+      "size_bytes": 4096,
+      "load_priority": 0
+    }
+  ]
+}

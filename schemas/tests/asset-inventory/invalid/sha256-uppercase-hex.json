@@ -1,0 +1,112 @@
+{
+  "schema_version": "0.1.0",
+  "generated_at": "2026-11-27T00:00:00Z",
+  "generator": {
+    "name": "synthetic-fixture-generator",
+    "version": "0.0.0",
+    "revision": "0000000000000000000000000000000000000000"
+  },
+  "sources": [
+    {
+      "source_id": "synthetic.archive_a",
+      "edition": "unknown",
+      "relpath": "synthetic/archive_a.zip",
+      "container": "gro_zip",
+      "sha256": "2868849022C526FC02FC5F15549B2E9EDC58842681A0F56945A4585E413770F1",
+      "size_bytes": 4096,
+      "load_priority": 0
+    }
+  ],
+  "assets": [
+    {
+      "asset_id": "unknown:synthetic/textures/test/checker_256",
+      "edition": "unknown",
+      "source_id": "synthetic.archive_a",
+      "virtual_path": "Synthetic/Textures/Test/Checker_256.synthetic",
+      "source_sha256": "fa0f4e666dd875c8e4d56c1e4c53fd90ac8182f9a81209bd6b95b5bc6e046e3b",
+      "size_bytes": 262144,
+      "asset_type": "texture",
+      "file_format": "synthetic_raw_rgba8",
+      "texture": {
+        "width_px": 256,
+        "height_px": 256,
+        "logical_width": 1024,
+        "logical_height": 1024,
+        "first_mip_level": 2,
+        "mip_count": 1,
+        "frames": 1,
+        "animated": false,
+        "procedural_effect": false,
+        "has_alpha_channel": false,
+        "pixel_format": "rgba8",
+        "is_power_of_two": true,
+        "cubemap": false,
+        "texture_role": "albedo"
+      },
+      "color_space": "srgb",
+      "color_space_source": "curated",
+      "alpha_mode": "none",
+      "tileability": {
+        "hint": "tile_uv",
+        "seam_score": 1.0,
+        "source": "measured"
+      },
+      "semantic_tags": [
+        "synthetic",
+        "pattern:checker"
+      ],
+      "category": "other",
+      "mapping_candidates": [
+        {
+          "target_asset_id": "unknown:synthetic/textures/test/checker_512",
+          "method": "perceptual_hash",
+          "confidence": 0.9,
+          "uv_compatibility": "identical",
+          "aspect_ratio_match": true,
+          "phash_distance": 2,
+          "transform": {
+            "flip_u": false,
+            "flip_v": false,
+            "rotate_deg": 0,
+            "crop": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          "evidence": "synthetic: same checker pattern at twice the resolution"
+        }
+      ],
+      "mapping_status": "matched",
+      "notes": "Synthetic example: invented IDs and paths; every hash is SHA-256 of the ASCII string 'SSTRE synthetic fixture: <label>' and does not identify any real file."
+    },
+    {
+      "asset_id": "unknown:synthetic/models/test/cube",
+      "edition": "unknown",
+      "source_id": "synthetic.archive_a",
+      "virtual_path": "Synthetic/Models/Test/Cube.synthetic",
+      "source_sha256": "00eaa8b60491fc1a8dfd25c22c96cc9d335fd59c9324f92c490ec1a6e08b2b6b",
+      "asset_type": "model",
+      "model": {
+        "format_version": "synthetic",
+        "vertex_count": 8,
+        "polygon_count": 12,
+        "uv_set_count": 1,
+        "texture_logical_width": 1024,
+        "texture_logical_height": 1024
+      },
+      "dependencies": [
+        {
+          "virtual_path": "Synthetic/Textures/Test/Checker_256.synthetic",
+          "asset_id": "unknown:synthetic/textures/test/checker_256",
+          "relation": "texture",
+          "resolved": true
+        }
+      ],
+      "mapping_candidates": [],
+      "mapping_status": "unmatched",
+      "notes": "Synthetic example: invented IDs and paths; every hash is SHA-256 of the ASCII string 'SSTRE synthetic fixture: <label>' and does not identify any real file."
+    }
+  ]
+}

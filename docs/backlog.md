@@ -52,13 +52,14 @@ Expands the plan's §8 "First POC backlog". Each item lists the open decision(s)
 | POC-23 | Platform spike S2: Classic-VK Vulkan raster on Windows + Linux (+ Steam Deck if available) | SSTRE-Engine | POC-02 | Report against RD-006 criteria S2.1–S2.6 | Every S2 criterion recorded; Linux result included | 2–5 | 6, 7 |
 | POC-24 | RT-backend port sizing: RD-001 criteria S1–S8, TSE + SKA/terrain coverage gap | SSTRE-Engine + SSTRE | POC-22, POC-23 | Sized estimate + risk list feeding ADR-0005 | Estimate with an explicit range and assumptions; ADR-0005 can move to accepted or be revised | 2–4 | 1 |
 | POC-25 | HD `CTSEMETA` texture header experiment (RD-002 E-B1), local only | SSTRE-AssetCompiler | POC-03; owner go-ahead after RD-007 Q6 position (reverse engineering HD formats) | Aggregate report: decoded dimensions/pixel formats for HD textures matched in RD-002 | ≥ 90% of path-matched HD textures decode to known dimensions/format, or blocker documented | 3–8 | 2 |
+| POC-27 | Patch-series tooling for ADR-0008: fetch the pinned upstreams, verify SHAs, `git am` the series, enforce the patch content rules (no binaries or game data; flag patches touching EXP-004 items); export the local build branches as `patches/<upstream>/` | SSTRE-Engine (+ umbrella validator) | ADR-0008, EXP-001/002 build commits | Script + CI job + first exported series | Clean checkout → fetch → apply reproduces the local build branch tree byte-for-byte (tree hash equal); a planted binary or game-data patch fails CI | 2–4 | 1, 8 |
 
 ## Owner and legal gates (not engineering effort)
 
 | ID | Decision | Source | Blocks |
 |---|---|---|---|
 | GATE-01 | ~~SPDX identifier per repo; copyright-holder wording; DCO vs CLA~~ **Decided 2026-11-27** (ADR-0006) | ADR-0006 | — |
-| GATE-02 | Local import of `upstream/classic-vk-main` and `upstream/rt-main` **approved 2026-11-27**. *Publishing* them is still blocked on the audit of questionable headers, binaries and data archives (POC-26) | ADR-0005, ADR-0006 | pushing the upstream branches |
+| GATE-02 | **Decided 2026-11-27:** upstream histories stay local; SSTRE-Engine publishes only own patches against pinned upstream commits (ADR-0008, provisional). Audit done (EXP-004) | ADR-0005, ADR-0006, ADR-0008 | — |
 | GATE-03 | Counsel review of RD-007 Q1 (Apache-2.0 KTX in RTGL1), Q3 (DLSS), Q4 (entity-code provenance), Q6 (local conversion under the EULA/SSA, HD reverse engineering), Q12 (trademark/project name) | RD-007 §16 | any binary release; POC-25 |
 | GATE-04 | Whether to approach the rights holder (Croteam/Devolver) for a license. Consoles stay a research objective (owner, 2026-11-27) | RD-006, ADR-0007 | official console distribution |
 | GATE-05 | Publishing per-asset identifiers, paths and hashes. Owner: local use allowed; publish only after provenance and restrictions are reviewed | ADR-0002, RD-002, RD-007 | committing POC-03/POC-06 output publicly |
@@ -70,6 +71,36 @@ Expands the plan's §8 "First POC backlog". Each item lists the open decision(s)
 | POC-19 | Baseline vs remastered in-engine comparison (local) | SSTRE-Engine + AssetCompiler | POC-08, POC-11, POC-17 | Local screenshots (not committed), perf/VRAM delta report | Same demo checkpoints captured both ways; p99 and peak VRAM delta reported; FLIP/SSIM numbers only in report | 2–4 | 3, 6 |
 | POC-20 | Compatibility matrix first real entries | SSTRE (`docs/compatibility.md`) | POC-17 | Updated matrix | Only rows with linked reports leave `untested` | 0.5–1 | 2, 6 |
 | POC-21 | Go/no-go recommendation | SSTRE | POC-01..25 | Decision memo + ADR updates (ADR-005, ADR-007) | Recommends engine base, asset source strategy, model choices, next sprint with re-estimated effort; owner reviewed | 2–3 | 1, 2, 3, 6, 8 |
+
+## Phase 1 sprint status (2026-11-27)
+
+| ID | Status | Result / evidence |
+|---|---|---|
+| POC-01 | **done** | RT + RTGL1 v1.1.0 build and run TFE (EXP-002) |
+| POC-02 | **done (partial)** | Classic-VK Windows and Linux builds; Windows TFE/TSE runtime; Linux graphical client untested (EXP-001) |
+| POC-03 | **done** | `sstre-ac detect` / `inventory`; 5/5 installs exact; 69 tests (EXP-007) |
+| POC-04 | **done** | synthetic examples and negative tests for all schemas (EXP-006) |
+| POC-05 | **done** | CI active in all five repos (validator, REUSE, pytest) and green on GitHub (EXP-006) |
+| POC-13 | **open** | demo profiler gave no output; needs a scripted demo plus PresentMon or a dump patch |
+| POC-14 | **blocked (RT)** / open (CVK) | RT `PlayDemo` x64 varargs defect (EXP-002) |
+| POC-16 | **done (CVK)** / fail (RT) | CVK loads TSE levels; RT TSE has no RT build (EXP-001/002) |
+| POC-22 | **done (partial)** | S1.1 pass, S1.2 fail, S1.3 Vulkan pass / OpenGL fail, override pass (EXP-002) |
+| POC-23 | **partial** | Windows raster pass; Linux graphical and Steam Deck untested (EXP-001) |
+| POC-24 | **done** | 30/53/96 pd (EXP-005) |
+| POC-25 | **done** | HD `.tex` decode 99.9%; verifier 20/21; verified HD sources TFE 395, TSE 364 (EXP-008) |
+| POC-26 (audit) | **done** | EXP-004; owner chose patch distribution (ADR-0008) |
+
+### Proposed next sprint (requires owner approval)
+
+| ID | Goal | Effort (pd) |
+|---|---|---|
+| POC-27 | Patch-series tooling; export the CVK and RT build commits as `patches/` | 2–4 |
+| POC-28 | Frame-time/VRAM baseline: scripted demo, PresentMon (pinned), input-isolated session, CVK + RT | 2–4 |
+| POC-29 | Time-boxed transplant spike: RT backend for TFE/Windows into Classic-VK, raster default, RT selectable | ~8 (time-box) |
+| POC-30 | Integrate the libktx-free KTX2 reader in the spike build and confirm that rendering matches | 1–2 |
+| POC-31 | Linux graphical run on real GPU hardware (and Steam Deck if available) | 1–3, needs hardware |
+| POC-32 | Compile-time disable of the master-server heartbeat in SSTRE builds | 0.5 |
+| POC-06/07 | 50-asset matrix selection (local) and `.tex` round-trip, using EXP-007/008 tooling | 3–8 |
 
 ## Rough totals (for planning only)
 

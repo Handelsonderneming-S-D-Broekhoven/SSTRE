@@ -1,0 +1,49 @@
+{
+  "schema_version": "0.1.0",
+  "generated_at": "2026-11-27T00:00:00Z",
+  "generator": {
+    "name": "synthetic-fixture-generator",
+    "version": "0.0.0",
+    "revision": "0000000000000000000000000000000000000000"
+  },
+  "sources": [
+    {
+      "source_id": "synthetic.archive_a",
+      "edition": "unknown",
+      "relpath": "synthetic/archive_a.zip",
+      "container": "gro_zip",
+      "sha256": "2868849022c526fc02fc5f15549b2e9edc58842681a0f56945a4585e413770f1",
+      "size_bytes": 4096,
+      "load_priority": 0
+    }
+  ],
+  "assets": [
+    {
+      "asset_id": "unknown:synthetic/models/test/cube",
+      "edition": "unknown",
+      "source_id": "synthetic.archive_a",
+      "virtual_path": "Synthetic/Models/Test/Cube.synthetic",
+      "source_sha256": "00eaa8b60491fc1a8dfd25c22c96cc9d335fd59c9324f92c490ec1a6e08b2b6b",
+      "asset_type": "model",
+      "model": {
+        "format_version": "synthetic",
+        "vertex_count": 8,
+        "polygon_count": 12,
+        "uv_set_count": 1,
+        "texture_logical_width": 1024,
+        "texture_logical_height": 1024
+      },
+      "dependencies": [
+        {
+          "virtual_path": "Synthetic/Textures/Test/Checker_256.synthetic",
+          "asset_id": "unknown:synthetic/textures/test/checker_256",
+          "relation": "texture",
+          "resolved": true
+        }
+      ],
+      "mapping_candidates": [],
+      "mapping_status": "unmatched",
+      "notes": "Synthetic example: invented IDs and paths; every hash is SHA-256 of the ASCII string 'SSTRE synthetic fixture: <label>' and does not identify any real file."
+    }
+  ]
+}

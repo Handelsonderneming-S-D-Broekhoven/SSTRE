@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/game-edition-report.schema.json",
+  "title": "SSTRE game edition detection report",
+  "$comment": "STATUS: PROPOSAL (Phase 1, POC-03). Produced by 'sstre-ac detect'. Real reports contain local paths and hashes of proprietary files; they stay in the user's local workspace and are not committed until backlog GATE-05 clears publication. Expected editions come from a user-supplied fingerprint file (SSTRE-AssetCompiler src/sstre_assetcompiler/data/edition-fingerprints.schema.json). The examples below are synthetic.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "generator", "fingerprint_sets", "installs"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^0\\.[0-9]+\\.[0-9]+$" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "generator": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "revision": { "type": "string" }
+      }
+    },
+    "fingerprint_sets": {
+      "type": "array",
+      "description": "Fingerprint files used, identified by hash only (no local path).",
+      "items": {
+        "type": "object",
+        "required": ["sha256", "profile_count"],
+        "additionalProperties": false,
+        "properties": {
+          "sha256": { "$ref": "#/$defs/sha256" },
+          "profile_count": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "installs": { "type": "array", "items": { "$ref": "#/$defs/install" } }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "relpath": { "type": "string", "description": "Path relative to the install root, '/'-separated." },
+    "install": {
+      "type": "object",
+      "required": ["root", "status", "detected_edition", "candidates", "archives", "warnings"],
+      "additionalProperties": false,
+      "properties": {
+        "root": { "type": "string", "description": "Absolute local path of the install as scanned." },
+        "status": {
+          "enum": ["exact", "partial", "unknown"],
+          "description": "exact = every file of the best profile is present with matching size and SHA-256; partial = some match; unknown = no profile file matched."
+        },
+        "detected_edition": { "enum": ["classic_tfe", "classic_tse", "hd_tfe", "hd_tse", "fusion", "unknown"] },
+        "profile_id": { "type": "string", "pattern": "^[a-z0-9_.-]+$" },
+        "steam": {
+          "type": "object",
+          "description": "Allowlisted fields of the Steam appmanifest whose installdir equals the install directory. Account data is never included.",
+          "required": ["manifest_file"],
+          "additionalProperties": false,
+          "properties": {
+            "manifest_file": { "type": "string" },
+            "app_id": { "type": "integer" },
+            "name": { "type": "string" },
+            "installdir": { "type": "string" },
+            "build_id": { "type": "integer" },
+            "last_updated": { "type": "integer", "description": "Unix time from the manifest's LastUpdated." }
+          }
+        },
+        "files": {
+          "type": "object",
+          "description": "Comparison against the best profile.",
+          "required": ["expected", "matched", "missing", "mismatched"],
+          "additionalProperties": false,
+          "properties": {
+            "expected": { "type": "integer", "minimum": 0 },
+            "matched": { "type": "integer", "minimum": 0 },
+            "missing": { "type": "array", "items": { "$ref": "#/$defs/relpath" } },
+            "mismatched": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["relpath", "reason"],
+                "additionalProperties": false,
+                "properties": {
+                  "relpath": { "$ref": "#/$defs/relpath" },
+                  "reason": { "enum": ["size", "sha256"] }
+                }
+              }
+            }
+          }
+        },
+        "candidates": {
+          "type": "array",
+          "description": "Profiles with at least one file present, best first.",
+          "items": {
+            "type": "object",
+            "required": ["profile_id", "matched", "expected"],
+            "additionalProperties": false,
+            "properties": {
+              "profile_id": { "type": "string" },
+              "matched": { "type": "integer", "minimum": 0 },
+              "expected": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "archives": {
+          "type": "array",
+          "description": "Archives found by the default scan (*.gro up to two directories deep), third-party Mods/ excluded.",
+          "items": {
+            "type": "object",
+            "required": ["relpath", "size_bytes", "listed_in_profile"],
+            "additionalProperties": false,
+            "properties": {
+              "relpath": { "$ref": "#/$defs/relpath" },
+              "size_bytes": { "type": "integer", "minimum": 0 },
+              "listed_in_profile": { "type": "boolean" },
+              "edition": { "enum": ["classic_tfe", "classic_tse", "hd_tfe", "hd_tse", "fusion_hd_tfe", "fusion_hd_tse", "fusion_other", "unknown"] },
+              "sha256": { "$ref": "#/$defs/sha256" }
+            }
+          }
+        },
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["relpath", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "relpath": { "$ref": "#/$defs/relpath" },
+              "reason": { "enum": ["third_party_mods"] }
+            }
+          }
+        },
+        "warnings": { "type": "array", "items": { "type": "string" } },
+        "elapsed_s": { "type": "number", "minimum": 0 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "enum": ["exact", "partial"] } } },
+          "then": { "required": ["profile_id", "files"] }
+        }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "schema_version": "0.1.0",
+      "generated_at": "2026-01-01T00:00:00Z",
+      "generator": { "name": "sstre-assetcompiler", "version": "0.1.0.dev0" },
+      "fingerprint_sets": [
+        { "sha256": "1111111111111111111111111111111111111111111111111111111111111111", "profile_count": 2 }
+      ],
+      "installs": [
+        {
+          "root": "/home/user/games/example-install",
+          "status": "partial",
+          "detected_edition": "classic_tfe",
+          "profile_id": "example-classic-tfe",
+          "steam": { "manifest_file": "appmanifest_1.acf", "app_id": 1, "name": "Example Game", "installdir": "example-install", "build_id": 2, "last_updated": 1700000000 },
+          "files": {
+            "expected": 3, "matched": 2, "missing": [],
+            "mismatched": [ { "relpath": "patch.gro", "reason": "sha256" } ]
+          },
+          "candidates": [
+            { "profile_id": "example-classic-tfe", "matched": 2, "expected": 3 },
+            { "profile_id": "example-classic-tse", "matched": 1, "expected": 4 }
+          ],
+          "archives": [
+            { "relpath": "base.gro", "size_bytes": 1024, "listed_in_profile": true, "edition": "classic_tfe", "sha256": "0000000000000000000000000000000000000000000000000000000000000001" },
+            { "relpath": "patch.gro", "size_bytes": 64, "listed_in_profile": true, "edition": "classic_tfe", "sha256": "00000000000000000000000000000000000000000000000000000000000000ff" },
+            { "relpath": "extra.gro", "size_bytes": 99, "listed_in_profile": false }
+          ],
+          "excluded": [ { "relpath": "Mods/SomeMod/mod.gro", "reason": "third_party_mods" } ],
+          "warnings": [],
+          "elapsed_s": 0.012
+        },
+        {
+          "root": "/home/user/games/unrelated",
+          "status": "unknown",
+          "detected_edition": "unknown",
+          "candidates": [],
+          "archives": [],
+          "warnings": []
+        }
+      ]
+    }
+  ]
+}

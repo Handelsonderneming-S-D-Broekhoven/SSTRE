@@ -1,0 +1,127 @@
+{
+  "$comment": "Synthetic example: invented IDs and paths; every hash is SHA-256 of the ASCII string 'SSTRE synthetic fixture: <label>' and does not identify any real file.",
+  "recipeFormatVersion": "0.1.0",
+  "assetId": "synthetic:textures/test/checker_256",
+  "source": {
+    "hash": "fa0f4e666dd875c8e4d56c1e4c53fd90ac8182f9a81209bd6b95b5bc6e046e3b",
+    "kind": "classic",
+    "logicalPath": "Synthetic/Textures/Test/Checker_256.synthetic",
+    "width": 256,
+    "height": 256,
+    "colorSpace": "srgb",
+    "alpha": {
+      "present": false,
+      "kind": "none"
+    },
+    "tileable": {
+      "wrapU": true,
+      "wrapV": true,
+      "source": "curated"
+    }
+  },
+  "textureClass": "architecture",
+  "materialProfile": null,
+  "targetProfile": "synthetic-target",
+  "steps": [
+    {
+      "stepId": "decode",
+      "op": "decode",
+      "inputs": [
+        "source"
+      ]
+    },
+    {
+      "stepId": "upscale",
+      "op": "resample",
+      "inputs": [
+        "decode"
+      ],
+      "scale": 2,
+      "filter": "lanczos3",
+      "channels": "rgb",
+      "implementation": {
+        "name": "synthetic-stub-resampler",
+        "version": "0.0.0",
+        "artifactHash": "sha256:7f902bdc50d42a73bbc425a3dd40b920e65a8ae06d33dbc5d23d7966a3f9c484"
+      },
+      "tiling": {
+        "tileSize": 0,
+        "wrapPadding": 8,
+        "edgePadding": "wrap"
+      }
+    },
+    {
+      "stepId": "encode",
+      "op": "encode",
+      "inputs": [
+        "upscale"
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "role": "albedo",
+      "fromStep": "encode",
+      "colorSpace": "srgb",
+      "inferred": false
+    }
+  ],
+  "compression": {
+    "container": "png",
+    "format": "RGBA8",
+    "mipmaps": {
+      "generate": true,
+      "filter": "kaiser",
+      "alphaCoveragePreserve": false,
+      "wrap": true
+    }
+  },
+  "qaGates": [
+    {
+      "metric": "dimensions",
+      "comparator": "==",
+      "threshold": "512x512",
+      "reference": "source",
+      "onFail": "fail-asset"
+    },
+    {
+      "metric": "ssim-downscaled",
+      "comparator": ">=",
+      "threshold": 0.95,
+      "reference": "source",
+      "onFail": "fallback"
+    }
+  ],
+  "fallbackPolicy": {
+    "chain": [
+      {
+        "id": "plain-resample",
+        "mode": "conventional-resample"
+      },
+      {
+        "id": "original",
+        "mode": "original"
+      }
+    ],
+    "maxAttempts": 2
+  },
+  "precedence": {
+    "layers": [
+      {
+        "layer": "global-defaults",
+        "ref": "synthetic/defaults.json",
+        "hash": "sha256:23b234506edaaac650b5a1ce5070b039524e698ded90c4d2b64a01bfc18017a4"
+      },
+      {
+        "layer": "curated-override",
+        "ref": "synthetic/override.json",
+        "hash": "sha256:3b2ac9ccf65bdbc0174435b24cf6adcc23adabf0f1cbb0164e0ccf4b340a9a77"
+      }
+    ],
+    "fieldSources": {
+      "/steps": "global-defaults",
+      "/textureClass": "curated-override"
+    },
+    "mergeRules": "deep-merge/arrays-replace/null-deletes@1"
+  }
+}

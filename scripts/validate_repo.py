@@ -1,26 +1,37 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Handelsonderneming S.D. Broekhoven, trading as ITEagle Europe
 # SPDX-License-Identifier: GPL-3.0-only
-"""Repository consistency checks for SSTRE Phase 0.
+"""Repository consistency checks for SSTRE.
 
-Runs locally and in CI. Requires Python 3.10+ and, for schema checks,
-the ``jsonschema`` package (``pip install jsonschema``). Without it the
-schema check is reported as an error unless ``--skip-schemas`` is given.
+Runs locally and in CI, in the umbrella and (with ``--root``) in the sibling
+repositories. Requires Python 3.10+ and, for schema checks, the ``jsonschema``
+package (``pip install jsonschema``). Without it the schema check is reported
+as an error unless ``--skip-schemas`` is given. No other dependencies.
 
 Checks:
-  1. schemas/**/*.json   - valid JSON, declares JSON Schema draft 2020-12,
+  1. schemas/*.json      - valid JSON, declares JSON Schema draft 2020-12,
                            passes the 2020-12 metaschema, and every entry in
                            the schema's own ``examples`` array (synthetic data)
                            validates against it. Cross-file ``$ref`` by ``$id``
                            is resolved against the other schemas in schemas/.
+                           Every schema is handled generically; new schema
+                           files need no change to this script.
+     schemas/tests/<name>/valid/*.json, schemas/tests/<name>/invalid/*.json
+                         - test documents for ``schemas/<name>.schema.json``.
+                           Every ``valid`` document must validate and every
+                           ``invalid`` document must be rejected (negative
+                           tests). Test data is synthetic only.
   2. **/*.md             - relative links and images resolve to files or
                            directories inside the repository; fenced code
                            blocks are balanced. Missing heading anchors are
                            warnings (errors with --strict-anchors).
   3. tracked + untracked-not-ignored files
                          - no files with extensions that indicate original game
-                           data, extracted assets or model weights, and a
-                           warning for files larger than --max-file-mb.
+                           data, demos/savegames, extracted assets or model
+                           weights; no binary files above --max-binary-mb; a
+                           warning for any file above --max-file-mb.
+                           Paths matching --forbidden-allowlist are exempt
+                           (for preserved upstream history, e.g. SSTRE-Engine).
 
 Exit code 0 = no errors, 1 = errors found, 2 = usage/environment problem.
 Not a substitute for legal review: it only catches obvious mistakes.
@@ -29,6 +40,7 @@ Not a substitute for legal review: it only catches obvious mistakes.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import re
 import subprocess
@@ -37,19 +49,24 @@ from pathlib import Path
 from urllib.parse import unquote
 
 DRAFT_2020_12 = "https://json-schema.org/draft/2020-12/schema"
+SCHEMA_SUFFIX = ".schema.json"
 
-# Extensions that indicate Serious Sam game data, game audio, or ML model
-# weights. Note: ``.tex`` collides with LaTeX; SSTRE does not use LaTeX.
+# Extensions that indicate Serious Sam game data, demos/savegames, game audio,
+# or ML model weights. Note: ``.tex`` collides with LaTeX; SSTRE does not use
+# LaTeX.
 FORBIDDEN_EXTENSIONS = {
     # Serious Engine 1 archives and asset formats
     ".gro", ".tex", ".mdl", ".wld", ".ani", ".bm", ".bs", ".ba", ".smc",
     ".fnt", ".tbn",
+    # recorded demos and savegames (contain level/game state)
+    ".dem", ".sav",
     # audio (game sound and music)
     ".ogg", ".wav", ".mp3",
     # model weights / checkpoints
     ".safetensors", ".ckpt", ".pth", ".pt", ".onnx", ".gguf",
 }
 FORBIDDEN_DIR_PARTS = {"extracted", "workspace"}
+BINARY_SNIFF_BYTES = 8192
 
 MD_INLINE_LINK = re.compile(r"!?\[(?:[^\[\]]|\[[^\[\]]*\])*\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\s*\)")
 MD_REF_DEF = re.compile(r"^\s{0,3}\[[^\]]+\]:\s*<?(\S+?)>?(?:\s+.*)?$")
@@ -82,6 +99,20 @@ def iter_files(root: Path, suffix: str) -> list[Path]:
     return sorted(out)
 
 
+def load_json(path: Path, root: Path, rep: Report) -> object | None:
+    rel = path.relative_to(root).as_posix()
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        rep.error(f"{rel}: invalid JSON: {exc}")
+        return None
+
+
+def fmt_error(e) -> str:
+    loc = "/".join(str(p) for p in e.absolute_path) or "<root>"
+    return f"at {loc}: {e.message}"
+
+
 # --------------------------------------------------------------------------
 # 1. JSON Schemas
 # --------------------------------------------------------------------------
@@ -90,7 +121,8 @@ def check_schemas(root: Path, rep: Report) -> int:
     if not schema_dir.is_dir():
         print("schemas: no schemas/ directory, skipped")
         return 0
-    files = iter_files(schema_dir, ".json")
+    # Schemas are the top-level *.json files; schemas/tests/ holds test data.
+    files = sorted(p for p in schema_dir.glob("*.json") if p.is_file())
     if not files:
         print("schemas: no *.json files, skipped")
         return 0
@@ -106,10 +138,8 @@ def check_schemas(root: Path, rep: Report) -> int:
     loaded: dict[Path, dict] = {}
     for f in files:
         rel = f.relative_to(root).as_posix()
-        try:
-            data = json.loads(f.read_text(encoding="utf-8"))
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            rep.error(f"{rel}: invalid JSON: {exc}")
+        data = load_json(f, root, rep)
+        if data is None:
             continue
         if not isinstance(data, dict):
             rep.error(f"{rel}: top level must be a JSON object")
@@ -127,30 +157,73 @@ def check_schemas(root: Path, rep: Report) -> int:
             rep.warn(f"{f.relative_to(root).as_posix()}: no $id; cannot be referenced by other schemas")
     registry = Registry().with_resources(resources)
 
+    validators: dict[str, object] = {}
+    nexamples = 0
     for f, data in loaded.items():
         rel = f.relative_to(root).as_posix()
         errs = sorted(Draft202012Validator(Draft202012Validator.META_SCHEMA).iter_errors(data),
                       key=lambda e: list(e.path))
         if errs:
             for e in errs:
-                loc = "/".join(str(p) for p in e.path) or "<root>"
-                rep.error(f"{rel}: metaschema violation at {loc}: {e.message}")
+                rep.error(f"{rel}: metaschema violation {fmt_error(e)}")
             continue
         examples = data.get("examples", [])
         if not examples:
             rep.warn(f"{rel}: no 'examples'; add synthetic example data so the schema is exercised")
         validator = Draft202012Validator(data, registry=registry)
+        if f.name.endswith(SCHEMA_SUFFIX):
+            validators[f.name[: -len(SCHEMA_SUFFIX)]] = validator
         for i, ex in enumerate(examples):
+            nexamples += 1
             try:
                 ex_errs = list(validator.iter_errors(ex))
             except Exception as exc:  # unresolvable $ref etc.
                 rep.error(f"{rel}: examples[{i}] could not be validated: {exc}")
                 continue
             for e in ex_errs:
-                loc = "/".join(str(p) for p in e.path) or "<root>"
-                rep.error(f"{rel}: examples[{i}] invalid at {loc}: {e.message}")
-    print(f"schemas: checked {len(files)} file(s)")
+                rep.error(f"{rel}: examples[{i}] invalid {fmt_error(e)}")
+    print(f"schemas: checked {len(files)} schema(s), {nexamples} inline example(s)")
+    check_schema_tests(root, schema_dir, validators, rep)
     return len(files)
+
+
+def check_schema_tests(root: Path, schema_dir: Path, validators: dict[str, object], rep: Report) -> None:
+    """Positive/negative test documents under schemas/tests/<name>/{valid,invalid}/."""
+    tests_dir = schema_dir / "tests"
+    counts = {"valid": 0, "invalid": 0}
+    if tests_dir.is_dir():
+        for sub in sorted(p for p in tests_dir.iterdir() if p.is_dir()):
+            name = sub.name
+            if name not in validators:
+                rep.error(f"{sub.relative_to(root).as_posix()}: no valid schema "
+                          f"schemas/{name}{SCHEMA_SUFFIX} for this test directory")
+                continue
+            validator = validators[name]
+            for extra in sorted(p for p in sub.iterdir() if p.name not in ("valid", "invalid")):
+                rep.error(f"{extra.relative_to(root).as_posix()}: unexpected entry; "
+                          "use valid/ or invalid/")
+            for kind in ("valid", "invalid"):
+                for doc_path in sorted((sub / kind).glob("*.json")) if (sub / kind).is_dir() else []:
+                    rel = doc_path.relative_to(root).as_posix()
+                    doc = load_json(doc_path, root, rep)
+                    if doc is None:
+                        continue
+                    counts[kind] += 1
+                    try:
+                        errs = sorted(validator.iter_errors(doc), key=lambda e: list(e.absolute_path))
+                    except Exception as exc:
+                        rep.error(f"{rel}: could not be validated: {exc}")
+                        continue
+                    if kind == "valid":
+                        for e in errs:
+                            rep.error(f"{rel}: expected valid, but invalid {fmt_error(e)}")
+                    elif not errs:
+                        rep.error(f"{rel}: expected to be rejected by schemas/{name}{SCHEMA_SUFFIX}, but it validates")
+                    else:
+                        print(f"schema-tests: {rel}: rejected as expected ({fmt_error(errs[0])})")
+    untested = sorted(n for n in validators if not (tests_dir / n / "invalid").is_dir())
+    print(f"schema-tests: {counts['valid']} valid and {counts['invalid']} invalid document(s) checked"
+          + (f"; no negative tests yet for: {', '.join(untested)}" if untested else ""))
 
 
 # --------------------------------------------------------------------------
@@ -259,22 +332,58 @@ def candidate_files(root: Path) -> list[str] | None:
     return sorted(names)
 
 
-def check_forbidden(root: Path, rep: Report, max_mb: float) -> int:
+def load_allowlist(path: Path | None, root: Path) -> list[str]:
+    """Allowlist file: one repository-relative glob per line (fnmatch syntax,
+    '/' separators, case-sensitive; '*' also matches '/'). '#' starts a
+    comment. Intended only for preserved upstream files whose status is
+    tracked by the licensing audit, never for new content."""
+    if path is None:
+        return []
+    full = path if path.is_absolute() else root / path
+    if not full.is_file():
+        raise FileNotFoundError(f"forbidden allowlist {full} does not exist")
+    patterns = []
+    for line in full.read_text(encoding="utf-8").splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            patterns.append(line)
+    return patterns
+
+
+def is_binary(path: Path) -> bool:
+    with path.open("rb") as fh:
+        return b"\0" in fh.read(BINARY_SNIFF_BYTES)
+
+
+def check_forbidden(root: Path, rep: Report, max_mb: float, max_binary_mb: float,
+                    allowlist: list[str]) -> int:
     names = candidate_files(root)
     if names is None:
         rep.warn("forbidden-files: not a git work tree or git unavailable; scanning filesystem instead")
         names = [p.relative_to(root).as_posix() for p in root.rglob("*")
                  if p.is_file() and not any(part in SKIP_DIRS for part in p.relative_to(root).parts)]
+    allowed = 0
     for name in names:
+        if any(fnmatch.fnmatchcase(name, pat) for pat in allowlist):
+            allowed += 1
+            continue
         p = Path(name)
         if p.suffix.lower() in FORBIDDEN_EXTENSIONS:
-            rep.error(f"{name}: forbidden extension '{p.suffix}' (game data, game audio or model weights must not be committed)")
+            rep.error(f"{name}: forbidden extension '{p.suffix}' (game data, demos/savegames, game audio "
+                      "or model weights must not be committed)")
         if FORBIDDEN_DIR_PARTS.intersection(part.lower() for part in p.parts[:-1]):
             rep.error(f"{name}: lives under a local-only directory ({'/'.join(sorted(FORBIDDEN_DIR_PARTS))})")
         full = root / name
-        if full.is_file() and full.stat().st_size > max_mb * 1024 * 1024:
+        if not full.is_file():
+            continue
+        size = full.stat().st_size
+        if size > max_binary_mb * 1024 * 1024 and is_binary(full):
+            rep.error(f"{name}: binary file larger than {max_binary_mb:g} MB "
+                      "(possible asset, archive or weights; binaries are not committed)")
+        elif size > max_mb * 1024 * 1024:
             rep.warn(f"{name}: larger than {max_mb:g} MB; confirm it is not an asset or binary")
-    print(f"forbidden-files: checked {len(names)} file(s)")
+    print(f"forbidden-files: checked {len(names)} file(s)"
+          + (f", {allowed} exempted by allowlist ({len(allowlist)} pattern(s))" if allowlist else ""))
     return len(names)
 
 
@@ -283,19 +392,34 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent,
                     help="repository root (default: parent of scripts/)")
     ap.add_argument("--skip-schemas", action="store_true", help="skip JSON Schema checks")
+    ap.add_argument("--skip-forbidden", action="store_true",
+                    help="skip the forbidden-file check entirely (prefer --forbidden-allowlist)")
+    ap.add_argument("--forbidden-allowlist", type=Path, metavar="FILE",
+                    help="file of repository-relative globs exempt from the forbidden-file check "
+                         "(relative to --root unless absolute); for preserved upstream files only")
     ap.add_argument("--strict-anchors", action="store_true", help="treat missing heading anchors as errors")
     ap.add_argument("--max-file-mb", type=float, default=5.0, help="warn on files above this size")
+    ap.add_argument("--max-binary-mb", type=float, default=1.0,
+                    help="error on binary files (NUL byte in the first 8 KiB) above this size")
     args = ap.parse_args(argv)
     root = args.root.resolve()
     if not root.is_dir():
         print(f"error: root {root} is not a directory", file=sys.stderr)
+        return 2
+    try:
+        allowlist = load_allowlist(args.forbidden_allowlist, root)
+    except (OSError, UnicodeDecodeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
         return 2
 
     rep = Report()
     if not args.skip_schemas:
         check_schemas(root, rep)
     check_markdown(root, rep, args.strict_anchors)
-    check_forbidden(root, rep, args.max_file_mb)
+    if args.skip_forbidden:
+        print("forbidden-files: skipped (--skip-forbidden)")
+    else:
+        check_forbidden(root, rep, args.max_file_mb, args.max_binary_mb, allowlist)
 
     for w in rep.warnings:
         print(f"WARNING: {w}")
