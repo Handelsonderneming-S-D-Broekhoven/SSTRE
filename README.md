@@ -48,6 +48,7 @@ The binding requirements are listed in the [project plan](docs/project-plan.md) 
 | [0005](docs/adr/0005-engine-foundation.md) | Engine foundation (Classic-VK main line + RT backend) | accepted as **provisional** direction; final selection after Phase 1 validation |
 | [0006](docs/adr/0006-licensing-boundaries.md) | Licensing boundaries | accepted (policy, not legal clearance) |
 | [0008](docs/adr/0008-engine-patch-distribution.md) | Engine distributed as own patches against pinned upstream commits | accepted (provisional) |
+| [0009](docs/adr/0009-asset-layers.md) | Independently configurable asset layers (Classic default; HD art opt-in) | accepted |
 | [0007](docs/adr/0007-platform-strategy.md) | Platform strategy | PC-first, Windows + Linux, raster baseline with optional RT accepted; consoles research only |
 
 ## Prerequisites
