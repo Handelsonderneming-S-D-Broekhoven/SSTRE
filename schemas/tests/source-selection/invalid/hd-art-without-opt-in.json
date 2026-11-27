@@ -1,0 +1,90 @@
+{
+  "schema_version": "0.1.0",
+  "record_id": "sel-00000000000000a2",
+  "asset_id": "classic_tfe:textures/example/wall.tex",
+  "category": "architecture",
+  "generated_at": "2026-11-27T12:00:00Z",
+  "generator": {
+    "name": "sstre-assetcompiler",
+    "version": "0.1.0.dev0"
+  },
+  "policy": {
+    "policy_id": "sstre-source-selection",
+    "version": "0.1.0",
+    "hd_art_opt_in": false,
+    "thresholds": {
+      "lossy_psnr_db": 40.0,
+      "same_art_ssim_min": 0.8
+    }
+  },
+  "classic": {
+    "virtual_path": "Textures/Example/Wall.tex",
+    "width_px": 256,
+    "height_px": 256,
+    "mex_width": 4096,
+    "mex_height": 4096,
+    "alpha_mode": "opaque"
+  },
+  "candidates": [
+    {
+      "candidate_id": "hd_tfe:textures/example/wall",
+      "source_kind": "hd",
+      "edition": "hd_tfe",
+      "source_format": "bc1",
+      "match": {
+        "verified": false,
+        "related": true,
+        "method": "embedding",
+        "embedding_score": 0.81
+      },
+      "metrics": {
+        "classic_px": [
+          256,
+          256
+        ],
+        "candidate_px": [
+          256,
+          256
+        ],
+        "resolution_ratio": 1.0,
+        "aspect_match": true,
+        "bit_identical": false,
+        "psnr_db": 31.5,
+        "ssim": 0.52,
+        "layout_ssim": 0.71,
+        "delta_e": 14.0,
+        "hist_intersection": 0.95,
+        "blockiness_classic": 1.0,
+        "blockiness_candidate": 1.18,
+        "blockiness_excess": 0.18,
+        "artefact_index": 0.18,
+        "sharpness_ratio": 0.97,
+        "detail_energy": 0.0
+      }
+    }
+  ],
+  "rules_evaluated": [
+    {
+      "rule_id": "R03_unverified",
+      "fired": true
+    },
+    {
+      "rule_id": "R07_art_difference",
+      "fired": true,
+      "detail": "unverified related candidate"
+    }
+  ],
+  "decision": {
+    "result": "hd_art_candidate",
+    "base_source": "classic",
+    "rule_fired": "R07_art_difference",
+    "reason": "Same layout but redrawn artwork",
+    "selected_candidate": null,
+    "requires_opt_in": false,
+    "hd_art": {
+      "candidate_id": "hd_tfe:textures/example/wall",
+      "status": "pending_owner_opt_in"
+    }
+  },
+  "local_only": true
+}

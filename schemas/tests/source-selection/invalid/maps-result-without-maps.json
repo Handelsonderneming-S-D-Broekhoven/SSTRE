@@ -1,0 +1,121 @@
+{
+  "schema_version": "0.1.0",
+  "record_id": "sel-00000000000000a3",
+  "asset_id": "classic_tfe:textures/example/wall.tex",
+  "category": "architecture",
+  "generated_at": "2026-11-27T12:00:00Z",
+  "generator": {
+    "name": "sstre-assetcompiler",
+    "version": "0.1.0.dev0"
+  },
+  "policy": {
+    "policy_id": "sstre-source-selection",
+    "version": "0.1.0",
+    "hd_art_opt_in": false,
+    "thresholds": {
+      "lossy_psnr_db": 40.0,
+      "same_art_ssim_min": 0.8
+    }
+  },
+  "classic": {
+    "virtual_path": "Textures/Example/Wall.tex",
+    "width_px": 256,
+    "height_px": 256,
+    "mex_width": 4096,
+    "mex_height": 4096,
+    "alpha_mode": "opaque"
+  },
+  "candidates": [
+    {
+      "candidate_id": "hd_tfe:textures/example/wall",
+      "source_kind": "hd",
+      "edition": "hd_tfe",
+      "source_format": "bc1",
+      "match": {
+        "verified": true,
+        "method": "exact_path",
+        "embedding_score": 0.97,
+        "phash_distance": 2
+      },
+      "metrics": {
+        "classic_px": [
+          256,
+          256
+        ],
+        "candidate_px": [
+          256,
+          256
+        ],
+        "resolution_ratio": 1.0,
+        "aspect_match": true,
+        "bit_identical": false,
+        "psnr_db": 31.5,
+        "ssim": 0.97,
+        "layout_ssim": 0.99,
+        "delta_e": 2.1,
+        "hist_intersection": 0.95,
+        "blockiness_classic": 1.0,
+        "blockiness_candidate": 1.18,
+        "blockiness_excess": 0.18,
+        "artefact_index": 0.18,
+        "sharpness_ratio": 0.97,
+        "detail_energy": 0.0
+      },
+      "companion_maps": {
+        "normal": "maps/wall_nm.png",
+        "gloss": "maps/wall_gm.png"
+      }
+    }
+  ],
+  "rules_evaluated": [
+    {
+      "rule_id": "R01_never_replace_category",
+      "fired": false
+    },
+    {
+      "rule_id": "R02_no_candidate",
+      "fired": false
+    },
+    {
+      "rule_id": "R03_unverified",
+      "fired": false
+    },
+    {
+      "rule_id": "R04_uv_incompatible",
+      "fired": false
+    },
+    {
+      "rule_id": "R06_equivalent",
+      "fired": false,
+      "detail": "psnr=31.5"
+    },
+    {
+      "rule_id": "R07_art_difference",
+      "fired": false
+    },
+    {
+      "rule_id": "R10_same_res_cleaner",
+      "fired": false
+    },
+    {
+      "rule_id": "R11_degraded_copy",
+      "fired": true,
+      "detail": "psnr=31.5 blk=0.18"
+    },
+    {
+      "rule_id": "M01_companion_maps",
+      "fired": true,
+      "detail": "normal,gloss"
+    }
+  ],
+  "decision": {
+    "result": "classic_with_hd_maps",
+    "base_source": "classic",
+    "rule_fired": "R11_degraded_copy",
+    "reason": "Lossy copy; HD maps reused",
+    "selected_candidate": null,
+    "requires_opt_in": false,
+    "maps_candidate": "hd_tfe:textures/example/wall"
+  },
+  "local_only": true
+}
