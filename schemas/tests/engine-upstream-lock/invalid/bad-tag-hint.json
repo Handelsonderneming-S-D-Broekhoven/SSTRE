@@ -1,0 +1,13 @@
+{
+  "schema_version": "0.1",
+  "upstreams": [
+    {
+      "name": "example-dependency",
+      "role": "dependency",
+      "repository": "https://github.com/example/example-lib",
+      "commit": "0000000000000000000000000000000000000002",
+      "tag_hint": 110,
+      "patch_series": "patches/example-dependency"
+    }
+  ]
+}
