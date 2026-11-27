@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/release-pins.schema.json",
+  "title": "SSTRE release pins (proposal)",
+  "description": "PROPOSAL (Phase 0, not yet adopted). Lock file owned by the SSTRE umbrella that pins the exact revision of every component repository used for one integrated build or release. Revisions are full 40-character Git commit SHAs; tags are informational only and never used for resolution.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format_version", "pin_set", "components"],
+  "properties": {
+    "format_version": {
+      "description": "Version of this lock-file format. Bumped on incompatible changes.",
+      "const": 1
+    },
+    "pin_set": {
+      "description": "Human-readable identifier of this pin set, e.g. a planned release name or a POC sprint label. Not a claim that a release exists.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "status": {
+      "description": "Lifecycle of this pin set.",
+      "enum": ["experimental", "candidate", "released", "withdrawn"],
+      "default": "experimental"
+    },
+    "created": {
+      "description": "UTC date the pin set was recorded (YYYY-MM-DD).",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "components": {
+      "description": "One entry per pinned repository. The umbrella itself is identified by the commit that contains this file and is not listed.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/component" }
+    },
+    "schema_versions": {
+      "description": "Versions of cross-repo contract schemas (see docs/architecture/cross-repo-contracts.md) that the pinned components are expected to agree on, keyed by schema file name.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9-]+\\.schema\\.json$" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "repository", "commit"],
+      "properties": {
+        "name": {
+          "description": "Component role key.",
+          "enum": ["engine", "asset-compiler", "manifests", "toolkit"]
+        },
+        "repository": {
+          "description": "HTTPS clone URL of the component repository.",
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$"
+        },
+        "commit": {
+          "description": "Full Git commit SHA-1 (40 lowercase hex characters).",
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "tag": {
+          "description": "Optional tag pointing at the commit, for readability only.",
+          "type": "string"
+        },
+        "upstream": {
+          "description": "Engine only: upstream project and commit the fork is based on, for license and provenance tracking.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository", "commit"],
+          "properties": {
+            "repository": {
+              "type": "string",
+              "pattern": "^https://github\\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "format_version": 1,
+      "pin_set": "example-synthetic",
+      "status": "experimental",
+      "created": "2026-11-27",
+      "notes": "Synthetic example. Commit values are placeholders and do not refer to real revisions.",
+      "components": [
+        {
+          "name": "engine",
+          "repository": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-Engine",
+          "commit": "0000000000000000000000000000000000000001",
+          "upstream": {
+            "repository": "https://github.com/example/upstream-engine",
+            "commit": "0000000000000000000000000000000000000002"
+          }
+        },
+        {
+          "name": "asset-compiler",
+          "repository": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-AssetCompiler",
+          "commit": "0000000000000000000000000000000000000003"
+        },
+        {
+          "name": "manifests",
+          "repository": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-Manifests",
+          "commit": "0000000000000000000000000000000000000004"
+        },
+        {
+          "name": "toolkit",
+          "repository": "https://github.com/Handelsonderneming-S-D-Broekhoven/Remaster-Toolkit",
+          "commit": "0000000000000000000000000000000000000005",
+          "tag": "v0.0.0-example"
+        }
+      ],
+      "schema_versions": {
+        "asset-recipe.schema.json": "0.1.0"
+      }
+    }
+  ]
+}

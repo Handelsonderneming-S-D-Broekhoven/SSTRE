@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/asset-inventory.schema.json",
+  "title": "SSTRE asset inventory",
+  "$comment": "STATUS: PROPOSAL (Phase 0, RD-002). Not yet approved by owner/lead; field names and enums may change. Inventory documents are generated locally from user-owned installs and MUST NOT be committed if they enumerate proprietary content beyond what the licensing policy (RD-007) permits. See docs/research/RD-002-hd-assets.md.",
+  "description": "An inventory document describing assets discovered in one or more user-supplied Serious Sam installations, plus HD-to-Classic mapping candidates.",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "generator", "sources", "assets"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^0\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of this schema the document conforms to. 0.x while in proposal state."
+    },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "generator": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "revision": { "type": "string", "description": "VCS revision of the generator (e.g. git SHA)." }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "description": "Editions / archives that were scanned.",
+      "items": { "$ref": "#/$defs/sourceArchive" }
+    },
+    "assets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/assetRecord" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "edition": {
+      "type": "string",
+      "enum": ["classic_tfe", "classic_tse", "hd_tfe", "hd_tse", "fusion_hd_tfe", "fusion_hd_tse", "fusion_other", "unknown"],
+      "description": "Source edition. fusion_* = content shipped inside Serious Sam Fusion 2017 game packs."
+    },
+    "sourceArchive": {
+      "type": "object",
+      "required": ["source_id", "edition", "relpath", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "source_id": { "type": "string", "pattern": "^[a-z0-9_.-]+$", "description": "Stable short ID for this archive, e.g. classic_tfe:1_00c.gro." },
+        "edition": { "$ref": "#/$defs/edition" },
+        "steam_app_id": { "type": "integer" },
+        "steam_build_id": { "type": "integer" },
+        "relpath": { "type": "string", "description": "Path relative to the install root; '.' for loose files." },
+        "container": { "type": "string", "enum": ["gro_zip", "loose_dir"] },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "load_priority": { "type": "integer", "description": "Override order (higher wins) as determined by the engine's archive mounting rules." }
+      }
+    },
+    "assetRecord": {
+      "type": "object",
+      "required": ["asset_id", "edition", "source_id", "virtual_path", "source_sha256", "asset_type"],
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^(classic_tfe|classic_tse|hd_tfe|hd_tse|fusion_hd_tfe|fusion_hd_tse|fusion_other|unknown):[a-z0-9_./-]+$",
+          "description": "Stable ID: '<edition>:<normalized virtual path>' (lowercase, forward slashes, no 'Content/<game>/' prefix). Content hash is NOT part of the ID so that patched files keep their identity; the hash is tracked in source_sha256."
+        },
+        "edition": { "$ref": "#/$defs/edition" },
+        "source_id": { "type": "string", "description": "sourceArchive.source_id that supplied the winning (highest-priority) copy." },
+        "shadowed_sources": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Other archives containing the same virtual path that are overridden."
+        },
+        "virtual_path": { "type": "string", "description": "Archive-relative path exactly as stored (case preserved)." },
+        "source_sha256": { "$ref": "#/$defs/sha256", "description": "SHA-256 of the uncompressed entry bytes." },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "asset_type": {
+          "type": "string",
+          "enum": ["texture", "model", "mesh", "skeleton", "animation", "world", "material", "shader", "font", "sound", "music", "script", "entity_class", "particle", "text", "other"]
+        },
+        "file_format": {
+          "type": "string",
+          "description": "Container format identifier, e.g. 'se1_tex_v4', 'se1_tex_v3', 'se1_mdl_v009', 'se1_bm', 'se1_wld', 'se3_meta_bin', 'unknown'."
+        },
+        "texture": { "$ref": "#/$defs/textureInfo" },
+        "model": { "$ref": "#/$defs/modelInfo" },
+        "color_space": {
+          "type": "string",
+          "enum": ["srgb", "linear", "data", "unknown"],
+          "description": "'data' = non-color (normal, mask, height). Classic SE1 does not store color space; values are inferred and flagged by color_space_source."
+        },
+        "color_space_source": { "type": "string", "enum": ["header", "inferred_name", "inferred_content", "curated"] },
+        "alpha_mode": {
+          "type": "string",
+          "enum": ["none", "cutout_1bit", "blend", "additive_hint", "data", "unknown"],
+          "description": "cutout_1bit corresponds to SE1 TEX_TRANSPARENT (1-bit alpha sufficient); blend to a full alpha channel."
+        },
+        "tileability": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hint": { "type": "string", "enum": ["tile_uv", "tile_u", "tile_v", "clamp", "atlas", "unknown"] },
+            "seam_score": { "type": "number", "minimum": 0, "maximum": 1, "description": "Measured wrap-seam continuity (1 = seamless). Signal, not proof." },
+            "source": { "type": "string", "enum": ["measured", "usage", "inferred_name", "curated"] }
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "Other assets this asset references (e.g. model -> texture, texture -> base texture via BAST, world -> textures/models).",
+          "items": {
+            "type": "object",
+            "required": ["virtual_path", "relation"],
+            "additionalProperties": false,
+            "properties": {
+              "virtual_path": { "type": "string" },
+              "asset_id": { "type": "string" },
+              "relation": { "type": "string", "enum": ["texture", "base_texture", "detail_texture", "bump_texture", "reflection_texture", "specular_texture", "mesh", "skeleton", "animation", "material", "shader", "sound", "referenced_by", "other"] },
+              "resolved": { "type": "boolean" }
+            }
+          }
+        },
+        "semantic_tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9_:-]+$" },
+          "description": "Free-form namespaced tags, e.g. 'category:architecture', 'category:ui', 'level:01_hatshepsut', 'no_diffusion', 'contains_text'."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["architecture", "terrain", "vegetation", "enemy", "weapon", "player", "item", "ui_hud", "font", "effect", "sky", "water", "technical_mask", "normal_bump", "detail", "other", "unknown"]
+        },
+        "mapping_candidates": {
+          "type": "array",
+          "description": "Ranked HD candidates for a Classic target (or vice versa). Empty array + mapping_status 'unmatched' records an explicit miss.",
+          "items": { "$ref": "#/$defs/mappingCandidate" }
+        },
+        "mapping_status": {
+          "type": "string",
+          "enum": ["not_attempted", "matched", "ambiguous", "unmatched", "rejected_uv_incompatible", "curated_override", "classic_fallback"]
+        },
+        "notes": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "asset_type": { "const": "texture" } } },
+          "then": { "required": ["texture"] }
+        }
+      ]
+    },
+    "textureInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width_px": { "type": "integer", "minimum": 1 },
+        "height_px": { "type": "integer", "minimum": 1 },
+        "logical_width": { "type": "integer", "minimum": 1, "description": "SE1 'mex' width (td_mexWidth); drives UV scale on brushes/models. Must be preserved by replacements." },
+        "logical_height": { "type": "integer", "minimum": 1 },
+        "first_mip_level": { "type": "integer", "minimum": 0, "description": "SE1 td_iFirstMipLevel (pixel = mex >> first_mip_level)." },
+        "mip_count": { "type": "integer", "minimum": 0, "description": "Stored or fine mip levels (SE1 td_ctFineMipLevels; v4 files do not store mips)." },
+        "frames": { "type": "integer", "minimum": 0, "description": "Animation frame count (SE1 td_ctFrames). 0 for procedural effect textures." },
+        "animated": { "type": "boolean" },
+        "procedural_effect": { "type": "boolean", "description": "SE1 effect texture (FXDT chunk: fire/water/plasma); cannot be upscaled as a bitmap." },
+        "has_alpha_channel": { "type": "boolean" },
+        "flags_raw": { "type": "integer", "description": "Raw SE1 TDAT flags as stored." },
+        "pixel_format": { "type": "string", "description": "e.g. 'rgb8', 'rgba8', 'bc1', 'bc3', 'bc5', 'unknown'." },
+        "is_power_of_two": { "type": "boolean" },
+        "cubemap": { "type": "boolean" },
+        "texture_role": { "type": "string", "enum": ["albedo", "normal", "bump_height", "detail", "specular", "reflection", "emissive", "mask", "lightmap", "font_atlas", "unknown"] }
+      }
+    },
+    "modelInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format_version": { "type": "string" },
+        "vertex_count": { "type": "integer", "minimum": 0 },
+        "polygon_count": { "type": "integer", "minimum": 0 },
+        "uv_set_count": { "type": "integer", "minimum": 0 },
+        "texture_logical_width": { "type": "integer", "description": "SE1 MDL md_Width (mex) the model's UVs are authored against." },
+        "texture_logical_height": { "type": "integer" },
+        "uv_fingerprint": { "type": "string", "description": "Hash of a normalized UV-island raster used to test UV compatibility across editions." }
+      }
+    },
+    "mappingCandidate": {
+      "type": "object",
+      "required": ["target_asset_id", "method", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "target_asset_id": { "type": "string" },
+        "method": { "type": "string", "enum": ["exact_path", "normalized_path", "name_only", "perceptual_hash", "feature_match", "uv_fingerprint", "curated"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "uv_compatibility": { "type": "string", "enum": ["identical", "affine", "incompatible", "not_applicable", "unknown"] },
+        "aspect_ratio_match": { "type": "boolean" },
+        "phash_distance": { "type": "integer", "minimum": 0 },
+        "transform": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Affine UV/pixel transform needed to align candidate to target (crop/flip/rotate/scale).",
+          "properties": {
+            "flip_u": { "type": "boolean" },
+            "flip_v": { "type": "boolean" },
+            "rotate_deg": { "type": "integer", "enum": [0, 90, 180, 270] },
+            "crop": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 }
+          }
+        },
+        "evidence": { "type": "string" },
+        "reviewed_by": { "type": "string" }
+      }
+    }
+  }
+}

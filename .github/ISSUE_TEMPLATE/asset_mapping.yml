@@ -1,0 +1,64 @@
+name: Asset mapping issue
+description: An asset is unmatched, mismatched, ambiguous or processed incorrectly (Classic/HD mapping, recipe, QA or fallback).
+labels: ["asset-mapping"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never attach or link game files, extracted textures, AI outputs or screenshots of game content** — issues are public.
+        Identify assets by game, edition, in-archive path, stable asset ID and SHA-256. Describe visual problems in words.
+  - type: dropdown
+    id: game
+    attributes:
+      label: Game
+      options:
+        - The First Encounter (TFE)
+        - The Second Encounter (TSE)
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: edition
+    attributes:
+      label: Source edition(s)
+      description: e.g. Classic (Steam), HD (Steam); include build/version string if known.
+    validations:
+      required: true
+  - type: textarea
+    id: asset
+    attributes:
+      label: Asset identification
+      description: In-archive path, stable asset ID (if assigned), SHA-256 of the source file, and of the HD candidate if relevant.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Problem type
+      options:
+        - No HD match found
+        - Wrong HD match
+        - Ambiguous (several candidates)
+        - UV / dimension / aspect mismatch
+        - Alpha / mask / technical texture mishandled
+        - Tiling seam
+        - Art-direction drift
+        - Wrong fallback decision
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: What is wrong, what is expected, which recipe/manifest revision and tool commit produced it.
+    validations:
+      required: true
+  - type: checkboxes
+    id: no-game-data
+    attributes:
+      label: Content check
+      options:
+        - label: This issue contains no game files, extracted assets, derivatives or screenshots of game content.
+          required: true
