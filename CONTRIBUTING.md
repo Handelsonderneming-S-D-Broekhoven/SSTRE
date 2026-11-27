@@ -61,6 +61,7 @@ instead of duplicating it; they may add repository-specific notes in their own
   Types: `feat`, `fix`, `docs`, `ci`, `build`, `test`, `refactor`, `chore`.
   Mark breaking contract changes with `!` and a `BREAKING CHANGE:` footer.
 - **Sign-off: Developer Certificate of Origin (DCO)** — adopted by the owner on 2026-11-27; no CLA. Every commit must carry a `Signed-off-by: Name <email>` trailer (`git commit -s`), certifying the [DCO 1.1](https://developercertificate.org/). Contributors keep their copyright; contributions are accepted under the license of the repository (or, in SSTRE-Manifests, of the directory) they are made to.
+- **DCO check (proposal, not yet required).** [`.github/workflows/dco-proposal.yml`](./.github/workflows/dco-proposal.yml) verifies that every non-merge commit in `base..HEAD` has a `Signed-off-by:` trailer matching the author's e-mail. It runs only on manual dispatch and is not a required status check, because the existing commits are not yet signed off (owner decision pending on how to handle them). Once that is settled it can be enabled for pull requests and made required.
 - Keep commits focused; do not mix formatting churn with functional changes.
 
 ## Branches and pull requests

@@ -1,0 +1,11 @@
+{
+  "format_version": 1,
+  "pin_set": "synthetic-minimal",
+  "components": [
+    {
+      "name": "toolkit",
+      "repository": "https://github.com/example/synthetic-toolkit",
+      "commit": "0000000000000000000000000000000000000006"
+    }
+  ]
+}
