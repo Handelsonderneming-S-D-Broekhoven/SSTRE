@@ -25,7 +25,7 @@ EXP-004 audited the full history of both engine upstreams imported locally: `ups
 SSTRE-Engine **publishes only SSTRE's own changes, as a patch series per upstream, against pinned upstream commits.** No upstream history or upstream blobs are pushed to the SSTRE-Engine repository.
 
 1. **Upstream lock.** SSTRE-Engine contains `upstream.lock.json` (schema: umbrella `schemas/engine-upstream-lock.schema.json`). For each upstream it lists the canonical repository URL, the full 40-hex commit SHA, its role (`primary` or `secondary`), and the patch-series directory.
-2. **Patch series.** Patches live in `patches/<upstream-name>/NNNN-<slug>.patch`. They are generated with `git format-patch` from a local branch on top of the pinned commit, so authorship, dates and messages are preserved, and they are applied in order with `git am`. Each patch contains only changes authored by SSTRE contributors.
+2. **Patch series.** Patches live in `patches/<upstream-name>/NNNN-<slug>.patch`. They are generated with `git format-patch` from a local branch on top of the pinned commit, so authorship, dates and messages are preserved, and they are applied in order with the SSTRE patch tool (`tools/sstre_patches.py apply` in SSTRE-Engine). Plain `git am` is not enough, because deletions are exported with `--irreversible-delete` so that deleted third-party files are never reproduced (see amendment A1). Each patch contains only changes authored by SSTRE contributors, except for the documented exceptions in amendment A1.
 3. **Users and CI fetch upstream from its original host** at the pinned SHA. Then they verify the commit SHA and apply the series. SSTRE redistributes no upstream content beyond the context lines inside patches.
 4. **Patch content rules**, enforced by review and, later, by CI:
    - No binary patches. No patch may add, modify or rename game data, demos, screenshots, prebuilt binaries or proprietary SDK files.
@@ -55,3 +55,14 @@ Distributing engine **binaries** would trigger the GPL obligation to provide the
 - **Fork model.** The repository no longer follows a "GitHub fork" model. The history-import procedure in SSTRE-Engine `docs/sstre/upstream-import-procedure.md` is superseded for publication purposes.
 - **Release pins.** The umbrella `release-pins.json` refers to the SSTRE-Engine commit. The upstream pins are carried by `upstream.lock.json`.
 - **Revisit** if a rights holder clarifies the status of the flagged files, or if the owner amends ADR-0006 to allow a filtered history.
+
+## Amendment A1 (2026-11-27, lead, within the approved licensing boundaries)
+
+Added after the first real exports (EXP-010).
+
+1. **Deletions are exported without content.** `git format-patch --irreversible-delete` is used, and `check` rejects any patch that carries the removed content of a deleted file. `apply` rebuilds such deletions from the pinned upstream file and refuses if that file does not match. This keeps the deletion of `Source/KTX` (Apache-2.0) from republishing its source.
+2. **Documented exceptions to "SSTRE-authored only"**, allowed if recorded in the series README and in THIRD_PARTY_NOTICES:
+   - **(a) Backports of commits from the same upstream project.** The upstream commit, its author and its date are credited, either in the author field (a verbatim cherry-pick) or in the commit message (an adapted backport). Example: the RTGL1 shader fix that backports upstream `a2ad71e`.
+   - **(b) Vendored third-party code** under a GPL-2.0-only-compatible licence, with its licence header intact and an upstream source digest recorded. Example: the zstd 1.5.7 single-file decompressor (BSD-3-Clause OR GPL-2.0) in the `rtgl1` series.
+   - **(c) Regenerated build artefacts of upstream sources** (for example Bison/Flex output from upstream grammars), when the upstream tree already tracks the generated files. Follow-up: make the build regenerate them, so the patches can drop them.
+3. **Size limit:** the CI patch size limit is 1,280 KiB per patch, which fits exception (b). Larger patches need lead review.

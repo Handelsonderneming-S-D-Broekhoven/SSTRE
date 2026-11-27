@@ -3,7 +3,7 @@
   "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/engine-upstream-lock.schema.json",
   "title": "SSTRE-Engine upstream lock",
   "description": "Pins the upstream engine repositories that SSTRE-Engine patch series apply to (ADR-0008). Upstream content is fetched from its original host; SSTRE publishes only its own patches.",
-  "$comment": "Status: accepted with ADR-0008 (provisional), 2026-11-27. Owner: SSTRE-Engine.",
+  "$comment": "Status: accepted with ADR-0008 (provisional), 2026-11-27. Owner: SSTRE-Engine. 2026-11-27 (POC-27): role 'dependency' and tag_hint added (backward compatible, schema_version unchanged).",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "upstreams"],
@@ -28,8 +28,8 @@
           "pattern": "^[a-z0-9][a-z0-9-]*$"
         },
         "role": {
-          "description": "primary = engine baseline (ADR-0005); secondary = source of functionality to port, not built as the product.",
-          "enum": ["primary", "secondary"]
+          "description": "primary = engine baseline (ADR-0005); secondary = source of functionality to port, not built as the product; dependency = third-party library built into an engine variant (e.g. RayTracedGL1 for the RT backend).",
+          "enum": ["primary", "secondary", "dependency"]
         },
         "repository": {
           "type": "string",
@@ -38,6 +38,10 @@
         "commit": { "$ref": "#/$defs/sha1" },
         "branch_hint": {
           "description": "Upstream branch the commit was taken from (informational; the commit is authoritative).",
+          "type": "string"
+        },
+        "tag_hint": {
+          "description": "Upstream tag that points at the commit (informational; the commit is authoritative).",
           "type": "string"
         },
         "license": {
