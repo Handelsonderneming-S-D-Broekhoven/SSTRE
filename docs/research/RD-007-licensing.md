@@ -51,7 +51,7 @@ Header counting method: a Python script read the first 3,000 bytes of every trac
 
 ### 2.3 Local game installations (read-only; only license documents were read)
 
-- `G:\SteamLibrary\steamapps\common\Serious Sam Classic The First Encounter\license.txt` and the TSE equivalent are byte-identical (SHA-256 `a0b7d8c0caf85b350db05cd3f9095e5c69693afeeefc8be82562abf3366e404c`, 17,197 bytes). Licensor: **GHI Media, LLC** (Austin, Texas). The text refers to `www.devolverdigital.com/eula` as the current version.
+- `G:\SteamLibrary\steamapps\common\Serious Sam Classic The First Encounter\license.txt` and the TSE equivalent are byte-identical (SHA-256 recorded locally, 17,197 bytes). Licensor: **GHI Media, LLC** (Austin, Texas). The text refers to `www.devolverdigital.com/eula` as the current version.
 - HD TFE and HD TSE: no EULA, license or readme file found at depth ≤ 3.
 - Fusion 2017: only `Help\External_EULA\*` (third-party component notices: libpng, Lua, OpenSSL, zlib, Ogg Vorbis, Theora, Noto fonts, nvDXT, etc.). No Croteam/Devolver EULA file was found locally.
 

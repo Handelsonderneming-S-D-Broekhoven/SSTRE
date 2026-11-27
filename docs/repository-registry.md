@@ -10,13 +10,15 @@ Do not substitute a guessed ITEagle organization.
 |---|---|---|---|
 | [SSTRE](https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE) | Umbrella: documentation, research dossiers, ADRs, cross-repo contracts (`schemas/`), release pins, later the user-facing builder and packaging | Proposed GPL-3.0-only for original code, subject to dependency audit | `main` @ `a8c73d2`, one commit ("Initial commit"), 2-line README, no license |
 | [SSTRE-Engine](https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-Engine) | Engine fork: rendering, game compatibility, runtime, platform ports | Preserve upstream licenses and notices; never relicense | `main` @ `d17edbb`, one commit, README only. **Not a GitHub fork and contains no upstream history yet**; base engine pending ADR-005 |
-| [SSTRE-AssetCompiler](https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-AssetCompiler) | Serious Sam-specific discovery, extraction, normalization, HD-to-Classic mapping, runtime format conversion, compilation and packaging | Proposed GPL-3.0-only for independent original code, subject to dependency audit | Empty repository, zero commits, no default branch |
+| [SSTRE-AssetCompiler](https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-AssetCompiler) | Serious Sam-specific discovery, extraction, normalization, HD-to-Classic mapping, runtime format conversion, compilation and packaging | `GPL-3.0-only` | Empty repository, zero commits, no default branch |
 | [SSTRE-Manifests](https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-Manifests) | Declarative data: defaults, material profiles, mappings, per-game recipes, curated overrides, generated lock manifests | Proposed GPL-3.0-only for original contributions; suitability for data under review | `main` @ `13d52c1`, one commit, README only, no license |
-| [Remaster-Toolkit](https://github.com/Handelsonderneming-S-D-Broekhoven/Remaster-Toolkit) | Game-agnostic texture processing, workflow execution, QA, caching, material generation, later curation tools | Proposed GPL-3.0-only for independent original code, subject to dependency audit | `main` @ `c0cfd64`, one commit, README only ("ITEagle Remaster-toolkit"), no license |
+| [Remaster-Toolkit](https://github.com/Handelsonderneming-S-D-Broekhoven/Remaster-Toolkit) | Game-agnostic texture processing, workflow execution, QA, caching, material generation, later curation tools | `GPL-3.0-only` | `main` @ `c0cfd64`, one commit, README only ("ITEagle Remaster-toolkit"), no license |
 
-Licensing for all repositories: pending owner confirmation — proposed GPL-3.0
-(see `docs/research/RD-007-licensing.md`). Nothing in this table is a legal
-conclusion.
+Licensing (owner decision 2026-11-27, [ADR-0006](adr/0006-licensing-boundaries.md)):
+`GPL-3.0-only` for SSTRE, SSTRE-AssetCompiler and Remaster-Toolkit;
+`GPL-2.0-only` preserved for SSTRE-Engine; `CC0-1.0` (factual metadata) plus
+`CC-BY-SA-4.0` (creative recipes and curation) for SSTRE-Manifests. Nothing in
+this document is a legal conclusion.
 
 ## Bootstrap branches
 

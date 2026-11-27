@@ -1,63 +1,57 @@
 # ADR-0006: Licensing boundaries between repositories
 
-- **Status:** proposed, pending owner confirmation and review of the open questions by counsel. This ADR is **not** legal clearance.
-- **Date:** 2026-11-27
-- **Deciders:** project owner; lead architect proposes
-- **Evidence:** [RD-007 licensing](../research/RD-007-licensing.md), [notices policy (draft)](../policies/notices-policy.md), [RD-001](../research/RD-001-engine-baseline.md), [RD-005](../research/RD-005-rendering.md)
+- **Status:** accepted (owner decision, 2026-11-27). This is a licensing *policy*, **not** legal clearance. The open legal questions in [RD-007](../research/RD-007-licensing.md) §16 remain open.
+- **Date:** 2026-11-27 (proposed); 2026-11-27 (accepted by owner)
+- **Deciders:** project owner
+- **Evidence:** [RD-007 licensing](../research/RD-007-licensing.md), [notices policy](../policies/notices-policy.md), [RD-001](../research/RD-001-engine-baseline.md), [RD-005](../research/RD-005-rendering.md)
 
 ## Context
 
-The Phase 0 audit (RD-007) observed the following:
+The Phase 0 audit (RD-007) found the following:
 
-- Every engine candidate ships the unmodified GPLv2 text. The operative grant in the file headers is "version 2 of the GNU General Public License" with no "or any later version". The engine is therefore treated as **GPL-2.0-only**.
-- GPL-2.0-only and GPL-3.0 code cannot be combined into one derivative work. Communication between separate programs through files and command-line interfaces is generally treated as aggregation (FSF GPL FAQ). Whether that holds depends on the actual coupling.
-- The engine repos also contain non-GPL material:
-  - zlib and libogg/libvorbis (permissive),
-  - LightWave SDK headers with no license terms,
-  - a Microsoft `DSOUND.H` "All Rights Reserved" header,
-  - checked-in `Bison.exe`/`Flex.exe`,
-  - `SE1_10.gro` game data with no license stated,
-  - TFE `Entities` sources in the RT/Vk line with no headers and uncertain provenance.
-- RayTracedGL1 is MIT. It compiles in Apache-2.0 KTX code, which the FSF considers incompatible with GPLv2, and it can optionally link NVIDIA DLSS, whose SDK license forbids making it subject to an open-source license.
-- None of the five SSTRE repositories has a license today.
-- The Classic game license forbids distributing the game and preparing derivative works. No HD/Fusion EULA could be retrieved.
+- **Engine license.** Every engine candidate ships the unmodified GPLv2 text. The file headers grant "version 2 of the GNU General Public License" without "or any later version". The engine is therefore treated as **GPL-2.0-only**.
+- **GPL versions.** GPL-2.0-only and GPL-3.0 code cannot be combined in one derivative work. Separate programs that exchange files through CLIs are generally treated as aggregation (FSF GPL FAQ), but that depends on the actual coupling.
+- **Questionable material in the engine repos:**
+  - LightWave SDK headers with no license terms.
+  - A Microsoft `DSOUND.H` marked "All Rights Reserved".
+  - Checked-in `Bison.exe` and `Flex.exe`.
+  - The `SE1_10.gro` game-data archive, with no license stated.
+  - TFE `Entities` sources in the RT/Vk line, with no headers and uncertain provenance.
+- **RayTracedGL1.** It is MIT-licensed, but it compiles in Apache-2.0 KTX code, which the FSF considers incompatible with GPLv2. It can also optionally link NVIDIA DLSS.
+- **Game licence.** The Classic game licence forbids redistribution and derivative works.
 
-## Decision (proposed)
+## Decision
 
-| Repository | Proposed license | Notes |
+| Repository | License (SPDX) | Copyright notice for our own work |
 |---|---|---|
-| SSTRE | `GPL-3.0-only` for code and docs; `schemas/` as `CC0-1.0` (RD-007 recommendation) | permissive schemas let any repository implement the contracts |
-| SSTRE-Engine | **`GPL-2.0-only`, inherited and never relicensed.** Upstream LICENSE and headers are preserved verbatim | new SSTRE files follow upstream terms |
-| SSTRE-AssetCompiler | `GPL-3.0-only` | must not contain code ported or copied from the engine. Anything that needs engine code (for example a `.tex` reader derived from `Texture.cpp`) is a separate GPL-2.0-only helper program, invoked as a process, or a clean-room implementation from a written spec |
-| SSTRE-Manifests | **owner choice:** `GPL-3.0-only` (plan) *or* `CC0-1.0` for schemas/generated locks plus `CC-BY-SA-4.0` for curated recipes (RD-007) | contains only metadata about third-party assets, never asset content |
-| Remaster-Toolkit | `GPL-3.0-only` | game-agnostic; dependencies audited before adoption |
+| SSTRE | `GPL-3.0-only` (whole repository, including `schemas/`) | Handelsonderneming S.D. Broekhoven, trading as ITEagle Europe |
+| SSTRE-Engine | **`GPL-2.0-only`**: preserved from upstream and never relicensed. Our modifications use the same terms | same, added for our changes only; upstream notices untouched |
+| SSTRE-AssetCompiler | `GPL-3.0-only` | same |
+| SSTRE-Manifests | `CC0-1.0` for factual manifest metadata; `CC-BY-SA-4.0` for original creative recipes and curated configuration (distinction documented in the repo's `LICENSE.md` and `REUSE.toml`) | same |
+| Remaster-Toolkit | `GPL-3.0-only` | same |
 
-Boundary rules:
+Further rules:
 
-1. Engine ↔ tools: separate processes only. They exchange compiled asset files and documented CLIs. No shared libraries, no linking, no shared address space.
-2. No proprietary SDK (DLSS, NRD or any console SDK) may be distributed with, or as part of, a GPL build. Builds with DLSS enabled are never distributed by the project (RD-007 Q3).
-3. No game assets, derivatives or model weights are distributed ([ADR-0002](0002-local-user-supplied-assets.md)).
-4. Third-party notices are maintained per repository following the [notices policy](../policies/notices-policy.md). The REUSE/SPDX conventions there are proposed.
-5. Naming and branding: an "unofficial, not affiliated with Croteam or Devolver Digital" disclaimer; no official logos. The project name itself awaits a trademark review (RD-007 Q12).
+1. **Contributions:** the Developer Certificate of Origin (`Signed-off-by:`), no CLA. Contributors keep their copyright.
+2. **Engine ↔ tools boundary:** separate processes only, exchanging compiled asset files through documented CLIs. No shared libraries, no linking, no shared address space. GPLv3 tools must not contain code copied or ported from the engine. Engine-derived format knowledge is used through a separate GPL-2.0-only helper process or a clean-room implementation from a written specification.
+3. **Preserve notices.** All existing third-party copyright notices are kept verbatim.
+4. **No unauthorized material.** The project never publishes material whose redistribution rights are unclear. This covers game assets, derivatives of them, model weights, proprietary SDKs, and the questionable upstream files listed above. Public availability elsewhere does not establish redistribution rights.
+5. **No proprietary SDKs in GPL builds.** DLSS, NRD and console SDKs are never distributed with or as part of a GPL build.
+6. **No engine binaries yet.** Engine binaries are not distributed until the identified licensing blockers (RD-007 Q1, Q3, Q4) are resolved.
+7. **Machine-readable licensing.** It is expressed with the [REUSE](https://reuse.software/) convention (`LICENSES/`, `REUSE.toml`) in the four non-engine repositories.
+8. **Naming and branding.** Use an "unofficial, not affiliated with Croteam or Devolver Digital" disclaimer and no official logos. The project name is pending a trademark review (RD-007 Q12).
 
 ## Alternatives considered
 
-| Alternative | Why not chosen / still open |
+| Alternative | Outcome |
 |---|---|
-| `GPL-3.0-or-later` for the new repositories | allows future GPL versions; the plan proposes `-only`. Tradeoffs are in RD-007 §6.2; **owner decides** |
-| GPL-2.0-only across all repositories | would allow linking with the engine, but drops the GPLv3 baseline the plan chose; open |
-| Permissive licenses (MIT/Apache) for the toolkit | maximizes reuse; contradicts the plan's GPLv3 baseline; open only if the owner wants it |
-| Monorepo with mixed licenses | rejected in [ADR-0001](0001-repository-separation.md) |
+| `GPL-3.0-or-later` | rejected by owner in favour of `-only` |
+| GPL-3.0 for manifests | rejected; data is better served by CC0 / CC-BY-SA |
+| CLA | rejected for the initial community phase; DCO adopted |
+| CC0 for umbrella `schemas/` (RD-007 suggestion) | not adopted; the umbrella is uniformly `GPL-3.0-only`. Schemas may be republished under CC0 in Manifests later if needed |
 
 ## Consequences
 
-- During Phase 0, GPL-3.0 license text is added only on local, unpushed branches of SSTRE, SSTRE-AssetCompiler and Remaster-Toolkit, as a reviewable proposal. The GPLv3 text is the same for `-only` and `-or-later`; the SPDX identifier in the READMEs stays pending. No license is added to SSTRE-Manifests until the owner chooses.
-- The SSTRE-Engine import must keep all upstream license files. Bundled `.gro` data, headerless entity sources and non-GPL files are flagged and handled in normal, reviewable commits, never by rewriting history.
-- Engine-derived format knowledge used by GPLv3 tools needs a documented clean-room or separate-process approach.
-
-## Acceptance criteria
-
-1. The owner confirms an SPDX identifier per repository, including `-only` vs `-or-later` and the license family for Manifests.
-2. The owner confirms the copyright-holder wording.
-3. The owner chooses DCO or CLA.
-4. RD-007 Q1 (Apache-2.0 KTX inside RTGL1), Q3 (DLSS), Q4 (entity provenance) and Q6 (local conversion under the EULA/SSA) have an owner or counsel position before any binary or engine release.
+- **License files.** The license texts are added to the four non-engine repositories. The engine gets none before the upstream import, because the imported upstream `LICENSE` applies.
+- **Publishing upstream branches.** Before the upstream branches are published, the questionable headers, binaries and data archives are audited (Phase 1). Any removal happens in normal, reviewable commits on top of the preserved history, never by rewriting it.
+- **KTX in the runtime.** Removing Apache-2.0 KTX code from the GPLv2 runtime is a Phase 1 investigation. The candidate approach is to do KTX processing only in the GPLv3 AssetCompiler, which emits a runtime format with a GPLv2-compatible loader.

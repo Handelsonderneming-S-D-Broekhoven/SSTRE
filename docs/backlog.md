@@ -57,11 +57,11 @@ Expands the plan's §8 "First POC backlog". Each item lists the open decision(s)
 
 | ID | Decision | Source | Blocks |
 |---|---|---|---|
-| GATE-01 | SPDX identifier per repo (`-only` vs `-or-later`; license family for Manifests); copyright-holder wording; DCO vs CLA | ADR-0006, RD-007 §6 | pushing any LICENSE; first external contribution |
-| GATE-02 | Engine history import option and pushing reference branches | ADR-0005, SSTRE-Engine `docs/sstre/upstream-import-procedure.md` | POC-01/02 in project repo (they can run from the local upstream clones meanwhile) |
+| GATE-01 | ~~SPDX identifier per repo; copyright-holder wording; DCO vs CLA~~ **Decided 2026-11-27** (ADR-0006) | ADR-0006 | — |
+| GATE-02 | Local import of `upstream/classic-vk-main` and `upstream/rt-main` **approved 2026-11-27**. *Publishing* them is still blocked on the audit of questionable headers, binaries and data archives (POC-26) | ADR-0005, ADR-0006 | pushing the upstream branches |
 | GATE-03 | Counsel review of RD-007 Q1 (Apache-2.0 KTX in RTGL1), Q3 (DLSS), Q4 (entity-code provenance), Q6 (local conversion under the EULA/SSA, HD reverse engineering), Q12 (trademark/project name) | RD-007 §16 | any binary release; POC-25 |
-| GATE-04 | Whether to approach the rights holder (Croteam/Devolver) for a license | RD-006, ADR-0007 | all console work |
-| GATE-05 | Whether per-asset virtual paths and hashes of proprietary files may be published in Manifests | RD-002, RD-007 | committing POC-06 output |
+| GATE-04 | Whether to approach the rights holder (Croteam/Devolver) for a license. Consoles stay a research objective (owner, 2026-11-27) | RD-006, ADR-0007 | official console distribution |
+| GATE-05 | Publishing per-asset identifiers, paths and hashes. Owner: local use allowed; publish only after provenance and restrictions are reviewed | ADR-0002, RD-002, RD-007 | committing POC-03/POC-06 output publicly |
 
 ## Priority 2 — integration and decision
 

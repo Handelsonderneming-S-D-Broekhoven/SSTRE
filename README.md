@@ -2,7 +2,7 @@
 
 An **unofficial**, open-source modernization project for *Serious Sam: The First Encounter* (TFE) and *The Second Encounter* (TSE). It aims to keep the original campaigns, gameplay and art direction, and to add ray/path tracing, PBR materials and AI-assisted texture reconstruction built locally from the player's own copy of the game.
 
-> **Status: Phase 0 — bootstrap and research.** Nothing is playable or buildable yet. No engine has been selected, no asset pipeline exists, and no platform is supported. This repository holds documentation, research, proposed architecture decisions and cross-repo contract proposals.
+> **Status: Phase 1 — technical validation (started 2026-11-27).** Nothing is playable from this project yet. The engine direction is provisional, no asset pipeline exists, and no platform is supported. This repository holds documentation, research, proposed architecture decisions and cross-repo contract proposals.
 >
 > SSTRE is not affiliated with, endorsed by or connected to Croteam or Devolver Digital. *Serious Sam* is a trademark of its respective owner. You need your own legally acquired copy of the game. This project never distributes game assets or derivatives of them.
 
@@ -45,9 +45,9 @@ The binding requirements are listed in the [project plan](docs/project-plan.md) 
 | [0002](docs/adr/0002-local-user-supplied-assets.md) | Local, user-supplied game data | accepted (project policy, not legal clearance) |
 | [0003](docs/adr/0003-dev-release-separation-locked-recipes.md) | Dev/release separation, locked recipes | accepted |
 | [0004](docs/adr/0004-exception-driven-curation.md) | Exception-driven curation | accepted |
-| [0005](docs/adr/0005-engine-foundation.md) | Engine foundation (Classic-VK main line + RT backend) | **proposed** |
-| [0006](docs/adr/0006-licensing-boundaries.md) | Licensing boundaries | **proposed** |
-| [0007](docs/adr/0007-platform-strategy.md) | Platform strategy | PC-first accepted; tiers and backends **proposed** |
+| [0005](docs/adr/0005-engine-foundation.md) | Engine foundation (Classic-VK main line + RT backend) | accepted as **provisional** direction; final selection after Phase 1 validation |
+| [0006](docs/adr/0006-licensing-boundaries.md) | Licensing boundaries | accepted (policy, not legal clearance) |
+| [0007](docs/adr/0007-platform-strategy.md) | Platform strategy | PC-first, Windows + Linux, raster baseline with optional RT accepted; consoles research only |
 
 ## Prerequisites
 
@@ -73,9 +73,13 @@ This checks the JSON Schemas against draft 2020-12, relative Markdown links, and
 
 ## Licensing
 
-- `LICENSE` contains the unmodified GNU GPL v3 text as a **proposal** on the unpublished bootstrap branch. Whether the identifier is `GPL-3.0-only` (project plan) or `GPL-3.0-or-later`, and whether `schemas/` should be `CC0-1.0`, awaits owner confirmation ([ADR-0006](docs/adr/0006-licensing-boundaries.md), [RD-007](docs/research/RD-007-licensing.md)).
-- The engine repository keeps its upstream `GPL-2.0-only` license and is never relicensed. Engine and GPLv3 tools communicate only through files and CLIs in separate processes.
-- See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the draft [notices policy](docs/policies/notices-policy.md).
+Copyright © 2026 Handelsonderneming S.D. Broekhoven, trading as ITEagle Europe, and contributors.
+
+- This repository: `GPL-3.0-only` ([`LICENSE`](LICENSE), machine-readable in [`REUSE.toml`](REUSE.toml)).
+- SSTRE-AssetCompiler and Remaster-Toolkit: `GPL-3.0-only`. SSTRE-Manifests: `CC0-1.0` for factual metadata and `CC-BY-SA-4.0` for creative recipes and curated configuration.
+- SSTRE-Engine keeps its upstream `GPL-2.0-only` license and is never relicensed. The engine and the GPLv3 tools communicate only through files and CLIs, in separate processes ([ADR-0006](docs/adr/0006-licensing-boundaries.md)).
+- No engine binaries are distributed until the identified licensing blockers are resolved ([RD-007](docs/research/RD-007-licensing.md)).
+- Contributions use the Developer Certificate of Origin (`git commit -s`). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the [notices policy](docs/policies/notices-policy.md).
 
 ## Contributing
 

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Proposed** (draft, Phase 0). Requires owner approval together with ADR-0006. Not legal advice. |
+| Status | **Accepted in part** (2026-11-27): the license baseline in §2 follows accepted ADR-0006. The tooling and CI rules remain **proposed**. Not legal advice. |
 | Date | 2026-11-27 |
 | Applies to | SSTRE, SSTRE-Engine, SSTRE-AssetCompiler, SSTRE-Manifests, Remaster-Toolkit |
 | Evidence | [RD-007 licensing](../research/RD-007-licensing.md) |
@@ -14,17 +14,17 @@
 3. Each binary or source release ships the notices it needs: license texts, attributions and a GPL corresponding-source offer where applicable.
 4. Compliance is checked automatically in CI, using tooling that does not require game data.
 
-## 2. Per-repository license baseline (pending owner confirmation)
+## 2. Per-repository license baseline (owner decision, 2026-11-27; see ADR-0006)
 
 | Repo | Default for SSTRE-authored files | Exceptions |
 |---|---|---|
-| SSTRE | `GPL-3.0-only` | `schemas/**`: `CC0-1.0`. Docs may use `CC-BY-SA-4.0` if the owner chooses |
-| SSTRE-Engine | **upstream license preserved**: `GPL-2.0-only`. New SSTRE files `GPL-2.0-only` (or `GPL-2.0-or-later` if the owner approves) | upstream third-party files keep their own IDs (`Zlib`, `BSD-3-Clause`, `MIT`, `Apache-2.0`, `LicenseRef-*`) |
-| SSTRE-AssetCompiler | `GPL-3.0-only` | synthetic test fixtures: `CC0-1.0` |
-| SSTRE-Manifests | `CC-BY-SA-4.0` for curated recipes/mappings. `CC0-1.0` for schemas and generated lock files | scripts (if any): `GPL-3.0-only` |
-| Remaster-Toolkit | `GPL-3.0-only` | fixtures: `CC0-1.0` |
+| SSTRE | `GPL-3.0-only` (including `schemas/` and docs) | none |
+| SSTRE-Engine | **upstream license preserved**: `GPL-2.0-only`. SSTRE modifications use `GPL-2.0-only` | upstream third-party files keep their own IDs (`Zlib`, `BSD-3-Clause`, `MIT`, `Apache-2.0`, `LicenseRef-*`) |
+| SSTRE-AssetCompiler | `GPL-3.0-only` | none yet. A `CC0-1.0` exception for synthetic fixtures needs owner approval |
+| SSTRE-Manifests | `CC-BY-SA-4.0` for original creative recipes, material profiles, curated overrides and docs | `CC0-1.0` for factual metadata: `schemas/`, `mappings/`, `generated/`, `games/*/editions/` |
+| Remaster-Toolkit | `GPL-3.0-only` | none yet (fixture exception as above) |
 
-`-only` vs `-or-later` is an open owner decision (RD-007 §6.2). Replace the IDs above consistently once it is decided.
+Copyright notice for the project's own contributions: `Handelsonderneming S.D. Broekhoven, trading as ITEagle Europe`. Contributors sign off under the DCO and keep their copyright.
 
 ## 3. File-level rules
 

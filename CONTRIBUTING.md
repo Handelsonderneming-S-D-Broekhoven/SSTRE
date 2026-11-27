@@ -47,9 +47,12 @@ instead of duplicating it; they may add repository-specific notes in their own
 
 ## Licensing
 
-License: pending owner confirmation — proposed GPL-3.0 (see SSTRE
-`docs/research/RD-007-licensing.md`). Until a license is in place, contributions
-are accepted only from the owner and invited collaborators.
+- SSTRE, SSTRE-AssetCompiler, Remaster-Toolkit: `GPL-3.0-only`. Copyright notices for our own work: `Handelsonderneming S.D. Broekhoven, trading as ITEagle Europe`.
+- SSTRE-Engine: `GPL-2.0-only`, inherited from upstream; never relicensed.
+- SSTRE-Manifests: `CC0-1.0` for factual metadata, `CC-BY-SA-4.0` for creative recipes and curated configuration.
+- Preserve every existing third-party copyright notice. Never commit material whose redistribution rights are unclear.
+- Details: [ADR-0006](docs/adr/0006-licensing-boundaries.md), [notices policy](docs/policies/notices-policy.md).
+
 
 ## Commits
 
@@ -57,11 +60,7 @@ are accepted only from the owner and invited collaborators.
   `docs(adr): add ADR-005 engine foundation`, `ci: pin setup-python by SHA`.
   Types: `feat`, `fix`, `docs`, `ci`, `build`, `test`, `refactor`, `chore`.
   Mark breaking contract changes with `!` and a `BREAKING CHANGE:` footer.
-- **Sign-off: DCO vs. CLA — Owner decision pending.** Recommendation: the
-  [Developer Certificate of Origin](https://developercertificate.org/) with
-  `git commit -s` (`Signed-off-by:` trailer). A DCO fits a GPL project without
-  copyright assignment; a CLA would only be needed if the owner wants the
-  ability to relicense contributions later. Until decided, please sign off.
+- **Sign-off: Developer Certificate of Origin (DCO)** — adopted by the owner on 2026-11-27; no CLA. Every commit must carry a `Signed-off-by: Name <email>` trailer (`git commit -s`), certifying the [DCO 1.1](https://developercertificate.org/). Contributors keep their copyright; contributions are accepted under the license of the repository (or, in SSTRE-Manifests, of the directory) they are made to.
 - Keep commits focused; do not mix formatting churn with functional changes.
 
 ## Branches and pull requests

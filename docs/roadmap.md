@@ -1,11 +1,11 @@
 # Roadmap
 
-**Current phase: 0, bootstrap and research.** No calendar or budget is approved. Effort is estimated only after the first proof-of-concept sprint (see [backlog](backlog.md)).
+**Current phase: 1, technical validation** (Phase 0 reviewed by the owner on 2026-11-27). No calendar or budget is approved. Effort is estimated only after the first proof-of-concept sprint (see [backlog](backlog.md)).
 
 | Phase | Objective | Exit gate | Status |
 |---|---|---|---|
-| 0 | Bootstrap and evidence-based research | Five repository roles documented; license boundaries reviewed; dossiers, ADRs and POC backlog available | in review |
-| 1 | Engine baseline | Selected engine builds and launches TFE on the reference PC; gameplay and performance baseline captured; TSE support assessed | not started |
+| 0 | Bootstrap and evidence-based research | Five repository roles documented; license boundaries reviewed; dossiers, ADRs and POC backlog available | done (owner-reviewed 2026-11-27) |
+| 1 | Engine baseline | Selected engine builds and launches TFE on the reference PC; gameplay and performance baseline captured; TSE support assessed | in progress |
 | 2 | Asset extraction and mapping | Representative Classic and HD assets extracted locally, mapped, and either round-tripped or with fallback documented | not started |
 | 3 | AI toolkit prototype | 50 representative textures processed; deterministic reruns measured; QA, provenance and caching demonstrated | not started |
 | 4 | First full texture build | Required assets covered with explicit fallback; high-priority and problem textures reviewed; full build does not stall on individual failures | not started |

@@ -1,8 +1,8 @@
 # ADR-0005: Engine foundation
 
-- **Status:** proposed. Not accepted until the Phase 1 build and spike criteria are measured and the owner approves.
-- **Date:** 2026-11-27
-- **Deciders:** project owner; lead architect proposes
+- **Status:** accepted as the **provisional implementation direction** (owner, 2026-11-27). The final engine selection still depends on successful compilation, source-level analysis and the rendering feasibility spike (acceptance criteria below). Until they are met, this ADR may be revised.
+- **Date:** 2026-11-27 (proposed and provisionally accepted)
+- **Deciders:** project owner
 - **Evidence:** [RD-001 engine baseline](../research/RD-001-engine-baseline.md), [RD-005 rendering](../research/RD-005-rendering.md), [RD-006 platforms](../research/RD-006-platforms.md), [RD-007 licensing](../research/RD-007-licensing.md)
 
 ## Context
@@ -21,12 +21,13 @@ The plan names sultim-t/Serious-Engine-RT as the preferred engine candidate and 
 
 RTGL1 itself has no raster fallback for world geometry (RD-005). [ADR-0007](0007-platform-strategy.md) proposes keeping a non-RT path on every tier.
 
-## Decision (proposed)
+## Decision (provisional)
 
-**Use SeriousSamClassic-VK as the main engine line, and port the RT integration from Serious-Engine-RT as an optional rendering backend** ("Classic-VK-first, RT optional").
+**Use SeriousSamClassic-VK as the primary engine baseline. Use Serious-Engine-RT as a secondary upstream and as the source of rendering functionality, ported as an optional rendering backend** ("Classic-VK-first, RT optional"). Support for both TFE and TSE is preserved.
 
 - Import Serious-Engine-RT **unmodified** into SSTRE-Engine as a reference branch. It is the source for the RT port and for the PBR-override mechanism.
-- Import Classic-VK's history as the candidate main line.
+- Import Classic-VK's history as the primary main line.
+- Both upstream histories are imported locally as `upstream/classic-vk-main` and `upstream/rt-main`, with commit history and attribution preserved. **Before these branches are published**, the questionable headers, binary files and game-data archives are audited ([ADR-0006](0006-licensing-boundaries.md)). Public availability upstream is not taken as proof of redistribution rights.
 - Both imports are non-destructive and use namespaced branches. See [the import procedure](https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-Engine/blob/phase0/bootstrap/docs/sstre/upstream-import-procedure.md); the branch is local and not yet pushed.
 
 ## Alternatives considered
@@ -50,4 +51,4 @@ RTGL1 itself has no raster fallback for world geometry (RD-005). [ADR-0007](0007
 2. Classic-VK launches TFE and TSE with user-owned Classic data. The RT fork launches TFE.
 3. RD-001 criteria S1–S8 and RD-005 spike S1 are measured and reported, including a sized estimate for porting the RT backend.
 4. RD-007 confirms no license blocker in either base (for example, the unlicensed `Entities/*.es` files in the RT fork and the bundled `.gro` data).
-5. The owner approves the decision and the history-import option.
+5. ~~The owner approves the decision and the history-import option.~~ Done for the provisional direction and the local import (2026-11-27). Publishing the upstream branches still requires the audit in item 4.

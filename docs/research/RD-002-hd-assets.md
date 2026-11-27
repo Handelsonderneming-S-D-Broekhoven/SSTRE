@@ -52,52 +52,13 @@ The version strings come from the `$Version:` field inside the `CTSEMETA` header
 
 ### 3.2 Top-level archive and executable SHA-256 (local, 2026-11-27)
 
-Shader caches, redistributables and the third-party `Mods/` content are omitted from this table.
+SHA-256 hashes and byte sizes were recorded for 40 top-level archives and executables across the five installs. Shader caches, redistributables and third-party `Mods/` content were excluded.
 
-| Edition | Path (relative to install) | Size (bytes) | SHA-256 |
-|---|---|---|---|
-| classic_tfe | `1_00c.gro` | 201152043 | `a7b6b62f80b1719ee7fbed0eba7db142c2a0ea36d77ce4ab77f69a99abb89422` |
-| classic_tfe | `1_00c_Logo.gro` | 17995 | `feaffb582ce9ad48e3c9c9bb25596ac394304ce82bfc7d2498ba342b495c3b2d` |
-| classic_tfe | `1_00c_scripts.gro` | 10859 | `5ae16b0a3e153a0fac632421804e247ff15d11d163ce4c55cdd0f37c2b2fe6de` |
-| classic_tfe | `1_00_ExtraTools.gro` | 1199329 | `53a5ac4aef529409688d07c9a3a5a1d61152008089628d375e3e45b73d9c4d8c` |
-| classic_tfe | `1_00_music.gro` | 71825740 | `7e1f37434175f53dc39361eb81ba26c2ecc9e495c76ed86a4685acdcb4b4116c` |
-| classic_tfe | `1_04_patch.gro` | 23553 | `dcc071443c4b9b09a85f973d410b918e53b71f61a3e2e2320a9b1b9405c570aa` |
-| classic_tfe | `Bin/SeriousSam.exe` | 557056 | `6364caf61ce5cc3b5578016478c09a762e00ce066fad2eddcdd92cca96626c6b` |
-| classic_tse | `1_04_patch.gro` | 23553 | `dcc071443c4b9b09a85f973d410b918e53b71f61a3e2e2320a9b1b9405c570aa` |
-| classic_tse | `1_07_tools.gro` | 8749 | `10cb425d46476e770ed890a975857880973837fd49d6741dc9da6419029c1c06` |
-| classic_tse | `SE1_00.gro` | 271463074 | `066fc63647381dafd338965b6411806633249801cdae8e81385baf4f7fd3affc` |
-| classic_tse | `SE1_00_Extra.gro` | 13411480 | `330d39360bf1e8c583810f41c283181c01ac3914c6c7cb29a9e5b16f81d6f5b1` |
-| classic_tse | `SE1_00_ExtraTools.gro` | 1906215 | `a2b737a2217031444244e6ea84248f1ab0fc0f6818e5da97235e7ca638e1731a` |
-| classic_tse | `SE1_00_Levels.gro` | 19218322 | `56039cbaaf9b7d4a5f6cc5afdf46df778eb4b49c1fe20ec0eec79c9126d533f9` |
-| classic_tse | `SE1_00_Logo.gro` | 17995 | `feaffb582ce9ad48e3c9c9bb25596ac394304ce82bfc7d2498ba342b495c3b2d` |
-| classic_tse | `SE1_00_Music.gro` | 55129210 | `b25d57684badd584c87a6952ba74591ff82ef2b7edc6262b8dba15a3c4f564b1` |
-| classic_tse | `Bin/SeriousSam.exe` | 790528 | `9f8f9a0b8fd718616036ed2c3584904e2dfd58e49515bf4c8ecc45175d02cc53` |
-| hd_tfe | `Bin/SamHD.exe` | 11919728 | `c6b7829454ca22bffc4beaf2ff517c03a00d08bed4d826336ec026a2e8b6c7c8` |
-| hd_tfe | `Content/SeriousSamHD/All.gro` | 967224552 | `742004de6974a89c7e312eefccfe2f7578ce88fdcc03fe91590a755fe48b1017` |
-| hd_tfe | `Content/SeriousSamHD/All_117121.gro` | 101993179 | `b4ac178e5f182f7002400b087739256ce9cbe63900fff3d860b1146adf53e214` |
-| hd_tfe | `Content/SeriousSamHD/All_582898.gro` | 85355602 | `4e7e89731b5e2e9c25383c6801f42c60055db1cbf831ce2d53c998cde26c3ba4` |
-| hd_tfe | `Content/SeriousSamHD/SignatureCatalog.dat` | 362026 | `198569792c7bf312c16aac95c4ad62f62d9d2cd5f3f20902380e10a70cb1d231` |
-| hd_tse | `Bin/SamHD_TSE.exe` | 10285424 | `bd29b9f305f19f21d665a17ac4017f0364769618e7d28595fd3a42b1e8a7b58a` |
-| hd_tse | `Content/SeriousSamHD_TSE/All.gro` | 1906693196 | `72aad0c65a22c3e0315e4918e6ed06d19afbf6bfbf2f75ccf0603d44f13046ec` |
-| hd_tse | `Content/SeriousSamHD_TSE/All_121332.gro` | 213545697 | `f0acc6020a39c7356198b163e922ba2ea42542dbabc2d62892265413964da27a` |
-| hd_tse | `Content/SeriousSamHD_TSE/All_126138.gro` | 53472230 | `43422a3cb74f41928c84c6f54607cfc55dd048398aab05d8559e7593e2a119be` |
-| hd_tse | `Content/SeriousSamHD_TSE/All_582858.gro` | 94990471 | `2dba71050161d976d502af65aca91065a5ccdea7da8efbdfb86ea4c0416b13fb` |
-| hd_tse | `Content/SeriousSamHD_TSE/DLC_TheFirstEncounter.gro` | 933751907 | `61858452c314aca286aa89748e625cd69500f8e616017ab1719e300903870446` |
-| hd_tse | `Content/SeriousSamHD_TSE/DLC_TheFirstEncounter_582858.gro` | 10666879 | `23d79a83aa6e1ca5fe539b5c06f054ecb0e7b8e79bef2032dab954f1f7667c8a` |
-| hd_tse | `Content/SeriousSamHD_TSE/DLC_LegendOfTheBeast.gro` | 712446390 | `153f8b24c0b5c010f7f54a28b7fbdb7defab5656b6693329de9b92adbbe92926` |
-| hd_tse | `Content/SeriousSamHD_TSE/DLC_LegendOfTheBeast_582858.gro` | 59571351 | `98dc0df1cbfd63666a9e0e167d0f53a847a5a86a33161e811c00df5bf69a7fb7` |
-| hd_tse | `Content/SeriousSamHD_TSE/DLC_PlayerModelsA.gro` | 3101 | `cd1ff499f1078a69998b6b109893a4b117ff04e3aaa19bbe07b259656e806a9c` |
-| hd_tse | `Content/SeriousSamHD_TSE/SignatureCatalog.dat` | 703703 | `8f932ca2ac9db326ff5de268d925ea1416a34a2819b3e23ca3310323c80a500e` |
-| fusion | `Bin/x64/Sam2017.exe` | 33054576 | `8ed914fcd1588b4eda08c64f296b17bd13d4ef332de4ed0379cd8f335b09fec8` |
-| fusion | `Content/SeriousSam2017/00_All.gro` | 525316745 | `6002206db65043612f7957294cce3b2aa41c163c7276b0ceaa735549b38176d3` |
-| fusion | `Content/SeriousSam2017/10_Game_SeriousSamHD_TFE.gro` | 1409941261 | `8687fc4de66104253a30e26fe5dacdaa24807f60353e1c0b1c0b3712a5040b32` |
-| fusion | `Content/SeriousSam2017/10_Game_SeriousSamHD_TSE.gro` | 2377066914 | `7488b4cc5876e4511a6669dc7a4bd86238d134122fd4a9dc49160d89cf46baf5` |
-| fusion | `Content/SeriousSam2017/30_DLC_LegendOfTheBeast.gro` | 348855663 | `443146f756ade0042e7f5638c3dc2137c7c32dc8440563cfd9af8bdf52dd62ad` |
-| fusion | `Content/SeriousSam2017/50_440323_10_Game_SeriousSamHD_TFE.gro` | 31730967 | `20825e1cef31f9f9d96405f0a5197967af424ee2e0fa67b3aaf67142f02427b1` |
-| fusion | `Content/SeriousSam2017/50_440323_10_Game_SeriousSamHD_TSE.gro` | 25178257 | `9af6b211ee8d2373bf5566d83ef5ba93df978c702a4ec9bf7bc1fc8cdc962eab` |
-| fusion | `Content/SeriousSam2017/50_440323_30_DLC_LegendOfTheBeast.gro` | 6160747 | `3a4a880e8f11a6a56b15fa6835f2c0d5008a6b16253084652dc660a30866a8fb` |
+**Publication status:** per owner decision (2026-11-27), the per-file hash table is kept **locally only**, in the workspace file `local-work/agent-b/RD-002-hd-assets.FULL.local.md`, until its provenance and the applicable restrictions have been reviewed (backlog GATE-05). The public dossier keeps only the method and the aggregate facts:
 
-The Fusion SS3 and Jewel of the Nile packs were also hashed, and the full list is kept locally (`local-work/agent-b/hashes.json`). They are not relevant to TFE/TSE.
+- Every edition is identified by its set of top-level `.gro` archives and its main executable.
+- Two archives are byte-identical between Classic TFE and Classic TSE (the `1_04` patch and logo archives).
+- HD TFE, HD TSE and Fusion each ship a `SignatureCatalog.dat` alongside their content archives.
 
 **Known vs needs confirmation:**
 - These hashes describe **one** machine on 2026-11-27.
@@ -270,23 +231,23 @@ Generated inventories enumerate proprietary file names. They belong in the user'
 - Use TFE first (plan §3), plus a few TSE-only items.
 - Deliberately include each mapping outcome: exact match, ambiguous, unmatched and UV-incompatible.
 - Include each Classic technical feature: v3 vs v4, FXDT, multi-frame, alpha, non-square, and 1024 px vs ≤32 px.
-- Names below are archive-relative Classic virtual paths only. **All entries are candidates pending owner review.**
+- The concrete candidate asset paths for each row are kept **locally only** (same local file as §3.2) until GATE-05 clears publication. The selection is a candidate set pending owner review.
 
-| # | Category | Count | Selection criteria | Candidate examples (Classic virtual path) |
-|---|---|---|---|---|
-| 1 | Architecture | 8 | `Textures/Levels/*`; at least 4 with exact HD path match, 1 ambiguous, 1 unmatched, at least 2 non-square, at least 1 v3 | `Textures/Levels/AmonComplex/BoxCollumn03.tex` (exact), `…/AmonComplex/Doors01.tex` (exact), `…/AmonComplex/BoxCollumn01.tex` (ambiguous: 2 HD basename candidates), `…/ChambersOfHorus/Wall04Brick.tex` (unmatched), `…/Dunes/Floor01.tex` (exact); 3 more by script |
-| 2 | Terrain | 5 | Ground, sand and grass used on large tiling surfaces or terrain; measure seam and tiling | `Textures/General/Grass/Grass06.tex` (exact), `…/Grass09.tex` (exact), `Textures/Levels/DreamWaterfalls/Grass.tex` (unmatched); 2 by script |
-| 3 | Vegetation | 4 | Alpha-cutout foliage on models | `Models/Plants/Palm10/Palm.tex`, `Models/Plants/Ivy01/Ivy01.tex`, `Models/Plants/Garden02/Garden06.tex`, `Models/Plants/OldTree02/Tree.tex` (all without HD path match) |
-| 4 | Enemies | 5 | Mix of small and large skins; expected UV-incompatible with HD | `Models/Enemies/Beast/Beast.tex`, `Models/Enemies/Boneman/Boneman.tex`; 3 by script, including 1 TSE `ModelsMP/Enemies/*` |
-| 5 | Weapons | 4 | First-person weapon skins (high screen coverage) | `Models/Weapons/Colt/ColtMain.tex`, `Models/Weapons/Cannon/Body.tex`; 2 by script |
-| 6 | UI / HUD / fonts | 5 | Text and glyph integrity; never diffused | `Textures/Interface/Crosshairs/Crosshair1.tex` (exact), `Textures/Interface/AmBullets.tex` (unmatched), `Fonts/Console1.tex`, `Fonts/Display3-normal.tex`, `Textures/Computer/Messages/Hatshepsut/HatshepsutStart.tex` (exact; contains text) |
-| 7 | Alpha / cutout | 4 | Level textures with the alpha flag; test 1-bit vs blend detection | `Textures/Levels/GreatPyramid/LiftRoad.tex`, `…/YellowTerrain/Spikes01.tex`, `…/Oasis/WallStamp01.tex`, `…/AmonComplex/EyeOfRa.tex` |
-| 8 | Animated textures | 3 | Multi-frame `FRMS` (frames > 1) | `Textures/Effects/UnderWater/UnderWater04/Texture.tex` (30 frames), `Models/Effects/ExplosionGrenade/Texture.tex` (23), `Models/CutSequences/Counter/Counter.tex` (8) |
-| 9 | Normal / bump / detail | 3 | SE1 detail layers and bump textures; output is data, not color | `Textures/Detail/Rock02_dtl.tex`, `Textures/Detail/Sand02_dtl.tex`, `Models/Items/Health/Pill/PillBump.tex` |
-| 10 | Technical masks | 3 | Heat maps, shadow masks, reflection/specular maps (color space = data) | `Models/Effects/Heatmaps/Waterfall01.tex`, `Textures/Effects/Shadow/SimpleModelShadow.tex`, `Models/SpecularTextures/Strong.tex` |
-| 11 | Skies / backgrounds | 3 | Background or sky frames; HD reorganized them, so test perceptual matching and check pHash false positives | `Textures/Background/Night01/Stars02.tex` (exact), `Textures/Background/Storm01/Sky02.tex`, `Textures/Background/Custom06/Frame0001.tex` (basename false-positive trap) |
-| 12 | Effects | 3 | 1 procedural FXDT (must be excluded from bitmap upscaling), 1 flare, 1 particle | `Models/Effects/Fire03/Fire.tex` (FXDT), `Textures/Effects/Flares/01/BlueDisc.tex` (exact), `Textures/Effects/Particles/WaterfallFoam.tex` (basename → HD `effects/water`) |
-| | **Total** | **50** | | |
+| # | Category | Count | Selection criteria |
+|---|---|---|---|
+| 1 | Architecture | 8 | `Textures/Levels/*`; at least 4 with exact HD path match, 1 ambiguous, 1 unmatched, at least 2 non-square, at least 1 v3 |
+| 2 | Terrain | 5 | Ground, sand and grass used on large tiling surfaces or terrain; measure seam and tiling |
+| 3 | Vegetation | 4 | Alpha-cutout foliage on models |
+| 4 | Enemies | 5 | Mix of small and large skins; expected UV-incompatible with HD |
+| 5 | Weapons | 4 | First-person weapon skins (high screen coverage) |
+| 6 | UI / HUD / fonts | 5 | Text and glyph integrity; never diffused |
+| 7 | Alpha / cutout | 4 | Level textures with the alpha flag; test 1-bit vs blend detection |
+| 8 | Animated textures | 3 | Multi-frame `FRMS` (frames > 1) |
+| 9 | Normal / bump / detail | 3 | SE1 detail layers and bump textures; output is data, not color |
+| 10 | Technical masks | 3 | Heat maps, shadow masks, reflection/specular maps (color space = data) |
+| 11 | Skies / backgrounds | 3 | Background or sky frames; HD reorganized them, so test perceptual matching and check pHash false positives |
+| 12 | Effects | 3 | 1 procedural FXDT (must be excluded from bitmap upscaling), 1 flare, 1 particle |
+| | **Total** | **50** | |
 
 SE1 has no true cubemaps. Reflection maps (`Models/ReflectionTextures/*`) stand in for that category, and one of them should replace a mask item if the owner prefers.
 

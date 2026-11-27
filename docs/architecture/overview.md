@@ -10,12 +10,12 @@ The binding requirements below come from the [project plan](../project-plan.md) 
 - Development and asset generation are PC-first. Any future console runtime consumes pre-built, platform-specific assets and does no AI inference.
 - Original gameplay, levels, enemy behavior and recognizable art direction are preserved by default.
 - Existing open-source engine and renderer work is reused.
-- HD remaster textures and materials are the preferred source where compatible and legally appropriate. Classic assets are the fallback.
+- HD remaster textures and materials are the preferred source where compatible and legally appropriate. Classic assets are the fallback. The pipeline **must support partial HD coverage**: per asset, it chooses an HD source or falls back to Classic. HD sources are not ruled out on exact path-match rates alone. Matching also uses normalized filenames, perceptual hashes, image embeddings, semantic similarity and model/material dependency mapping (owner direction, 2026-11-27).
 - The reusable toolkit is kept separate from game-specific adapters, manifests and the engine ([ADR-0001](../adr/0001-repository-separation.md)).
 - Release builds need no live LLM or AI API ([ADR-0003](../adr/0003-dev-release-separation-locked-recipes.md)).
 - Bulk processing is automated, and curation is driven by exceptions ([ADR-0004](../adr/0004-exception-driven-curation.md)).
 - Asset builds are reproducible and versioned, with locked dependencies and incremental caching.
-- Ray/path tracing is a target. A non-RT path is kept or investigated for portability.
+- Conventional rasterization is the mandatory rendering baseline. Ray and path tracing are optional backends ([ADR-0007](../adr/0007-platform-strategy.md)).
 - Proprietary game data never enters source control or CI ([ADR-0002](../adr/0002-local-user-supplied-assets.md)).
 
 ## Data flow
@@ -63,13 +63,13 @@ These are tracked in the plan §3 "Open decisions" list. Each is assigned to a d
 
 | # | Decision | Dossier | ADR |
 |---|---|---|---|
-| 1 | Engine base (RT-first vs Classic-VK-first) | [RD-001](../research/RD-001-engine-baseline.md) | [ADR-0005](../adr/0005-engine-foundation.md) (proposed) |
+| 1 | Engine base (RT-first vs Classic-VK-first) | [RD-001](../research/RD-001-engine-baseline.md) | [ADR-0005](../adr/0005-engine-foundation.md) (provisionally accepted: Classic-VK-first) |
 | 2 | Supported editions and HD mapping feasibility | [RD-002](../research/RD-002-hd-assets.md) | — |
 | 3 | AI models and workflows | [RD-003](../research/RD-003-ai-pipeline.md) | — |
 | 4 | Determinism limits and tolerances | [RD-004](../research/RD-004-reproducibility.md) | — |
 | 5 | PBR, animation, cubemap and metadata representation | [RD-005](../research/RD-005-rendering.md) | — |
-| 6 | Backends, shader toolchain, compression and packaging per platform | [RD-005](../research/RD-005-rendering.md), [RD-006](../research/RD-006-platforms.md) | [ADR-0007](../adr/0007-platform-strategy.md) (partly proposed) |
+| 6 | Backends, shader toolchain, compression and packaging per platform | [RD-005](../research/RD-005-rendering.md), [RD-006](../research/RD-006-platforms.md) | [ADR-0007](../adr/0007-platform-strategy.md) (raster baseline accepted; formats proposed) |
 | 7 | Console legal and technical constraints | [RD-006](../research/RD-006-platforms.md), [RD-007](../research/RD-007-licensing.md) | [ADR-0007](../adr/0007-platform-strategy.md) |
 | 8 | GUI, CLI framework, database, containers, CI matrix, release format | [RD-008](../research/RD-008-testing-release.md) | — (minimal scaffolding until evidence exists) |
 
-Licensing boundaries are covered by [ADR-0006](../adr/0006-licensing-boundaries.md) (proposed) and [RD-007](../research/RD-007-licensing.md).
+Licensing boundaries are covered by [ADR-0006](../adr/0006-licensing-boundaries.md) (accepted) and [RD-007](../research/RD-007-licensing.md).

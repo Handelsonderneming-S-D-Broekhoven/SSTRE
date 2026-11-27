@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Handelsonderneming S.D. Broekhoven, trading as ITEagle Europe
+# SPDX-License-Identifier: GPL-3.0-only
 """Repository consistency checks for SSTRE Phase 0.
 
 Runs locally and in CI. Requires Python 3.10+ and, for schema checks,
