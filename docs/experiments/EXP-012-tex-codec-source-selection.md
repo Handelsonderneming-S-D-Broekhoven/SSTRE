@@ -1,5 +1,7 @@
 # EXP-012: Classic `.tex` codec, AI extraction set, raster import path and HD source selection
 
+> **Correction (2026-11-28, from [EXP-016](EXP-016-tex4096-crash.md)):** the raster import-path results show that high-density replacements *load* and tile correctly. They do **not** show that they are uploaded at full resolution: the shipped `tex_iNormalSize=9` caps uploads to a 512² area, and OpenGL uploads world textures as 16-bit unless `TEX_32BIT` is set. The '4096² crash' is a row-width buffer overflow in `FilterBitmap()` (width > 2048), fixed in EXP-016.
+
 | Field | Value |
 |---|---|
 | Date | 2026-11-27 |
