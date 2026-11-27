@@ -27,7 +27,7 @@ RTGL1 itself has no raster fallback for world geometry (RD-005). [ADR-0007](0007
 
 - Import Serious-Engine-RT **unmodified** into SSTRE-Engine as a reference branch. It is the source for the RT port and for the PBR-override mechanism.
 - Import Classic-VK's history as the primary main line.
-- Both upstream histories are imported locally as `upstream/classic-vk-main` and `upstream/rt-main`, with commit history and attribution preserved. **Before these branches are published**, the questionable headers, binary files and game-data archives are audited ([ADR-0006](0006-licensing-boundaries.md)). Public availability upstream is not taken as proof of redistribution rights.
+- Both upstream histories are imported locally as `upstream/classic-vk-main` and `upstream/rt-main`, with commit history and attribution preserved. **They are not published:** per [ADR-0008](0008-engine-patch-distribution.md), SSTRE-Engine distributes only its own patches against the pinned upstream commits. Before any change to that decision, the questionable headers, binary files and game-data archives are audited ([ADR-0006](0006-licensing-boundaries.md)). Public availability upstream is not taken as proof of redistribution rights.
 - Both imports are non-destructive and use namespaced branches. See [the import procedure](https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE-Engine/blob/phase0/bootstrap/docs/sstre/upstream-import-procedure.md); the branch is local and not yet pushed.
 
 ## Alternatives considered

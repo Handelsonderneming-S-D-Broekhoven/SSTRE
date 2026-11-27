@@ -193,6 +193,10 @@ Attribution impact of option 3 [ASM, based on `git filter-repo` documented defau
 - The pre-push hook stays as it is.
 - Backlog suggestion: add an item for "publication route for engine upstream (option 4/5/3)". GATE-05 is unaffected.
 
+## Owner decision (2026-11-27)
+
+The owner chose **option 5**: publish only SSTRE's own patches against pinned upstream commits. This is the provisional official distribution strategy for SSTRE-Engine, recorded in [ADR-0008](../adr/0008-engine-patch-distribution.md). The upstream branches stay local behind the pre-push hook. Binary distribution remains blocked (ADR-0006 rule 6).
+
 ## Open questions
 
 1. Owner: choose between option 4 (status quo), option 5 (patch-only publication against upstream) and option 3 (filtered import branch, which needs an ADR-0006 clarification).

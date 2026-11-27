@@ -52,13 +52,14 @@ Expands the plan's §8 "First POC backlog". Each item lists the open decision(s)
 | POC-23 | Platform spike S2: Classic-VK Vulkan raster on Windows + Linux (+ Steam Deck if available) | SSTRE-Engine | POC-02 | Report against RD-006 criteria S2.1–S2.6 | Every S2 criterion recorded; Linux result included | 2–5 | 6, 7 |
 | POC-24 | RT-backend port sizing: RD-001 criteria S1–S8, TSE + SKA/terrain coverage gap | SSTRE-Engine + SSTRE | POC-22, POC-23 | Sized estimate + risk list feeding ADR-0005 | Estimate with an explicit range and assumptions; ADR-0005 can move to accepted or be revised | 2–4 | 1 |
 | POC-25 | HD `CTSEMETA` texture header experiment (RD-002 E-B1), local only | SSTRE-AssetCompiler | POC-03; owner go-ahead after RD-007 Q6 position (reverse engineering HD formats) | Aggregate report: decoded dimensions/pixel formats for HD textures matched in RD-002 | ≥ 90% of path-matched HD textures decode to known dimensions/format, or blocker documented | 3–8 | 2 |
+| POC-27 | Patch-series tooling for ADR-0008: fetch the pinned upstreams, verify SHAs, `git am` the series, enforce the patch content rules (no binaries or game data; flag patches touching EXP-004 items); export the local build branches as `patches/<upstream>/` | SSTRE-Engine (+ umbrella validator) | ADR-0008, EXP-001/002 build commits | Script + CI job + first exported series | Clean checkout → fetch → apply reproduces the local build branch tree byte-for-byte (tree hash equal); a planted binary or game-data patch fails CI | 2–4 | 1, 8 |
 
 ## Owner and legal gates (not engineering effort)
 
 | ID | Decision | Source | Blocks |
 |---|---|---|---|
 | GATE-01 | ~~SPDX identifier per repo; copyright-holder wording; DCO vs CLA~~ **Decided 2026-11-27** (ADR-0006) | ADR-0006 | — |
-| GATE-02 | Local import of `upstream/classic-vk-main` and `upstream/rt-main` **approved 2026-11-27**. *Publishing* them is still blocked on the audit of questionable headers, binaries and data archives (POC-26) | ADR-0005, ADR-0006 | pushing the upstream branches |
+| GATE-02 | **Decided 2026-11-27:** upstream histories stay local; SSTRE-Engine publishes only own patches against pinned upstream commits (ADR-0008, provisional). Audit done (EXP-004) | ADR-0005, ADR-0006, ADR-0008 | — |
 | GATE-03 | Counsel review of RD-007 Q1 (Apache-2.0 KTX in RTGL1), Q3 (DLSS), Q4 (entity-code provenance), Q6 (local conversion under the EULA/SSA, HD reverse engineering), Q12 (trademark/project name) | RD-007 §16 | any binary release; POC-25 |
 | GATE-04 | Whether to approach the rights holder (Croteam/Devolver) for a license. Consoles stay a research objective (owner, 2026-11-27) | RD-006, ADR-0007 | official console distribution |
 | GATE-05 | Publishing per-asset identifiers, paths and hashes. Owner: local use allowed; publish only after provenance and restrictions are reviewed | ADR-0002, RD-002, RD-007 | committing POC-03/POC-06 output publicly |

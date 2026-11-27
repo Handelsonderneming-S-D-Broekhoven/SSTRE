@@ -1,0 +1,1 @@
+{"schema_version": "0.1", "upstreams": [{"name": "x", "role": "primary", "repository": "https://github.com/example/x", "commit": "510d36f", "patch_series": "patches/x"}]}
