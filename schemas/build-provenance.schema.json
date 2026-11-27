@@ -1,0 +1,397 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/build-provenance.schema.json",
+  "$comment": "STATUS: PROPOSAL (Phase 0, 2026-11-27, Agent C). Not an accepted contract. Per-asset build output provenance / lock record. Concepts borrowed from SLSA provenance v1 and in-toto (https://slsa.dev/spec/v1.0/provenance); this is NOT a SLSA-compliant attestation. Hashes are 'sha256:<hex>'; hashed JSON uses RFC 8785 JCS. See docs/research/RD-004-reproducibility.md.",
+  "title": "SSTRE per-asset build provenance record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["provenanceFormatVersion", "assetId", "status", "assetKey", "input", "recipe", "environment", "outputs", "qa", "fallback"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "provenanceFormatVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "assetId": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "status": { "enum": ["succeeded", "succeeded-with-fallback", "failed", "skipped-cached"] },
+    "assetKey": {
+      "description": "Asset-level content-addressed cache key (RD-004 section 6).",
+      "$ref": "#/$defs/sha256"
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceHash"],
+      "properties": {
+        "sourceHash": { "$ref": "#/$defs/sha256" },
+        "sourceKind": { "enum": ["classic", "hd-remaster", "curated-replacement"] },
+        "gameEdition": { "description": "Edition id from RD-002 (e.g. tfe-classic-steam); no proprietary content.", "type": "string" },
+        "archiveHash": { "$ref": "#/$defs/sha256" },
+        "inventoryRecordHash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolvedRecipeHash", "recipeFormatVersion"],
+      "properties": {
+        "resolvedRecipeHash": { "$ref": "#/$defs/sha256" },
+        "recipeFormatVersion": { "type": "string" },
+        "precedenceSource": {
+          "description": "Highest-precedence layer that contributed to the resolved recipe.",
+          "enum": ["global-defaults", "material-profile", "generated-recipe", "curated-override"]
+        },
+        "layerHashes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["layer", "hash"],
+            "properties": {
+              "layer": { "enum": ["global-defaults", "material-profile", "generated-recipe", "curated-override"] },
+              "ref": { "type": "string" },
+              "hash": { "$ref": "#/$defs/sha256" }
+            }
+          }
+        },
+        "manifestsCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "targetProfile": { "type": "string" },
+        "targetProfileHash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "steps": {
+      "description": "Per-step execution records, in execution order.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stepId", "stepKey", "cacheHit"],
+        "properties": {
+          "stepId": { "type": "string" },
+          "stepKey": { "$ref": "#/$defs/sha256" },
+          "cacheHit": { "type": "boolean" },
+          "inputHashes": { "type": "array", "items": { "$ref": "#/$defs/sha256" } },
+          "outputHashes": { "type": "array", "items": { "$ref": "#/$defs/sha256" } },
+          "decodedPixelHash": { "description": "Hash of raw decoded pixel buffer (separates encoder from compute nondeterminism).", "$ref": "#/$defs/sha256" },
+          "models": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["role", "hash"],
+              "properties": {
+                "role": { "type": "string" },
+                "hash": { "$ref": "#/$defs/sha256" },
+                "verified": { "description": "True if file bytes were re-hashed and matched before use.", "type": "boolean" },
+                "licenseId": { "type": "string" }
+              }
+            }
+          },
+          "runtimeClass": { "description": "Equivalence class id used in the step cache key.", "type": "string" },
+          "wallTimeSeconds": { "type": "number", "minimum": 0 },
+          "modelLoadSeconds": { "type": "number", "minimum": 0 },
+          "peakVramBytes": { "type": "integer", "minimum": 0 },
+          "deterministicExceptions": {
+            "description": "Ops that ran nondeterministically (warnings) or settings deviating from the reference.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "error": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "environment": {
+      "description": "Toolchain/runtime identity (builder + internal parameters in SLSA terms).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environmentHash", "executor"],
+      "properties": {
+        "environmentHash": { "description": "JCS hash of this environment object without environmentHash itself.", "$ref": "#/$defs/sha256" },
+        "referenceEnvironmentId": { "type": ["string", "null"] },
+        "executor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version"],
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "gitCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+            "dirty": { "type": "boolean" }
+          }
+        },
+        "os": { "type": "object", "additionalProperties": { "type": "string" } },
+        "cpu": { "type": "string" },
+        "gpus": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "vendor": { "type": "string" },
+              "name": { "type": "string" },
+              "computeCapability": { "type": "string" },
+              "smCount": { "type": "integer", "minimum": 0 },
+              "vramMiB": { "type": "integer", "minimum": 0 },
+              "driverVersion": { "type": "string" }
+            }
+          }
+        },
+        "runtimes": {
+          "description": "e.g. {\"python\": \"3.10.11\", \"torch\": \"2.15.0\", \"cuda\": \"...\", \"cudnn\": \"...\", \"diffusers\": \"0.43.0\", \"spandrel\": \"0.4.2\"}.",
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "lockfileHash": { "$ref": "#/$defs/sha256" },
+        "containerDigest": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" },
+        "settings": {
+          "description": "Determinism-relevant settings and env vars (e.g. CUBLAS_WORKSPACE_CONFIG, deterministicAlgorithms, warnOnly, cudnnBenchmark, allowTF32, sdpaBackend, rngDevice).",
+          "type": "object",
+          "additionalProperties": { "type": ["string", "boolean", "number", "null"] }
+        },
+        "workflowEngine": {
+          "description": "If a workflow engine (e.g. ComfyUI) was used: core commit and pinned custom nodes.",
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "gitCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+            "customNodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "gitCommit", "reviewed"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "repo": { "type": "string" },
+                  "gitCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+                  "reviewed": { "type": "boolean" },
+                  "licenseId": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "hash"],
+        "properties": {
+          "role": { "type": "string" },
+          "hash": { "$ref": "#/$defs/sha256" },
+          "decodedPixelHash": { "$ref": "#/$defs/sha256" },
+          "mediaType": { "type": "string" },
+          "format": { "type": "string" },
+          "width": { "type": "integer", "minimum": 1 },
+          "height": { "type": "integer", "minimum": 1 },
+          "mipLevels": { "type": "integer", "minimum": 1 },
+          "sizeBytes": { "type": "integer", "minimum": 0 },
+          "inferred": { "type": "boolean" }
+        }
+      }
+    },
+    "qa": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "results"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["metric", "value", "passed"],
+            "properties": {
+              "metric": { "type": "string" },
+              "value": { "type": ["number", "string", "null"] },
+              "threshold": { "type": ["number", "string", "null"] },
+              "comparator": { "enum": ["<=", ">=", "==", null] },
+              "reference": { "type": "string" },
+              "passed": { "type": "boolean" },
+              "attemptId": { "type": "string", "description": "Fallback chain entry id or 'primary'." }
+            }
+          }
+        },
+        "toleranceClassClaimed": {
+          "description": "Reproducibility tolerance class (RD-004 section 8.3) claimed for this output in this environment.",
+          "enum": ["T0", "T1", "T2", "T3", "unmeasured"]
+        },
+        "humanReview": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "reviewer": { "type": "string" },
+            "decision": { "enum": ["approved", "rejected", "needs-override"] },
+            "notesRef": { "type": "string" }
+          }
+        }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["used"],
+      "properties": {
+        "used": { "type": "boolean" },
+        "selectedAttemptId": { "type": "string", "description": "'primary' or fallbackPolicy.chain[].id" },
+        "selectedMode": { "enum": ["primary", "skip-optional-steps", "alternate-steps", "conventional-resample", "original"] },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["attemptId", "outcome"],
+            "properties": {
+              "attemptId": { "type": "string" },
+              "outcome": { "enum": ["passed", "gate-failed", "error", "not-run"] },
+              "reason": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "run": {
+      "description": "Run metadata; excluded from all cache keys and lock-identity comparisons.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "invocationId": { "type": "string" },
+        "startedOn": { "type": "string", "format": "date-time" },
+        "finishedOn": { "type": "string", "format": "date-time" },
+        "resumedFrom": { "type": ["string", "null"] },
+        "logRef": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "examples": [
+    {
+      "$comment": "Synthetic example: invented IDs and paths; every hash is SHA-256 of the ASCII string 'SSTRE synthetic fixture: <label>' and does not identify any real file.",
+      "provenanceFormatVersion": "0.1.0",
+      "assetId": "synthetic:textures/test/checker_256",
+      "status": "succeeded",
+      "assetKey": "sha256:7496d7bbfdb673ab38d993915d3c8a8096fa529eb64e6d9adcd08eda56f831c2",
+      "input": {
+        "sourceHash": "sha256:fa0f4e666dd875c8e4d56c1e4c53fd90ac8182f9a81209bd6b95b5bc6e046e3b",
+        "sourceKind": "classic",
+        "gameEdition": "synthetic"
+      },
+      "recipe": {
+        "resolvedRecipeHash": "sha256:3bcc5ff07deb9c2a1eeba0f3724b449223bfa1787a760914e7732f7e78ba61ae",
+        "recipeFormatVersion": "0.1.0",
+        "precedenceSource": "curated-override",
+        "targetProfile": "synthetic-target",
+        "layerHashes": [
+          {
+            "layer": "global-defaults",
+            "hash": "sha256:23b234506edaaac650b5a1ce5070b039524e698ded90c4d2b64a01bfc18017a4"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "stepId": "decode",
+          "stepKey": "sha256:b393223d3b2bac0828108850c98c8db6d6281ec31fad071b8b24ef1ab1d51735",
+          "cacheHit": true,
+          "inputHashes": [
+            "sha256:fa0f4e666dd875c8e4d56c1e4c53fd90ac8182f9a81209bd6b95b5bc6e046e3b"
+          ],
+          "outputHashes": [
+            "sha256:2dbc0f13973c3c03d9774f7da6f9176906f2422a7d329cd26117ae4b4c562e5d"
+          ]
+        },
+        {
+          "stepId": "upscale",
+          "stepKey": "sha256:3372d1c1e5529e7cc693070d6c48383600647f935bd02ea9b19a46f24a033d3c",
+          "cacheHit": false,
+          "inputHashes": [
+            "sha256:2dbc0f13973c3c03d9774f7da6f9176906f2422a7d329cd26117ae4b4c562e5d"
+          ],
+          "outputHashes": [
+            "sha256:19d2c11e7d0439f3716525c14254b730d28f20c31f4070f5caff064c279cfec2"
+          ],
+          "runtimeClass": "synthetic-cpu",
+          "wallTimeSeconds": 0.01,
+          "deterministicExceptions": [],
+          "error": null
+        }
+      ],
+      "environment": {
+        "environmentHash": "sha256:d932e5ac37ec01a4e9ef13410e924973f5639bcc3cfe89369980ccecb5b31a14",
+        "referenceEnvironmentId": null,
+        "executor": {
+          "name": "synthetic-executor",
+          "version": "0.0.0",
+          "gitCommit": "0000000000000000000000000000000000000000",
+          "dirty": false
+        },
+        "os": {
+          "name": "synthetic-os"
+        },
+        "cpu": "synthetic-cpu",
+        "gpus": [],
+        "runtimes": {
+          "python": "3.12.0"
+        },
+        "lockfileHash": "sha256:64e817f8d95f3c77ed800607a1093dfaad10a52fba5752cd5da188be3dd22a02",
+        "containerDigest": null,
+        "settings": {
+          "deterministicAlgorithms": true
+        },
+        "workflowEngine": null
+      },
+      "outputs": [
+        {
+          "role": "albedo",
+          "hash": "sha256:344955c936bb959353f3d7bd0eb3f3d00870e56a29b7c72bde315a8097571fd4",
+          "decodedPixelHash": "sha256:8ae6435cee22b0d218bfa9fa17cfd6fa4ded3bc0e3c6d0586ec487f37baebc91",
+          "mediaType": "image/png",
+          "format": "RGBA8",
+          "width": 512,
+          "height": 512,
+          "mipLevels": 1,
+          "sizeBytes": 1024,
+          "inferred": false
+        }
+      ],
+      "qa": {
+        "passed": true,
+        "results": [
+          {
+            "metric": "dimensions",
+            "value": "512x512",
+            "threshold": "512x512",
+            "comparator": "==",
+            "reference": "source",
+            "passed": true,
+            "attemptId": "primary"
+          }
+        ],
+        "toleranceClassClaimed": "unmeasured",
+        "humanReview": null
+      },
+      "fallback": {
+        "used": false,
+        "selectedAttemptId": "primary",
+        "selectedMode": "primary",
+        "attempts": [
+          {
+            "attemptId": "primary",
+            "outcome": "passed"
+          }
+        ]
+      },
+      "run": {
+        "invocationId": "synthetic-run-0001",
+        "startedOn": "2026-11-27T00:00:00Z",
+        "finishedOn": "2026-11-27T00:00:01Z",
+        "resumedFrom": null
+      }
+    }
+  ]
+}

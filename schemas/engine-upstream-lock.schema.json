@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/engine-upstream-lock.schema.json",
+  "title": "SSTRE-Engine upstream lock",
+  "description": "Pins the upstream engine repositories that SSTRE-Engine patch series apply to (ADR-0008). Upstream content is fetched from its original host; SSTRE publishes only its own patches.",
+  "$comment": "Status: accepted with ADR-0008 (provisional), 2026-11-27. Owner: SSTRE-Engine.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "upstreams"],
+  "properties": {
+    "schema_version": { "const": "0.1" },
+    "upstreams": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/upstream" }
+    }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "upstream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "role", "repository", "commit", "patch_series"],
+      "properties": {
+        "name": {
+          "description": "Short identifier; also the patch directory name under patches/.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "role": {
+          "description": "primary = engine baseline (ADR-0005); secondary = source of functionality to port, not built as the product.",
+          "enum": ["primary", "secondary"]
+        },
+        "repository": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$"
+        },
+        "commit": { "$ref": "#/$defs/sha1" },
+        "branch_hint": {
+          "description": "Upstream branch the commit was taken from (informational; the commit is authoritative).",
+          "type": "string"
+        },
+        "license": {
+          "description": "SPDX expression of the upstream as audited (RD-007).",
+          "type": "string"
+        },
+        "swhid": {
+          "description": "Software Heritage identifier of the pinned revision, if archived.",
+          "type": "string",
+          "pattern": "^swh:1:rev:[0-9a-f]{40}$"
+        },
+        "patch_series": {
+          "description": "Directory (relative to the SSTRE-Engine root) holding NNNN-*.patch files applied in order with git am.",
+          "type": "string",
+          "pattern": "^patches/[a-z0-9][a-z0-9-]*$"
+        },
+        "audit": {
+          "description": "Reference to the publication audit covering this pin.",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schema_version": "0.1",
+      "upstreams": [
+        {
+          "name": "example-engine",
+          "role": "primary",
+          "repository": "https://github.com/example/example-engine",
+          "commit": "0000000000000000000000000000000000000001",
+          "license": "GPL-2.0-only",
+          "swhid": "swh:1:rev:0000000000000000000000000000000000000001",
+          "patch_series": "patches/example-engine"
+        }
+      ]
+    }
+  ]
+}

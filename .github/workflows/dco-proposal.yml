@@ -1,0 +1,60 @@
+name: dco-proposal
+
+# PROPOSAL - NOT A REQUIRED CHECK. DCO sign-off was adopted by the owner on
+# 2026-11-27 (CONTRIBUTING.md), but the existing commits are not signed off
+# yet, pending the owner's decision on how to handle them. This workflow
+# therefore runs only on manual dispatch and is not a branch-protection
+# requirement. To activate it: add a `pull_request:` trigger (checking
+# base..head of the PR) and make the job a required status check.
+#
+# It verifies that every non-merge commit in <base>..HEAD has a
+# "Signed-off-by:" trailer whose e-mail matches the commit author's e-mail
+# (Developer Certificate of Origin 1.1, https://developercertificate.org/).
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Base branch or commit; commits in base..HEAD are checked"
+        required: true
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  dco:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out (full history)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check Signed-off-by trailers
+        env:
+          BASE: ${{ inputs.base }}
+        run: |
+          set -eu
+          if git rev-parse --verify --quiet "origin/$BASE^{commit}" >/dev/null; then
+            base_rev="origin/$BASE"
+          else
+            base_rev="$BASE"
+          fi
+          missing=0
+          total=0
+          for c in $(git rev-list --no-merges "$base_rev..HEAD"); do
+            total=$((total + 1))
+            author_email=$(git show -s --format='%ae' "$c")
+            if git show -s --format='%(trailers:key=Signed-off-by,valueonly)' "$c" \
+                 | grep -qiF "<$author_email>"; then
+              echo "ok      $(git show -s --format='%h %s' "$c")"
+            else
+              echo "MISSING $(git show -s --format='%h %s' "$c") (author <$author_email>)"
+              missing=$((missing + 1))
+            fi
+          done
+          echo "checked $total commit(s) in $base_rev..HEAD, $missing without matching sign-off"
+          [ "$missing" -eq 0 ]

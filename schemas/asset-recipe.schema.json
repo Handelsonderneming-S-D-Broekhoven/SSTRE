@@ -1,0 +1,445 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/asset-recipe.schema.json",
+  "$comment": "STATUS: PROPOSAL (Phase 0, 2026-11-27, Agent C). Not an accepted contract. Describes a RESOLVED, frozen per-asset recipe after precedence merge (curated-override > generated-recipe > material-profile > global-defaults). See docs/research/RD-003-ai-pipeline.md and RD-004-reproducibility.md. resolvedRecipeHash = sha256 over RFC 8785 JCS serialization of this document excluding top-level 'precedence' and '$comment'. Numbers must be IEEE-754 doubles (integers within +/-2^53); NaN/Infinity forbidden by JCS.",
+  "title": "SSTRE resolved asset recipe",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["recipeFormatVersion", "assetId", "source", "textureClass", "steps", "fallbackPolicy", "precedence"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "recipeFormatVersion": {
+      "description": "Semantic version of this recipe format; changes to hashing/normalization rules bump the major version.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "assetId": { "$ref": "#/$defs/assetId" },
+    "source": {
+      "description": "Identity of the input asset bytes (defined by the RD-002 inventory).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hash", "kind"],
+      "properties": {
+        "hash": { "$ref": "#/$defs/sha256" },
+        "kind": { "enum": ["classic", "hd-remaster", "curated-replacement"] },
+        "logicalPath": { "description": "Game-relative logical path, forward slashes; informational only (assetId is the key).", "type": "string" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "colorSpace": { "$ref": "#/$defs/colorSpace" },
+        "alpha": { "$ref": "#/$defs/alphaInfo" },
+        "tileable": { "$ref": "#/$defs/tiling" }
+      }
+    },
+    "textureClass": {
+      "description": "Processing class (proposal, RD-003 section 6). Final taxonomy owned by RD-002 inventory schema.",
+      "enum": [
+        "hd-mapped", "architecture", "terrain", "vegetation-cutout", "translucent-effect",
+        "character-skin", "weapon", "sky", "cubemap-face", "ui-text", "normal-map",
+        "height-map", "mask-technical", "lightmap", "animated-frame", "unknown"
+      ]
+    },
+    "materialProfile": { "description": "Id of the material profile layer applied, if any.", "type": ["string", "null"] },
+    "targetProfile": {
+      "description": "Runtime target profile id; outputs depending on it include it in their cache key.",
+      "type": "string"
+    },
+    "steps": {
+      "description": "Ordered pipeline steps. Order is significant.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/step" }
+    },
+    "outputs": {
+      "description": "Declared output maps of the recipe.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "fromStep"],
+        "properties": {
+          "role": { "enum": ["albedo", "normal", "height", "roughness", "metallic", "ao", "emissive", "mask", "alpha", "other"] },
+          "fromStep": { "type": "string" },
+          "colorSpace": { "$ref": "#/$defs/colorSpace" },
+          "normalConvention": { "enum": ["opengl-y-up", "directx-y-down", "n/a"] },
+          "inferred": { "description": "True if map is estimated (not measured) data.", "type": "boolean" }
+        }
+      }
+    },
+    "compression": {
+      "description": "Runtime encoding settings (formats decided in RD-005/RD-006).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "container": { "enum": ["dds", "ktx2", "png", "native-se1", "other"] },
+        "format": { "description": "e.g. BC7_UNORM_SRGB, BC5_UNORM, ASTC_6x6, RGBA8.", "type": "string" },
+        "tool": { "$ref": "#/$defs/toolRef" },
+        "quality": { "type": "string" },
+        "mipmaps": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "generate": { "type": "boolean" },
+            "filter": { "enum": ["box", "kaiser", "lanczos", "none"] },
+            "alphaCoveragePreserve": { "type": "boolean" },
+            "wrap": { "type": "boolean" }
+          }
+        },
+        "extraArgs": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "qaGates": {
+      "description": "Gate thresholds applied after processing; values are calibrated by benchmark (RD-003 section 9).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["metric", "comparator", "threshold"],
+        "properties": {
+          "metric": { "enum": ["ssim-downscaled", "psnr-downscaled", "lpips-v0.1-alex", "lpips-v0.1-vgg", "dists", "deltaE2000-mean", "deltaE2000-p95", "seam-ratio", "alpha-iou", "alpha-mae", "hf-energy-ratio", "dimensions", "custom"] },
+          "comparator": { "enum": ["<=", ">=", "=="] },
+          "threshold": { "type": ["number", "string"] },
+          "reference": { "enum": ["source", "sr-only", "previous-step"] },
+          "onFail": { "enum": ["fallback", "fail-asset", "warn"] }
+        }
+      }
+    },
+    "fallbackPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chain"],
+      "properties": {
+        "chain": {
+          "description": "Ordered fallback alternatives tried when a step errors or a gate with onFail=fallback fails. Last entry should be 'original'.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "mode"],
+            "properties": {
+              "id": { "type": "string" },
+              "mode": { "enum": ["skip-optional-steps", "alternate-steps", "conventional-resample", "original"] },
+              "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } }
+            }
+          }
+        },
+        "maxAttempts": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "precedence": {
+      "description": "Record of how this recipe was resolved. Excluded from resolvedRecipeHash.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layers"],
+      "properties": {
+        "layers": {
+          "description": "Contributing layers, lowest to highest precedence.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["layer", "hash"],
+            "properties": {
+              "layer": { "enum": ["global-defaults", "material-profile", "generated-recipe", "curated-override"] },
+              "ref": { "description": "Repository-relative path or id of the layer document.", "type": "string" },
+              "hash": { "$ref": "#/$defs/sha256" },
+              "repoCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+            }
+          }
+        },
+        "fieldSources": {
+          "description": "Map JSON Pointer (RFC 6901) of each resolved leaf to the layer that supplied it.",
+          "type": "object",
+          "additionalProperties": { "enum": ["global-defaults", "material-profile", "generated-recipe", "curated-override"] }
+        },
+        "mergeRules": { "description": "Identifier of merge semantics, e.g. 'deep-merge/arrays-replace/null-deletes@1'.", "type": "string" },
+        "generatedBy": {
+          "description": "For generated-recipe layers: dev-time generator (e.g. VLM) identity. Never invoked in release builds.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tool": { "$ref": "#/$defs/toolRef" },
+            "model": { "$ref": "#/$defs/modelRef" },
+            "promptTemplateHash": { "$ref": "#/$defs/sha256" },
+            "rawResponseHash": { "$ref": "#/$defs/sha256" },
+            "decoding": { "type": "string" },
+            "reviewedBy": { "type": ["string", "null"] }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "assetId": {
+      "description": "Stable asset identifier (format owned by RD-002); independent of file path changes.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[a-z0-9][a-z0-9._:/-]*$"
+    },
+    "colorSpace": { "enum": ["srgb", "linear", "data", "unknown"] },
+    "alphaInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "present": { "type": "boolean" },
+        "kind": { "enum": ["none", "binary-cutout", "multi-level", "smooth", "data"] },
+        "premultiplied": { "type": "boolean" },
+        "cutoutThreshold": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "tiling": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "wrapU": { "type": "boolean" },
+        "wrapV": { "type": "boolean" },
+        "source": { "enum": ["inventory", "detected", "vlm", "curated", "default"] }
+      }
+    },
+    "toolRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "gitCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "artifactHash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "modelRef": {
+      "description": "Model referenced by content hash; name/revision are informational and never resolved as mutable aliases in release builds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "hash"],
+      "properties": {
+        "role": { "enum": ["sr", "checkpoint", "unet", "vae", "text-encoder", "controlnet", "lora", "pbr-estimator", "vlm", "ocr", "metric", "other"] },
+        "hash": { "$ref": "#/$defs/sha256" },
+        "name": { "type": "string" },
+        "format": { "enum": ["safetensors", "onnx", "pth-weights-only", "gguf", "other"] },
+        "sourceUri": { "type": "string" },
+        "sourceRevision": { "description": "e.g. Hugging Face commit SHA or release tag.", "type": "string" },
+        "licenseId": { "description": "SPDX id or LicenseRef-*; reviewed in RD-007.", "type": "string" },
+        "licenseTextHash": { "$ref": "#/$defs/sha256" },
+        "weight": { "description": "Strength (e.g. LoRA/ControlNet scale).", "type": "number" }
+      }
+    },
+    "tilingParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tileSize": { "type": "integer", "minimum": 0, "description": "0 = no tiling." },
+        "overlap": { "type": "integer", "minimum": 0 },
+        "blend": { "enum": ["none", "linear-feather", "cosine-feather", "gaussian"] },
+        "order": { "enum": ["row-major", "col-major", "serpentine"] },
+        "wrapPadding": { "type": "integer", "minimum": 0, "description": "Circular padding in source pixels for tileable textures." },
+        "edgePadding": { "enum": ["reflect", "replicate", "zero", "wrap"] },
+        "circularConv": { "type": "boolean", "description": "Patch conv layers to circular padding (diffusion; hypothesis in RD-003)." }
+      }
+    },
+    "diffusionParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seed", "sampler", "scheduler", "steps", "denoise", "cfg"],
+      "properties": {
+        "seed": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "rngDevice": { "enum": ["cpu", "cuda"] },
+        "noiseDtype": { "enum": ["float32", "float16", "bfloat16"] },
+        "sampler": { "type": "string", "description": "e.g. euler, dpmpp_2m. Ancestral/SDE samplers consume extra noise per step." },
+        "scheduler": { "type": "string", "description": "e.g. karras, normal, simple." },
+        "steps": { "type": "integer", "minimum": 1 },
+        "denoise": { "type": "number", "minimum": 0, "maximum": 1 },
+        "cfg": { "type": "number", "minimum": 0 },
+        "prompt": { "type": "string", "description": "NFC-normalized before hashing." },
+        "negativePrompt": { "type": "string" },
+        "controlnetStrength": { "type": "number", "minimum": 0 },
+        "controlStart": { "type": "number", "minimum": 0, "maximum": 1 },
+        "controlEnd": { "type": "number", "minimum": 0, "maximum": 1 },
+        "workingResolution": { "type": "integer", "minimum": 64 }
+      }
+    },
+    "precision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compute"],
+      "properties": {
+        "compute": { "enum": ["fp32", "fp16", "bf16", "fp8", "int8", "mixed"] },
+        "vae": { "enum": ["fp32", "fp16", "bf16", "n/a"] },
+        "allowTF32": { "type": "boolean" },
+        "deterministicAlgorithms": { "type": "boolean" },
+        "attentionBackend": { "enum": ["math", "flash", "efficient", "cudnn", "xformers", "default"] }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stepId", "op"],
+      "properties": {
+        "stepId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$" },
+        "op": {
+          "enum": [
+            "decode", "color-convert", "alpha-split", "alpha-merge", "edge-dilate", "dejpeg-denoise",
+            "resample", "sr", "controlled-diffusion", "seam-fix", "pbr-derive", "normalize-normals",
+            "downscale", "sharpen", "custom-workflow", "encode"
+          ]
+        },
+        "optional": { "type": "boolean", "description": "If true, may be skipped by fallback mode 'skip-optional-steps'." },
+        "inputs": { "type": "array", "items": { "type": "string" }, "description": "stepIds or 'source'." },
+        "implementation": { "$ref": "#/$defs/toolRef" },
+        "workflowHash": { "$ref": "#/$defs/sha256", "description": "JCS hash of a workflow document (e.g. ComfyUI API JSON) for op=custom-workflow." },
+        "models": { "type": "array", "items": { "$ref": "#/$defs/modelRef" } },
+        "scale": { "type": "number", "exclusiveMinimum": 0 },
+        "targetWidth": { "type": "integer", "minimum": 1 },
+        "targetHeight": { "type": "integer", "minimum": 1 },
+        "filter": { "enum": ["nearest", "bilinear", "bicubic", "lanczos3", "area", "xbrz", "n/a"] },
+        "channels": { "enum": ["rgb", "rgba", "a", "luma", "all"] },
+        "tiling": { "$ref": "#/$defs/tilingParams" },
+        "precision": { "$ref": "#/$defs/precision" },
+        "diffusion": { "$ref": "#/$defs/diffusionParams" },
+        "params": {
+          "description": "Op-specific parameters not modelled above (must be JSON-canonicalizable).",
+          "type": "object"
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "op": { "const": "controlled-diffusion" } } }, "then": { "required": ["diffusion", "precision", "models"] } },
+        { "if": { "properties": { "op": { "const": "sr" } } }, "then": { "required": ["precision", "models"] } },
+        { "if": { "properties": { "op": { "const": "custom-workflow" } } }, "then": { "required": ["workflowHash"] } }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "$comment": "Synthetic example: invented IDs and paths; every hash is SHA-256 of the ASCII string 'SSTRE synthetic fixture: <label>' and does not identify any real file.",
+      "recipeFormatVersion": "0.1.0",
+      "assetId": "synthetic:textures/test/checker_256",
+      "source": {
+        "hash": "sha256:fa0f4e666dd875c8e4d56c1e4c53fd90ac8182f9a81209bd6b95b5bc6e046e3b",
+        "kind": "classic",
+        "logicalPath": "Synthetic/Textures/Test/Checker_256.synthetic",
+        "width": 256,
+        "height": 256,
+        "colorSpace": "srgb",
+        "alpha": {
+          "present": false,
+          "kind": "none"
+        },
+        "tileable": {
+          "wrapU": true,
+          "wrapV": true,
+          "source": "curated"
+        }
+      },
+      "textureClass": "architecture",
+      "materialProfile": null,
+      "targetProfile": "synthetic-target",
+      "steps": [
+        {
+          "stepId": "decode",
+          "op": "decode",
+          "inputs": [
+            "source"
+          ]
+        },
+        {
+          "stepId": "upscale",
+          "op": "resample",
+          "inputs": [
+            "decode"
+          ],
+          "scale": 2,
+          "filter": "lanczos3",
+          "channels": "rgb",
+          "implementation": {
+            "name": "synthetic-stub-resampler",
+            "version": "0.0.0",
+            "artifactHash": "sha256:7f902bdc50d42a73bbc425a3dd40b920e65a8ae06d33dbc5d23d7966a3f9c484"
+          },
+          "tiling": {
+            "tileSize": 0,
+            "wrapPadding": 8,
+            "edgePadding": "wrap"
+          }
+        },
+        {
+          "stepId": "encode",
+          "op": "encode",
+          "inputs": [
+            "upscale"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "role": "albedo",
+          "fromStep": "encode",
+          "colorSpace": "srgb",
+          "inferred": false
+        }
+      ],
+      "compression": {
+        "container": "png",
+        "format": "RGBA8",
+        "mipmaps": {
+          "generate": true,
+          "filter": "kaiser",
+          "alphaCoveragePreserve": false,
+          "wrap": true
+        }
+      },
+      "qaGates": [
+        {
+          "metric": "dimensions",
+          "comparator": "==",
+          "threshold": "512x512",
+          "reference": "source",
+          "onFail": "fail-asset"
+        },
+        {
+          "metric": "ssim-downscaled",
+          "comparator": ">=",
+          "threshold": 0.95,
+          "reference": "source",
+          "onFail": "fallback"
+        }
+      ],
+      "fallbackPolicy": {
+        "chain": [
+          {
+            "id": "plain-resample",
+            "mode": "conventional-resample"
+          },
+          {
+            "id": "original",
+            "mode": "original"
+          }
+        ],
+        "maxAttempts": 2
+      },
+      "precedence": {
+        "layers": [
+          {
+            "layer": "global-defaults",
+            "ref": "synthetic/defaults.json",
+            "hash": "sha256:23b234506edaaac650b5a1ce5070b039524e698ded90c4d2b64a01bfc18017a4"
+          },
+          {
+            "layer": "curated-override",
+            "ref": "synthetic/override.json",
+            "hash": "sha256:3b2ac9ccf65bdbc0174435b24cf6adcc23adabf0f1cbb0164e0ccf4b340a9a77"
+          }
+        ],
+        "fieldSources": {
+          "/steps": "global-defaults",
+          "/textureClass": "curated-override"
+        },
+        "mergeRules": "deep-merge/arrays-replace/null-deletes@1"
+      }
+    }
+  ]
+}

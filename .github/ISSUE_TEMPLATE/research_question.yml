@@ -1,0 +1,38 @@
+name: Research question
+description: Propose or track an open technical, legal or platform question (feeds docs/research and ADRs).
+labels: ["research"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Research results land in `docs/research/RD-NNN-*.md`; decisions in `docs/adr/`.
+        Separate **observed facts** (with URLs, commits, file paths) from assumptions. Do not post legal conclusions as settled.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question and scope
+      description: What exactly must be answered, and what is out of scope?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Decision it informs
+      description: Which ADR, POC backlog item or open decision (plan §3) depends on the answer?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Known evidence
+      description: Primary sources with URLs and exact commits/versions where available.
+  - type: textarea
+    id: experiment
+    attributes:
+      label: Proposed experiment and success criteria
+      description: How would we measure the answer? What result would change the recommendation?
+  - type: input
+    id: related
+    attributes:
+      label: Related dossier / ADR
+      placeholder: e.g. RD-001, ADR-005

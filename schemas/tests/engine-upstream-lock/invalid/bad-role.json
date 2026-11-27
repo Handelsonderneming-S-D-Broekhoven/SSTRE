@@ -1,0 +1,1 @@
+{"schema_version": "0.1", "upstreams": [{"name": "x", "role": "fork", "repository": "https://github.com/example/x", "commit": "0000000000000000000000000000000000000001", "patch_series": "patches/x"}]}

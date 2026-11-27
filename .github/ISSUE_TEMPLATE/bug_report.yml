@@ -1,0 +1,56 @@
+name: Bug report
+description: Something in SSTRE documentation, scripts, schemas or CI does not work as described.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        SSTRE is in Phase 0: there is no playable build or released tool yet.
+        **Do not attach game files, extracted assets, AI-upscaled derivatives, or screenshots of game content.**
+        Describe assets by path and SHA-256 instead. Security issues: use a private advisory (see SECURITY.md).
+  - type: dropdown
+    id: repository
+    attributes:
+      label: Repository
+      options:
+        - SSTRE (umbrella)
+        - SSTRE-Engine
+        - SSTRE-AssetCompiler
+        - SSTRE-Manifests
+        - Remaster-Toolkit
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Commit or branch
+      description: Output of `git rev-parse HEAD` in the affected checkout.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands. Use synthetic data where possible.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, GPU/driver if relevant, game edition if relevant (no files).
+  - type: checkboxes
+    id: no-game-data
+    attributes:
+      label: Content check
+      options:
+        - label: This issue contains no game files, extracted assets, derivatives or screenshots of game content.
+          required: true
