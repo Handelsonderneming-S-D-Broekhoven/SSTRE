@@ -1,6 +1,7 @@
 # RD-007 — Licensing, GPL compatibility, asset/model terms and branding
 
 > **Changelog**
+> - 2026-11-27 (sprint 2, lead): Q24–Q28 added from EXP-012 (owner instruction); Q16 owner-decided (ADR-0008).
 > - 2026-11-27 (Phase 1, compliance auditor): §16 turned into a register with a status column. Owner decisions of 2026-11-27 recorded (D1–D3, Q11). New questions Q15–Q23 added from [EXP-004](../experiments/EXP-004-upstream-publication-audit.md) (upstream publication audit) and [RD-006 §3.5](./RD-006-platforms.md#35-legal-split-per-platform-four-separate-questions) (platform legal split). Other sections are unchanged: their "proposal" wording reflects the Phase 0 state, and ADR-0006 governs where they differ.
 
 | Field | Value |
@@ -372,3 +373,8 @@ Status values: **open** (owner or research action, no counsel needed yet) · **o
 | Q21 | **Unattributed RT assets:** provenance and licence of `OverridenTextures/WaterNormal_n.ktx2`, and of the blue-noise data in `BlueNoise_LDR_RGBA_128.ktx2` (the same blob ships in RTGL1, MIT, without a source credit). | open (ask the author) | EXP-004 G7/G8. |
 | Q22 | **Headers without a grant:** 43 CVK files carry only "Copyright (c) 2002-2012 Croteam Ltd. All rights reserved." (downstream port files, absent from Croteam-official), and 2,946 pre-GPL Croteam blobs remain in RT history. Is the repo-level GPL-2.0 statement sufficient for them? | needs counsel (low priority) | EXP-004 H3/H4. Notices are preserved verbatim in any case. |
 | Q23 | **Filtered-history attribution:** if option 3 is chosen, do omitting whole files and rewriting SHAs (with a published commit map and NOTICE) satisfy GPLv2 §1/§2 notice duties and upstream attribution expectations? | needs counsel (low priority) | Relevant only if Q16 selects option 3. |
+| Q24 | **HD artwork in a Classic build:** may genuinely different HD *artwork* (not same-content copies) be used locally in a Classic-engine build (ADR-0009 layers 4–5, opt-in)? | needs counsel | Raised by EXP-012. Local, user-side use only; no distribution. |
+| Q25 | **Publishing records that reference HD assets:** after GATE-05, may source-selection records, approvals or mappings that reference HD assets (IDs, paths, hashes) be published? | needs counsel | EXP-012; ADR-0009 rule 6. |
+| Q26 | **HD companion maps with Classic albedo:** may HD normal/gloss maps be combined with Classic albedo in a local build (ADR-0009 layer 3)? | needs counsel | EXP-012. Same-product family, cross-edition combination. |
+| Q27 | **Publishing the HD format reader:** may the locally developed HD `.tex` (CTSEMETA) reader ever be published, e.g. under an interoperability exception (EU Software Directive art. 6 does not obviously cover *data* formats)? | needs counsel | EXP-008, EXP-012. Reader stays local until reviewed (owner, 2026-11-27). |
+| Q28 | **Metrics derived from HD pixels:** are aggregate quality metrics computed from HD pixels (PSNR, pHash distances, embeddings) publishable? | open (owner); counsel optional | EXP-008/EXP-012 publish aggregates only. |
