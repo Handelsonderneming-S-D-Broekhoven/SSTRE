@@ -3,8 +3,9 @@
 | Field | Value |
 |---|---|
 | Date | 2026-11-27 |
-| Status | Draft research. Phase 0. Not a decision. |
+| Status | Draft research. Phase 0, with **Phase 1 update 2026-11-27** (§16; §6, §7 and §13 revised). Not a decision. |
 | Author | Agent B (asset format researcher), for lead review |
+| Phase 1 evidence | [EXP-008 HD asset matching](../experiments/EXP-008-hd-asset-matching.md) |
 | Related | [RD-001 engine baseline](./RD-001-engine-baseline.md), [RD-003 AI pipeline](./RD-003-ai-pipeline.md), [RD-005 rendering](./RD-005-rendering.md), [RD-007 licensing](./RD-007-licensing.md) |
 | Schema proposal | [`schemas/asset-inventory.schema.json`](../../schemas/asset-inventory.schema.json) |
 
@@ -107,7 +108,7 @@ The HD and Fusion installs also ship `SignatureCatalog.dat` / `*.dat` files (mag
 | Asset | Classic SE1 (evidence: source) | HD / Fusion SE3-era (evidence: header observation, **uncertain**) |
 |---|---|---|
 | Archive | `.gro` = zip; later-loaded archives override earlier ones (mount-order rules still to be confirmed from `Base/Unzip.cpp`) | `.gro` = zip (all archives < 4 GiB; zip64 use not checked); signed with `SignatureCatalog.dat` |
-| Texture | `.tex`: `TVER` + int version (3 or 4), then chunks `TDAT` (flags, mexW, mexH, fineMips, firstMip, [v3: ctMips, frameSize], frames), `FRMS` (raw RGB/RGBA per frame, v4 stores mip 0 only, mips regenerated on load), `ANIM` (CAnimData), `BAST` (base texture name), `FXDT`/`FXBF`/`FXB2` (procedural effect), `DTLT` (legacy). Pixel = mex >> firstMip; max 1024 px (`MAX_MEX`, `Base/Types.h:162-169`); power-of-two asserted. Source: `Graphics/Texture.cpp:677-900` | `.tex`: magic `CTSEMETA` + `0x1234ABCD` marker, then self-describing reflection metadata (`$Version:`, class names `CResourceFile`, `CStaticTexture`, `CBaseTexture`, `CPlatformMip`, `TexFlags`, `TexFormat`, `GfxTexWrap`, `CTextureMatrix` (TSE/Fusion), `CColorModifiers` (Fusion), `CResourceStreamingData` (Fusion)), `METAEND`, then data. Pixel format, dimensions and compression are not yet decoded; a `CTSEMETA` reader is required |
+| Texture | `.tex`: `TVER` + int version (3 or 4), then chunks `TDAT` (flags, mexW, mexH, fineMips, firstMip, [v3: ctMips, frameSize], frames), `FRMS` (raw RGB/RGBA per frame, v4 stores mip 0 only, mips regenerated on load), `ANIM` (CAnimData), `BAST` (base texture name), `FXDT`/`FXBF`/`FXB2` (procedural effect), `DTLT` (legacy). Pixel = mex >> firstMip; max 1024 px (`MAX_MEX`, `Base/Types.h:162-169`); power-of-two asserted. Source: `Graphics/Texture.cpp:677-900` | `.tex`: magic `CTSEMETA` + `0x1234ABCD` marker, then self-describing reflection metadata (`$Version:`, class names `CResourceFile`, `CStaticTexture`, `CBaseTexture`, `CPlatformMip`, `TexFlags`, `TexFormat`, `GfxTexWrap`, `CTextureMatrix` (TSE/Fusion), `CColorModifiers` (Fusion), `CResourceStreamingData` (Fusion)), `METAEND`, then data. Pixel format, dimensions and compression are not yet decoded; a `CTSEMETA` reader is required. **Phase 1: decoded [EXP], see §16.1** |
 | Model | `.mdl`: `MDAT` + version chunk `V007`…`V010` observed (TFE: V010 338, V009 17, V008 2, V007 2), vertex-animated mip-models, `STXW`/`STXH` = texture size in mex that the UVs are authored against. Source: `Models/Model.cpp:1270ff, 1495`, `Models/Model_internal.h:25-31`. TSE adds SKA: `.bm` (`MESH`, v12), `.bs` (`SKEL`), `.ba` (`ANIM`), `.smc` (text). Source: `Ska/Mesh.cpp:19-20` | `.mdl`: `CTSEMETA`; classes `CSkeleton`, `CMesh`, `CRenderMesh`, `CModelConfigChildrenHolder`, `CModelAnimHost`, `CMechanismTemplateHolder`, `CDestructionHolder`. Geometry in `.bmf` (`CRenderMesh`, `CCollisionMesh`, `CShaderModifierList`, `CRenderMeshSection`, vertex buffers). Skeletal (`.skl`), animation (`.ans`/`.anh`) |
 | World | `.wld`: starts `BUIV` (build version, `Network/Network.cpp:2251`), then `WRLD`, brushes (BSP, polygons with 3 texture layers `bpo_abptTextures[3]`, `Brushes/Brush.h:394`), entities (`WSTA`). Source: `World/WorldIO.cpp` | HD standalone `.wld`: `CTSEMETA` (`CWorldInfoEntity`, `CLightmapAtlas`, `CStaticAtlasGroup`). Fusion `.wld`: magic `WRKSTRM1`. Mesh-based worlds, **not** brush/BSP |
 | Material | None as a separate asset: surface = texture plus per-polygon flags/blend on the brush; models use mdl render flags, plus reflection/specular/bump textures set by entity code. TSE SKA uses `.sha` shader DLL entries (`Shaders/`) | `.mtr` (`CTSEMETA`, 247 in HD TFE), `.mat` (`CSamMaterial`, `CMaterialAttributes`; physical/sound/decal/particle "scheme", **a gameplay material, not a render shader**). Render shader parameters live in `CShaderModifierList` in meshes and `.mtr` (uncertain) |
@@ -118,6 +119,14 @@ The HD and Fusion installs also ship `SignatureCatalog.dat` / `*.dat` files (mag
 ## 6. Mapping feasibility by level
 
 ### 6.1 Texture level: **feasible for a subset; path heuristics work for architecture**
+
+> **Phase 1 revision (2026-11-27) [EXP], from EXP-008:**
+> - HD textures are now decoded: 99.9% of standalone HD TFE and TSE.
+> - Exact path both **overstates and understates** HD value. Of the pixel-verified same-content matches, 90–96% have the *same* pixel size as Classic. Most of these are lossy BC1/BC3 re-encodes of the Classic art (median PSNR 32.5 dB vs Classic; only 12% bit-identical).
+> - Normalized names plus pixel verification add about 105 (TFE) and 108 (TSE) verified sources beyond exact path, including items, player, enemy and weapon skins.
+> - True HD upscales with the same layout are a small minority (TFE 9, TSE 24 verified). Redrawn HD versions (architecture, UI) are more common and need curation.
+>
+> The original Phase 0 text below is kept for traceability.
 
 Normalized path match: lowercase, strip `Content/SeriousSamHD[_TSE]/`, fold `TexturesMP`→`Textures` and `ModelsMP`→`Models`, drop the extension.
 
@@ -157,7 +166,14 @@ HD dimensions are **not yet determined**, because the `CTSEMETA` payload is unde
 - **Runtime constraint:** stock SE1 rejects textures larger than 1024 px (`MAX_MEX`) and asserts power-of-two dimensions (`Graphics/Texture.cpp:295-301`). Higher-resolution replacements therefore need the runtime override path.
 - **Override path in the RT fork:** it already loads overrides by virtual path from `OverridenTextures/Compressed/<dir>/<name>.ktx2`, with `_n` (normal) and `_rme` (roughness/metallic/emission) postfixes and `NNN` frame suffixes for animated textures (`Sources/Engine/Raytracing/SSRT.cpp:316-355`, `TextureUploader.cpp:33, 100-235`). Mex sizes stay untouched, so UVs are preserved. This is the natural target contract for compiled HD-derived textures; see [RD-005](./RD-005-rendering.md).
 
-### 6.3 Model level: **not feasible to import HD models into SE1**
+### 6.3 Model level: **not feasible to import HD models into SE1** (Phase 1: HD mesh/UV extraction proven for one static mesh; import still not recommended)
+
+> **Phase 1 revision [EXP]:**
+> - One HD `.bmf` static mesh decodes to plain float32 position/normal/UV streams and raw u16 indices. The UV atlas is coherent, with 0 degenerate triangles. So HD **UVs are extractable**.
+> - Skinning, skeleton, animation, sections/LODs and the vertex-format descriptor are not decoded.
+> - Some Classic model skins also exist unchanged inside the HD archives; they are found by normalization and verification.
+> - [ASM] Reprojecting remade HD art onto Classic UV layouts by baking is technically plausible but needs per-asset mesh registration and cleanup (EXP-008 §Interpretation: about 2–4 person-weeks of tooling plus 0.5–2 person-days per asset).
+> - The gameplay-parity constraints below still rule out importing HD meshes for Phase 2.
 
 The HD and Fusion `.mdl`/`.bmf` formats are skeletal render meshes with configs (`CModelConfigChildrenHolder`, `CMechanismTemplateHolder`). Classic TFE uses vertex-animated MDL with collision boxes and attachments, and its gameplay code references them through entity classes, so animation names and attachment indices are game logic. Classic TSE has SKA (`.bm`/`.bs`/`.ba`), but SKA is a different format and is mostly unused by the Classic campaign content.
 
@@ -170,6 +186,11 @@ Importing HD geometry would require:
 This is a separate, high-risk project and is **not recommended** for Phase 2. Keep Classic models and upscale their own textures (see [RD-003](./RD-003-ai-pipeline.md)).
 
 ### 6.4 Material level: **limited, metadata-only reuse**
+
+> **Phase 1 revision [EXP]:**
+> - `RFIL` reference tables parse for 100% of HD resources. 89–90% of HD textures are referenced by at least one resource (mesh, material, world or particle).
+> - Explicit role labels cover 34% (TFE) and 39% (TSE) of HD textures via the `_cm/_nm/_gm/_ao/_hm/_tm/...` suffix convention. The normal-map suffix agrees 100% with the BC3 normal flag.
+> - Slot names are **not** present as strings: `IDNT` holds generic argument names, and member names are stripped. Exact slot binding needs object deserialization (not done).
 
 HD `.mat` files are physical and gameplay surface schemes (sound, decal, particle), not shaders. HD `.mtr` and `CShaderModifierList` files probably carry shader parameters and the texture-slot bindings for normal/specular/detail maps. This is a hypothesis.
 
@@ -184,6 +205,8 @@ HD and Fusion shaders ship only as compiled caches (`.shc`) for D3D9, D3D11, D3D
 The HD worlds are rebuilt mesh worlds (`CTSEMETA`/`WRKSTRM1`, `CLightmapAtlas`), not SE1 brushes. The Classic `.wld` files remain authoritative; the project mandate also requires gameplay parity.
 
 ## 7. Proposed mapping strategy
+
+> **Phase 1 revision (2026-11-27).** Steps 2–4 below are superseded by the measured ladder in §16.3: candidate generation by path, normalization, pHash and embeddings, then **acceptance only through a pixel verifier plus a value gate**, then curation. The value gate is new. A verified HD candidate is used only if it is better than Classic: more pixels, or HD-only companion maps, or an owner-approved redraw. Otherwise the record falls back to Classic, even when it is "matched". The pipeline must support partial coverage per asset and per category.
 
 The pipeline lives in AssetCompiler; its output goes to SSTRE-Manifests `mappings/`.
 
@@ -290,6 +313,17 @@ SE1 has no true cubemaps. Reflection maps (`Models/ReflectionTextures/*`) stand 
 
 ## 13. Recommendation
 
+> **Phase 1 revised recommendation (2026-11-27). It supersedes the Phase 0 bullets below where they conflict.**
+> - **Keep HD as an optional, partial source.** [EXP] HD is fully decodable. Do not judge HD on exact-path percentages: the ladder plus verifier finds about 33% (TFE) and 25% (TSE) same-content matches.
+> - **Default every texture to Classic (lossless) plus the RD-003 pipeline.** [EXP] Most same-content HD matches are same-resolution lossy copies, so Classic is the better source for them.
+> - **Use an HD texture only when it adds value:**
+>   - (a) a true upscale with the same layout (a minority of props and architecture);
+>   - (b) HD-only normal/gloss maps for an unchanged albedo layout;
+>   - (c) owner-approved redrawn HD art (architecture, UI) as an optional "HD art" layer.
+> - **Characters, weapons and items:** Classic models stay. Classic skins found unchanged in HD add nothing. Remade HD art needs reprojection, which is a research prototype and not Phase 2 scope.
+> - **Fonts, technical maps and procedural FX:** Classic only.
+> - **Legal gate (RD-007), unchanged:** a CTSEMETA reader is data-format reverse engineering and must be reviewed before any AssetCompiler implementation. Any implementation is clean-room per ADR-0006.
+
 - Use **HD textures as an optional, verified source for brush architecture, Netricsa images, crosshairs and some effects** (about 30% of Classic textures by exact path, mostly `Textures/Levels`).
 - Treat **all character, weapon, item, plant, font, detail and technical textures as Classic-sourced**, processed through the RD-003 pipeline.
 - Do **not** attempt HD model, world or shader import.
@@ -309,3 +343,108 @@ SE1 has no true cubemaps. Reflection maps (`Models/ReflectionTextures/*`) stand 
 2. Agent E reviews §11.
 3. Implement E-B1 and E-B2 in SSTRE-AssetCompiler, read-only and local, with synthetic fixtures for CI.
 4. Freeze schema v0.1 after one real inventory run validates against it.
+
+## 16. Phase 1 update (2026-11-27)
+
+Evidence: [EXP-008](../experiments/EXP-008-hd-asset-matching.md). Per-asset paths, hashes, thumbnails and judgments are kept locally (`local-work/hd/`) until GATE-05 clears them; this section reports only aggregates.
+
+### 16.1 HD `.tex` format (data-file analysis; no binary disassembly) [EXP]
+
+The diagram below is synthetic: it shows field layout only.
+
+```
+CTSEMETA | 0x1234ABCD | ver | "$Version: ..." | MSGS | INFO | RFIL[(idx,0,len,str)...] | IDNT[(idx,len,str)...]
+| EXTY | INTY n | DTTY{id,name,kind,...,STMB{member#,type}} x n | EXOB | OBTY | EDTY | OBJS
+   ... CBaseTexture: width u32 | height u32 | flags u32 | format u32 | STAR len u32 | <mip chain> ...
+| EDOB | METAEND (trailer)
+standalone HD mip-chain transform:
+  BC1 (fmt 9):     [c0 u16 x Nblk(chain)] [c1 u16 x Nblk] [idx u32 x Nblk]; endpoints = running sum (u16)
+  BC3 (fmt 10/11): same colour planes + [alpha 8-byte records x Nblk] (raw); flag 0x80 = DXT5nm normal map
+  planes (fmt 2/3/4/5/6/7/8/12): k x [u8 plane over whole chain], each a running sum (u8); order R,G,B,A
+Fusion: different enum (+fmt 15), standard interleaved BCn, high mips in paired "--Big" files
+```
+
+Decode coverage:
+
+- **HD TFE:** 1621 of 1623 textures decoded.
+- **HD TSE:** 3362 of 3366 decoded. The 6 failures across both are empty lightmap stubs.
+- **Visual QA:** 87 random thumbnails, covering all formats, all looked plausible. Format 12 is not fully verified.
+- **Fusion:** 100% of headers parse. Pixel decode is not yet implemented at scale.
+
+### 16.2 What the matches are worth [EXP]
+
+| Measure | Classic TFE | Classic TSE |
+|---|---|---|
+| Decoded Classic textures (procedural FX excluded) | 1209 | 1477 |
+| (a) Exact-path candidates | 393 | 400 |
+| Verified same-content (verifier: DINOv2 ≥ 0.90 and pHash ≤ 16; hold-out precision 20/21) | **395 (32.7%)** | **364 (24.6%)** |
+| Verified sources found beyond exact path (via normalization or pHash) | **+105** | **+108** |
+| Verified with more HD pixels than Classic | 9 | 24 |
+| Verified with an HD companion `_nm` / `_gm` | 6 / 5 | 17 / 22 |
+| Curate tier (embedding ≥ 0.75 but not verified; mostly redrawn or related art) | 177 (86 with more pixels) | 261 (145 with more pixels) |
+| No candidate at any stage | 389 | 503 |
+
+Same-size verified pairs (n = 275): 12% are bit-identical; the rest are lossy copies (PSNR median 32.5 dB against Classic).
+
+### 16.3 Matching ladder (both Classic sets; 117 human-checked pairs) [EXP]
+
+| Stage | New Classic textures with a candidate (TFE / TSE) | S-precision (S+R) | Role in the pipeline |
+|---|---|---|---|
+| (a) Exact normalized path | 393 / 400 | 0.79 (1.00), n = 14 | Candidate. Still verify: UI and Netricsa textures are often redrawn |
+| (b) Improved normalization (`textures/` and `hd/` folders, role suffixes, `_batched`, digits, fuzzy stem within the same model folder) | 166 / 219 | 0.56 (0.67), n = 18 | Candidate |
+| (c) pHash ≤ 12, in-group top-1 | 62 / 74 | 0.20 (0.70), n = 10 | Candidate |
+| (d) DINOv2 in-group top-1 (≥ 0.85 / 0.75–0.85 / 0.65–0.75) | 20+61+118 / 14+96+171 | 0.21 / 0.07 / 0.00 | Retrieval only. Recall proxy: top-1 87%, top-5 93% |
+| (e) Semantic CLIP/VLM labels | not run | — | Optional, for curation queues |
+| Verifier on the best candidate from any stage | — | **0.95 on hold-out** (20/21) | Automatic acceptance |
+
+Category gating remains mandatory. Cross-category retrieval produced the typical false positives: generic gradients, glows and skies.
+
+### 16.4 Per-category source strategy (supports partial HD coverage)
+
+| Category | Default | Use HD when | Expected HD share [EXP]/[ASM] |
+|---|---|---|---|
+| Architecture (brush) | Classic + RD-003 | Verified **and** more pixels (a true upscale); or HD `_nm`/`_gm` for an unchanged layout; or an owner-approved redraw (R tier) that keeps the original mex size | Verified 62% (TFE) / 41% (TSE), but true upscales only ≈1% [EXP]; redraws ≈15–20% [EXP, curate tier] |
+| Props / statues (other models) | Classic + RD-003 | Verified upscale (seen at 4–16×) | ≈7% (TSE) [EXP] |
+| Items / player / enemies / weapons | Classic + RD-003 | Only if verified **and** better (rare). Remade art only through a future reprojection project | ≈0–1% usable now [EXP]; remade art [ASM] |
+| UI / Netricsa | Classic (text integrity) | Owner-approved HD redraw, after checking text and layout | Redraws are common (172 higher-resolution exact-path pairs) [EXP] |
+| Sky / backgrounds | Classic | Owner-approved HD panoramas (reorganized, so not drop-in) | ≈0 drop-in [EXP] |
+| Effects | Classic (procedural FX are never replaced) | Verified upscale of bitmap sprites | Small [EXP] |
+| Fonts, technical/reflection/specular maps, procedural FX | Classic only | Never | 0 |
+
+**Conservative fallback:**
+
+- Any texture without an accepted, value-gated HD source keeps its Classic texture.
+- An unverified candidate is never used automatically.
+- Every record carries its status, so partial coverage per level or category is the normal case. The build report counts each status.
+
+### 16.5 Proposed `asset-inventory.schema.json` changes (proposal only; not applied)
+
+1. **`mappingCandidate.method`:**
+   - Add the values `normalized_name` (stage b), `embedding` (stage d), `semantic` (stage e) and `dependency` (model/material graph).
+   - Add `embedding_model` (id, revision, weights SHA-256) and `embedding_score`.
+2. **`mappingCandidate`:**
+   - Add `verifier` {`rule_id`, `passed`, `phash_distance`, `embedding_score`, `psnr_vs_classic`, `ssim`}.
+   - Add `resolution_ratio` (HD pixels / Classic pixels).
+   - Add `value_gate`, enum `upscale | companion_maps | approved_redraw | none`.
+   - Add `judgment`, enum `same | related | wrong`, with `reviewed_by` / `reviewed_at`.
+   - Add `source_lossy_format` (e.g. `bc1`).
+3. **`mapping_status`:**
+   - Add `matched_no_gain`: a verified match that adds nothing, so Classic is used.
+   - Add `curation_queue`: a related candidate awaiting the owner.
+   - Keep `classic_fallback` as the explicit final state.
+4. **`textureInfo`:**
+   - Add `se3_format_id` (raw enum, per edition) and `se3_flags`.
+   - Add `payload_transform`, enum `se3_plane_delta | none`.
+   - Add `streamed_mip_parts` (Fusion `--Big` files).
+   - Extend `texture_role` with `gloss`, `ao`, `translucency` and `opacity`.
+   - Add `role_source`, enum `suffix | format_flag | material_slot | curated`.
+5. **`dependencies.relation`:** add `normal_map`, `gloss_map`, `ao_map`, `referenced_by_material` and `referenced_by_mesh` (the last two from `RFIL`).
+6. **`modelInfo`:** add `hd_uv_available` (bool), `hd_mesh_ref` and `reprojection` {`status`, `bake_coverage`, `seam_score`}.
+7. **Matching gate:** keep the asset-level `category` as it is. Matching uses a coarser gate group (architecture, props, items, player, enemies, weapons, effects, ui, sky, technical); record it as `match_gate`.
+
+### 16.6 Open decisions (owner / RD-007)
+
+1. Approve or reject an optional "HD art" layer of redrawn textures. This is an art-direction change.
+2. Confirm that same-resolution lossy HD matches are not used. Recommended: use Classic plus AI instead.
+3. RD-007: is a CTSEMETA reader legal, and can HD-only normal/gloss maps be used cross-product?
+4. Decide whether to fund a reprojection prototype (one enemy) as research.
