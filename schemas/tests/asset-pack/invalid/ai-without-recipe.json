@@ -1,0 +1,25 @@
+{
+ "packFormatVersion": "0.1.0",
+ "packId": "ai",
+ "version": "1.0.0",
+ "kind": "ai-enhancement",
+ "entries": [
+  {
+   "assetId": "classic_tfe:textures/syn/plain.tex",
+   "role": "albedo",
+   "file": "out.png",
+   "sha256": "sha256:22f71c8c3d54a87c850a351f8c9f53b3c0af9784d4d8a9a2e9e58047e2d62850",
+   "px": [
+    512,
+    512
+   ],
+   "input": {
+    "sourceSha256": "sha256:c219c72bd761040a053f5d0411b515506954a8cb8d2a2a44408c82b75802f6dc"
+   },
+   "qa": {
+    "passed": true
+   }
+  }
+ ],
+ "qualityProfile": "conservative"
+}

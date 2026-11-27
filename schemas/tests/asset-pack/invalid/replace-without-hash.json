@@ -1,0 +1,21 @@
+{
+ "packFormatVersion": "0.1.0",
+ "packId": "cur",
+ "version": "1.0.0",
+ "kind": "curated",
+ "entries": [
+  {
+   "assetId": "classic_tfe:textures/interface/syn_logo.tex",
+   "action": "use-classic"
+  },
+  {
+   "assetId": "classic_tfe:textures/syn/maps.tex",
+   "file": "m.png",
+   "px": [
+    512,
+    512
+   ],
+   "keepMaps": true
+  }
+ ]
+}

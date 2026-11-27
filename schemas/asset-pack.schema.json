@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/asset-pack.schema.json",
+  "title": "SSTRE asset pack index (AI Enhancement outputs, curated and community overrides)",
+  "$comment": "STATUS: PROPOSAL (sprint 2, track A2, EXP-015; ADR-0009 layers 6 and 7). The index of a directory of processed or replacement textures. kind=ai-enhancement is the interface through which the AI track's outputs enter layer 6: every entry names the asset, the hash of the exact source it processed (must equal the source the plan selected), the resolved recipe hash (asset-recipe.schema.json), the QA verdict and optionally the build-provenance record. kind=curated|community feeds layer 7. Files are referenced relative to the index. Packs that contain or reference game-derived pixels are local only (ADR-0002, GATE-05); the examples are synthetic.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["packFormatVersion", "packId", "version", "kind", "entries"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "packFormatVersion": { "type": "string", "pattern": "^0\\.[0-9]+\\.[0-9]+$" },
+    "packId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+    "version": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["ai-enhancement", "curated", "community"] },
+    "title": { "type": "string" },
+    "license": { "type": "string", "description": "SPDX expression of the pack's own contribution, if any." },
+    "localOnly": { "type": "boolean" },
+    "qualityProfile": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$", "description": "AI packs: the quality profile the outputs were produced for." },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": { "name": { "type": "string" }, "version": { "type": "string" }, "gitCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" } }
+    },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "ai-enhancement" } } },
+      "then": {
+        "required": ["qualityProfile"],
+        "properties": { "entries": { "items": { "$ref": "#/$defs/aiEntry" } } }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": { "$ref": "build-provenance.schema.json#/$defs/sha256" },
+    "size": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 2, "maxItems": 2 },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assetId"],
+      "properties": {
+        "assetId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "role": { "enum": ["albedo", "normal", "gloss", "ao", "height"], "default": "albedo" },
+        "action": {
+          "description": "replace: supply this file; use-classic: force the Classic source; skip-ai: keep the selected source unprocessed.",
+          "enum": ["replace", "use-classic", "skip-ai"],
+          "default": "replace"
+        },
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "px": { "$ref": "#/$defs/size" },
+        "alphaMode": { "enum": ["opaque", "cutout", "blend", "none"] },
+        "priority": { "type": "integer", "minimum": -1000000, "maximum": 1000000 },
+        "keepMaps": { "type": "boolean", "description": "Keep the HD maps verified for the Classic albedo (override only)." },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sourceSha256"],
+          "properties": {
+            "sourceSha256": { "$ref": "#/$defs/sha256", "description": "Hash of the exact source processed: the source file or its decoded mip-0 PNG, as recorded in the plan (source.sha256 / source.imageSha256)." },
+            "layer": { "enum": ["classic-base", "hd-quality", "hd-artwork", "hd-interface"] }
+          }
+        },
+        "recipeHash": { "$ref": "#/$defs/sha256", "description": "resolvedRecipeHash of the asset-recipe used." },
+        "provenanceSha256": { "$ref": "#/$defs/sha256", "description": "JCS hash of the build-provenance record." },
+        "provenanceRef": { "type": "string" },
+        "qa": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["passed"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "toleranceClass": { "enum": ["T0", "T1", "T2", "T3", "unmeasured"] },
+            "fallbackUsed": { "type": "boolean" }
+          }
+        },
+        "note": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "const": "replace" } } },
+          "then": { "required": ["file", "sha256", "px"] }
+        }
+      ]
+    },
+    "aiEntry": {
+      "required": ["file", "sha256", "px", "input", "recipeHash", "qa"],
+      "properties": { "action": { "const": "replace" } }
+    }
+  },
+  "examples": [
+    {
+      "$comment": "Synthetic example: hashes are SHA-256 of 'SSTRE synthetic fixture: <label>'.",
+      "packFormatVersion": "0.1.0",
+      "packId": "synthetic-ai",
+      "version": "0.1.0",
+      "kind": "ai-enhancement",
+      "qualityProfile": "conservative",
+      "localOnly": true,
+      "generator": { "name": "synthetic-toolkit", "version": "0.0.0" },
+      "entries": [
+        {
+          "assetId": "synthetic:textures/test/wall.tex",
+          "role": "albedo",
+          "file": "wall.x2.png",
+          "sha256": "sha256:344955c936bb959353f3d7bd0eb3f3d00870e56a29b7c72bde315a8097571fd4",
+          "px": [512, 512],
+          "input": { "sourceSha256": "sha256:fa0f4e666dd875c8e4d56c1e4c53fd90ac8182f9a81209bd6b95b5bc6e046e3b", "layer": "classic-base" },
+          "recipeHash": "sha256:3bcc5ff07deb9c2a1eeba0f3724b449223bfa1787a760914e7732f7e78ba61ae",
+          "qa": { "passed": true, "toleranceClass": "unmeasured" }
+        }
+      ]
+    }
+  ]
+}

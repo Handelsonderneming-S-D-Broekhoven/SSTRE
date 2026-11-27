@@ -1,0 +1,63 @@
+{
+ "$comment": "Built-in SSTRE platform profile. Limits from EXP-012 (Classic-VK loaded 2048x2048, 2048x1024 and 2048x4096 = 8.4 Mpx; 4096x4096 crashed on Vulkan and OpenGL). Formats from RD-006 section 4 and EXP-014.",
+ "profileFormatVersion": "0.1.0",
+ "profileId": "pc-default",
+ "title": "PC (Windows/Linux), Classic-VK raster + experimental RT",
+ "status": "provisional",
+ "evidence": [
+  "EXP-012",
+  "EXP-014",
+  "RD-006"
+ ],
+ "textureLimits": {
+  "maxWidth": 4096,
+  "maxHeight": 4096,
+  "maxLongEdge": 4096,
+  "maxShortEdge": 2048,
+  "maxPixels": 8388608,
+  "requirePowerOfTwo": false,
+  "respectFirstMipDensity": true,
+  "notes": "Cap at the experimentally validated maximum until the 4096x4096 crash is understood. 4096x2048 (landscape) is inferred from symmetry, not tested."
+ },
+ "mipPolicy": {
+  "filter": "kaiser",
+  "alphaCoveragePreserve": true,
+  "wrapForTileable": true
+ },
+ "memoryBudget": {
+  "bytes": 2147483648,
+  "accountingTarget": "raster",
+  "includeMips": true,
+  "policy": "report"
+ },
+ "preprocessing": {
+  "downscale": {
+   "policy": "halve-until-fit",
+   "filter": "lanczos3",
+   "neverBelowClassic": true
+  },
+  "colorSpace": {
+   "color": "srgb",
+   "data": "linear",
+   "resampleInLinear": true
+  },
+  "alpha": {
+   "mode": "preserve",
+   "premultiply": false,
+   "dilateEdges": true,
+   "cutoutCoverage": true
+  },
+  "normals": {
+   "renormalizeAfterResample": true
+  }
+ },
+ "materialMaps": {
+  "enabled": true,
+  "roles": [
+   "normal",
+   "gloss",
+   "ao",
+   "height"
+  ]
+ }
+}

@@ -45,3 +45,9 @@ Rules:
 - SSTRE-AssetCompiler implements layer configuration, selection and effective-configuration recording (sprint 2, track A2), plus platform profiles.
 - The source selector (EXP-012) feeds layers 2–5. Its "HD-art queue" decisions populate layer 4 or 5 candidates awaiting approval.
 - SSTRE-Manifests will hold layer configurations, approvals and curated overrides as data. Their publication is subject to GATE-05.
+
+## Clarifications (2026-11-27, lead, from the EXP-015 implementation)
+
+- **HD Interface** has its own global opt-in, independent of HD Artwork. Re-laid-out UI pages (different layout, not only higher resolution) are a further opt-in inside HD Interface (`includeRelayout`, default off). Each still needs per-asset approval.
+- **Default AI quality profile:** the tool default is `off`, so a build with no configuration gives the Classic experience. The vertical-slice configuration uses `conservative`: deterministic super-resolution, no generative steps. Generative refinement stays an explicit opt-in experiment.
+- **Memory budgets** are part of the platform profile. EXP-015 measured that the `standard` AI profile needs about 5.6 GB of raster texture memory for TFE, against the 2 GiB `pc-default` budget, so profiles must prioritise which assets receive the planned upscale.

@@ -1,0 +1,23 @@
+{
+ "packFormatVersion": "0.1.0",
+ "packId": "cur",
+ "version": "1.0.0",
+ "kind": "curated",
+ "entries": [
+  {
+   "assetId": "classic_tfe:textures/interface/syn_logo.tex",
+   "action": "use-classic"
+  },
+  {
+   "assetId": "classic_tfe:textures/syn/maps.tex",
+   "file": "m.png",
+   "sha256": "sha256:4c5185ab9076c8c710b6635d07c8c963e55cecc389908c4b8e9d7c35e6cce252",
+   "px": [
+    512,
+    512
+   ],
+   "keepMaps": true
+  }
+ ],
+ "$comment": "Synthetic test document: invented asset IDs; hashes are SHA-256 of 'SSTRE synthetic fixture: <label>'."
+}

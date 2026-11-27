@@ -1,0 +1,21 @@
+{
+ "approvalsFormatVersion": "0.1.0",
+ "approvalsId": "syn",
+ "approvals": [
+  {
+   "assetId": "classic_tfe:models/syn/statue.tex",
+   "layer": "hd-artwork",
+   "candidateId": "hd_tfe:syn/statue",
+   "decision": "approved",
+   "approvedBy": "owner",
+   "date": "2026-11-27"
+  },
+  {
+   "assetId": "classic_tfe:textures/interface/syn_logo.tex",
+   "layer": "hd-interface",
+   "candidateId": "hd_tfe:syn/logo",
+   "decision": "approved"
+  }
+ ],
+ "$comment": "Synthetic test document: invented asset IDs; hashes are SHA-256 of 'SSTRE synthetic fixture: <label>'."
+}

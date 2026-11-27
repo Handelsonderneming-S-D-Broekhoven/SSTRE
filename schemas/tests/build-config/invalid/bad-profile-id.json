@@ -1,0 +1,24 @@
+{
+ "configFormatVersion": "0.1.0",
+ "configId": "inline-profile",
+ "platformProfile": "PC Default",
+ "qualityProfiles": {
+  "mine": {
+   "enabled": true,
+   "defaultMode": "sr",
+   "classes": {
+    "ui": {
+     "mode": "skip"
+    }
+   }
+  }
+ },
+ "layers": {
+  "ai-enhancement": {
+   "qualityProfile": "mine"
+  }
+ },
+ "selection": {
+  "policyId": "sstre-source-selection"
+ }
+}

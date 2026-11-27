@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/build-config.schema.json",
+  "title": "SSTRE layered asset build configuration",
+  "$comment": "STATUS: PROPOSAL (sprint 2, track A2, EXP-015). Input of 'sstre-ac plan' (ADR-0009). Selects the asset layers, the AI quality profile, the platform profile, the approvals file and the asset packs (AI outputs for layer 6, curated/community overrides for layer 7). Paths are relative to this file. Layers 1-7 have a FIXED order that this document cannot change; omitted layers take the ADR-0009 defaults (Classic Base, HD Quality, HD Material Maps on; HD Artwork, HD Interface, overrides off; AI 'off'). The frozen, resolved form is written into build-manifest.schema.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["configFormatVersion", "configId"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "configFormatVersion": { "type": "string", "pattern": "^0\\.[0-9]+\\.[0-9]+$" },
+    "configId": { "$ref": "#/$defs/id" },
+    "description": { "type": "string" },
+    "layers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "classic-base": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "enabled": { "const": true, "description": "Always on: source of truth and fallback (ADR-0009 rule 4)." } }
+        },
+        "hd-quality": { "$ref": "#/$defs/switch", "description": "Layer 2: only assets the source selector found verified superior (decision.result = hd)." },
+        "hd-material-maps": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "roles": { "type": "array", "items": { "$ref": "platform-profile.schema.json#/$defs/mapRole" }, "uniqueItems": true }
+          }
+        },
+        "hd-artwork": { "$ref": "#/$defs/switch", "description": "Layer 4: global opt-in; each asset also needs an approval." },
+        "hd-interface": {
+          "description": "Layer 5: separate opt-in for menus, HUD and Netricsa art; each asset also needs an approval.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "includeRelayout": { "type": "boolean", "description": "Also offer higher-resolution, re-laid-out UI images (EXP-012); still approval-gated." }
+          }
+        },
+        "ai-enhancement": {
+          "description": "Layer 6: processes the source selected by layers 1-5.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "qualityProfile": { "$ref": "#/$defs/id" },
+            "packs": { "type": "array", "items": { "$ref": "#/$defs/packRef" } }
+          }
+        },
+        "overrides": {
+          "description": "Layer 7: curated and community override packs, highest applicable priority.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "packs": { "type": "array", "items": { "$ref": "#/$defs/packRef" } }
+          }
+        }
+      }
+    },
+    "qualityProfiles": {
+      "description": "Additional or replacement AI quality profiles, keyed by id. Built-ins: off, conservative, standard.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/qualityProfile" }
+    },
+    "platformProfile": {
+      "description": "Built-in profile id (pc-default, pc-low-memory, legacy-constrained) or an inline profile.",
+      "oneOf": [
+        { "$ref": "#/$defs/id" },
+        { "$ref": "platform-profile.schema.json" }
+      ]
+    },
+    "approvals": {
+      "description": "Per-asset approvals for layers 4 and 5 (layer-approvals.schema.json).",
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/fileRef" }]
+    },
+    "selection": {
+      "description": "Restrict the source-selection records to one policy.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policyId": { "type": "string" },
+        "policyVersion": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+    "sha256": { "$ref": "build-provenance.schema.json#/$defs/sha256" },
+    "layerId": {
+      "enum": ["classic-base", "hd-quality", "hd-material-maps", "hd-artwork", "hd-interface", "ai-enhancement", "overrides"]
+    },
+    "switch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "enabled": { "type": "boolean" } }
+    },
+    "fileRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256", "description": "If given, the file must have this hash. Release configs pin every file." }
+      }
+    },
+    "packRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packId", "version", "kind", "path", "priority"],
+      "properties": {
+        "packId": { "$ref": "#/$defs/id" },
+        "version": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["ai-enhancement", "curated", "community"] },
+        "path": { "type": "string", "minLength": 1, "description": "Pack index (asset-pack.schema.json)." },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "priority": { "type": "integer", "minimum": -1000000, "maximum": 1000000, "description": "Higher wins; ties: curated before community, then packId." }
+      }
+    },
+    "qualityProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "description": { "type": "string" },
+        "defaultMode": { "$ref": "#/$defs/aiMode" },
+        "processSources": { "type": "array", "items": { "enum": ["classic-base", "hd-quality", "hd-artwork", "hd-interface"] }, "uniqueItems": true },
+        "classes": {
+          "description": "Per category (source-selection categories).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mode"],
+            "properties": {
+              "mode": { "$ref": "#/$defs/aiMode" },
+              "scale": { "type": "integer", "minimum": 1, "maximum": 16 }
+            }
+          }
+        }
+      }
+    },
+    "aiMode": { "enum": ["skip", "sr", "sr+refine"] }
+  },
+  "examples": [
+    {
+      "$comment": "Synthetic example: ADR-0009 defaults on the PC profile.",
+      "configFormatVersion": "0.1.0",
+      "configId": "default",
+      "layers": {},
+      "platformProfile": "pc-default"
+    },
+    {
+      "$comment": "Synthetic example: HD Artwork and HD Interface opted in, conservative AI, one curated pack.",
+      "configFormatVersion": "0.1.0",
+      "configId": "hd-art-opt-in",
+      "layers": {
+        "hd-artwork": { "enabled": true },
+        "hd-interface": { "enabled": true, "includeRelayout": false },
+        "ai-enhancement": {
+          "qualityProfile": "conservative",
+          "packs": [{ "packId": "ai-set1", "version": "0.1.0", "kind": "ai-enhancement", "path": "packs/ai-set1/pack.json", "priority": 0 }]
+        },
+        "overrides": {
+          "enabled": true,
+          "packs": [{ "packId": "curated-core", "version": "1.0.0", "kind": "curated", "path": "packs/curated-core/pack.json", "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "priority": 10 }]
+        }
+      },
+      "platformProfile": "pc-low-memory",
+      "approvals": { "path": "approvals/synthetic.json" }
+    }
+  ]
+}

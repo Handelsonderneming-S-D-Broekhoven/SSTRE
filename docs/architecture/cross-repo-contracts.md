@@ -97,13 +97,21 @@ that contains the schema version they implement. A schema may move to the
 repository that owns it once that repository has code; the umbrella then keeps
 a pointer, not a copy.
 
-| Schema | Owner (author in Phase 0) | Producer repo | Consumer repos | Status |
+| Schema | Owner | Producer repo | Consumer repos | Status |
 |---|---|---|---|---|
-| `schemas/asset-inventory.schema.json` | Agent B (asset formats); maintained by AssetCompiler | AssetCompiler | Manifests, Toolkit (indirectly) | Being drafted concurrently |
-| `schemas/asset-recipe.schema.json` | Agent C (AI pipeline / reproducibility) | Manifests (authored), Toolkit resolver (resolved form) | Toolkit, AssetCompiler | Being drafted concurrently |
-| `schemas/build-provenance.schema.json` | Agent C | Toolkit, AssetCompiler | Umbrella release tooling, QA | Being drafted concurrently |
-| [`schemas/release-pins.schema.json`](../../schemas/release-pins.schema.json) | Agent F (repository bootstrap); maintained by umbrella | Umbrella | Umbrella build tooling | Proposal written |
-| QA report, mapping file, package manifest | Unassigned | – | – | Not yet proposed |
+| [`asset-inventory`](../../schemas/asset-inventory.schema.json) | AssetCompiler | AssetCompiler (`sstre-ac inventory`) | Manifests, Toolkit (indirectly) | proposal, implemented (EXP-007) |
+| [`game-edition-report`](../../schemas/game-edition-report.schema.json) | AssetCompiler | AssetCompiler (`sstre-ac detect`) | umbrella builder | implemented (EXP-007) |
+| [`asset-recipe`](../../schemas/asset-recipe.schema.json) | Toolkit | Manifests (authored), Toolkit resolver | Toolkit, AssetCompiler | proposal |
+| [`build-provenance`](../../schemas/build-provenance.schema.json) | Toolkit | Toolkit, AssetCompiler | release tooling, QA | proposal |
+| [`source-selection`](../../schemas/source-selection.schema.json) | AssetCompiler | AssetCompiler (`select-source`) | AssetCompiler planner, Manifests | implemented (EXP-012) |
+| [`build-config`](../../schemas/build-config.schema.json) | AssetCompiler | user / umbrella builder, Manifests (layer configs) | AssetCompiler planner | implemented (EXP-015, ADR-0009) |
+| [`build-manifest`](../../schemas/build-manifest.schema.json) | AssetCompiler | AssetCompiler (`sstre-ac plan`) | packaging, release tooling, QA | implemented (EXP-015) |
+| [`platform-profile`](../../schemas/platform-profile.schema.json) | AssetCompiler | AssetCompiler / Manifests | AssetCompiler planner, Toolkit (target sizes) | implemented (EXP-015); non-PC profiles hypothetical |
+| [`layer-approvals`](../../schemas/layer-approvals.schema.json) | Manifests (data), AssetCompiler (consumer) | curators (local until GATE-05) | AssetCompiler planner | implemented (EXP-015) |
+| [`asset-pack`](../../schemas/asset-pack.schema.json) | AssetCompiler | Toolkit (`ai-enhancement` packs), curators, community | AssetCompiler planner (layers 6–7) | implemented (EXP-015) |
+| [`release-pins`](../../schemas/release-pins.schema.json) | umbrella | umbrella | umbrella build tooling | proposal |
+| [`engine-upstream-lock`](../../schemas/engine-upstream-lock.schema.json) | SSTRE-Engine | SSTRE-Engine | patch tooling (EXP-010) | implemented (ADR-0008) |
+| QA report, package format | unassigned | – | – | not yet proposed |
 
 Every schema must:
 
