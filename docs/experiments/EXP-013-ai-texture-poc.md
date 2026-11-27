@@ -1,5 +1,7 @@
 # EXP-013: AI texture-processing proof of concept (Remaster-Toolkit)
 
+> **Correction (2026-11-28, from [EXP-016](EXP-016-tex4096-crash.md)):** the in-engine comparison ran with the shipped `tex_iNormalSize=9` (uploads capped to a 512² area) and, on OpenGL, 16-bit uploads of textures without `TEX_32BIT`. Its in-engine numbers are therefore partly affected by downscaled uploads. A corrected re-run with `tex_iNormalSize=11`, `tex_iNormalQuality=22` and `TEX_32BIT` follows as an addendum.
+
 | Field | Value |
 |---|---|
 | Date | 2026-11-27 |
