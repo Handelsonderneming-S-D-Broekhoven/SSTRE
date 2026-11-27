@@ -1,0 +1,45 @@
+{
+  "schema_version": "0.1.0",
+  "record_id": "sel-00000000000000a4",
+  "asset_id": "classic_tfe:textures/example/wall.tex",
+  "category": "font",
+  "generated_at": "2026-11-27T12:00:00Z",
+  "generator": {
+    "name": "sstre-assetcompiler",
+    "version": "0.1.0.dev0"
+  },
+  "policy": {
+    "policy_id": "sstre-source-selection",
+    "version": "0.1.0",
+    "hd_art_opt_in": false,
+    "thresholds": {
+      "lossy_psnr_db": 40.0,
+      "same_art_ssim_min": 0.8
+    }
+  },
+  "classic": {
+    "virtual_path": "Textures/Example/Wall.tex",
+    "width_px": 256,
+    "height_px": 256,
+    "mex_width": 4096,
+    "mex_height": 4096,
+    "alpha_mode": "opaque"
+  },
+  "candidates": [],
+  "rules_evaluated": [
+    {
+      "rule_id": "R01_never_replace_category",
+      "fired": true,
+      "detail": "font"
+    }
+  ],
+  "decision": {
+    "result": "classic",
+    "base_source": "classic",
+    "rule_fired": "R01_never_replace_category",
+    "reason": "Category is never replaced",
+    "selected_candidate": null,
+    "requires_opt_in": false
+  },
+  "local_only": true
+}

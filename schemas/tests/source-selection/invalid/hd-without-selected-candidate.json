@@ -1,0 +1,86 @@
+{
+  "schema_version": "0.1.0",
+  "record_id": "sel-00000000000000a1",
+  "asset_id": "classic_tfe:textures/example/wall.tex",
+  "category": "architecture",
+  "generated_at": "2026-11-27T12:00:00Z",
+  "generator": {
+    "name": "sstre-assetcompiler",
+    "version": "0.1.0.dev0"
+  },
+  "policy": {
+    "policy_id": "sstre-source-selection",
+    "version": "0.1.0",
+    "hd_art_opt_in": false,
+    "thresholds": {
+      "lossy_psnr_db": 40.0,
+      "same_art_ssim_min": 0.8
+    }
+  },
+  "classic": {
+    "virtual_path": "Textures/Example/Wall.tex",
+    "width_px": 256,
+    "height_px": 256,
+    "mex_width": 4096,
+    "mex_height": 4096,
+    "alpha_mode": "opaque"
+  },
+  "candidates": [
+    {
+      "candidate_id": "hd_tfe:textures/example/wall",
+      "source_kind": "hd",
+      "edition": "hd_tfe",
+      "source_format": "bc1",
+      "match": {
+        "verified": true,
+        "method": "exact_path",
+        "embedding_score": 0.97,
+        "phash_distance": 2
+      },
+      "metrics": {
+        "classic_px": [
+          256,
+          256
+        ],
+        "candidate_px": [
+          1024,
+          1024
+        ],
+        "resolution_ratio": 16.0,
+        "aspect_match": true,
+        "bit_identical": false,
+        "psnr_db": 30.2,
+        "ssim": 0.95,
+        "layout_ssim": 0.99,
+        "delta_e": 2.1,
+        "hist_intersection": 0.95,
+        "blockiness_classic": 1.0,
+        "blockiness_candidate": 1.18,
+        "blockiness_excess": 0.3,
+        "artefact_index": 0.075,
+        "sharpness_ratio": 0.97,
+        "detail_energy": 0.31
+      }
+    }
+  ],
+  "rules_evaluated": [
+    {
+      "rule_id": "R01_never_replace_category",
+      "fired": false
+    },
+    {
+      "rule_id": "R08_upscale_with_detail",
+      "fired": true,
+      "detail": "ratio=16 detail=0.31 art=0.075"
+    }
+  ],
+  "decision": {
+    "result": "hd",
+    "base_source": "hd",
+    "rule_fired": "R08_upscale_with_detail",
+    "reason": "More pixels with real detail",
+    "selected_candidate": null,
+    "requires_opt_in": false
+  },
+  "local_only": true
+}

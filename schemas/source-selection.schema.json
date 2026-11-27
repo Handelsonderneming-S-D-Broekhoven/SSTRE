@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/source-selection.schema.json",
+  "title": "SSTRE per-asset texture source-selection record",
+  "$comment": "STATUS: PROPOSAL (sprint 2, EXP-012). One record per asset, produced by 'sstre-ac select-source'. Records the inputs (Classic texture, HD/HD-art candidates and their match evidence), every computed metric, the policy thresholds, the ordered rules evaluated and the decision. Real records contain virtual paths and hashes of proprietary files and stay in the user's local workspace until backlog GATE-05 clears publication. The examples below are synthetic.",
+  "type": "object",
+  "required": ["schema_version", "record_id", "asset_id", "category", "generated_at", "generator", "policy", "classic", "candidates", "rules_evaluated", "decision", "local_only"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^0\\.[0-9]+\\.[0-9]+$" },
+    "record_id": { "type": "string", "pattern": "^sel-[0-9a-f]{16}$", "description": "Stable id: hash of asset_id and policy." },
+    "asset_id": { "type": "string", "pattern": "^(classic_tfe|classic_tse):[a-z0-9_./ -]+(#[a-z]+)?$" },
+    "category": {
+      "enum": ["architecture", "terrain", "vegetation", "props", "items", "player", "enemy", "weapon", "effects", "ui", "font", "sky", "detail", "technical", "procedural_effect", "other"]
+    },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "generator": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": { "name": { "type": "string" }, "version": { "type": "string" }, "revision": { "type": "string" } }
+    },
+    "policy": {
+      "type": "object",
+      "required": ["policy_id", "version", "hd_art_opt_in", "thresholds"],
+      "additionalProperties": false,
+      "properties": {
+        "policy_id": { "type": "string" },
+        "version": { "type": "string" },
+        "hd_art_opt_in": { "type": "boolean", "description": "Owner opt-in for the optional HD-art layer. Off by default." },
+        "thresholds": { "type": "object", "additionalProperties": { "type": "number" } }
+      }
+    },
+    "classic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "virtual_path": { "type": "string" },
+        "source_sha256": { "$ref": "#/$defs/sha256" },
+        "image_sha256": { "$ref": "#/$defs/sha256" },
+        "width_px": { "type": "integer", "minimum": 1 },
+        "height_px": { "type": "integer", "minimum": 1 },
+        "mex_width": { "type": "integer", "minimum": 1 },
+        "mex_height": { "type": "integer", "minimum": 1 },
+        "alpha_mode": { "enum": ["opaque", "cutout", "blend", "none"] },
+        "procedural_effect": { "type": "boolean" }
+      }
+    },
+    "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+    "rules_evaluated": {
+      "type": "array",
+      "description": "Ordered trace; the first rule with fired=true (other than modifiers M*) decided.",
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "fired"],
+        "additionalProperties": false,
+        "properties": {
+          "rule_id": { "$ref": "#/$defs/rule_id" },
+          "fired": { "type": "boolean" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "decision": { "$ref": "#/$defs/decision" },
+    "local_only": { "const": true },
+    "local_context": {
+      "type": "object",
+      "description": "Free-form local annotations (e.g. research tiers, human judgments). Never published."
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "rule_id": {
+      "enum": ["R01_never_replace_category", "R02_no_candidate", "R03_unverified", "R04_uv_incompatible", "R05_alpha_mismatch", "R06_equivalent", "R07_art_difference", "R08_upscale_with_detail", "R09_upscale_without_detail", "R10_same_res_cleaner", "R11_degraded_copy", "R12_default_classic", "M01_companion_maps"]
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["candidate_id", "source_kind", "metrics"],
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": { "type": "string", "minLength": 1 },
+        "source_kind": { "enum": ["hd", "hd_art", "fusion"] },
+        "edition": { "enum": ["hd_tfe", "hd_tse", "fusion_hd_tfe", "fusion_hd_tse"] },
+        "virtual_path": { "type": "string" },
+        "source_sha256": { "$ref": "#/$defs/sha256" },
+        "image_sha256": { "$ref": "#/$defs/sha256" },
+        "source_format": { "type": "string", "description": "Decoder-reported pixel format, e.g. bc1, bc3, p4 (uncompressed planes)." },
+        "companion_maps": {
+          "type": "object",
+          "propertyNames": { "enum": ["normal", "gloss", "ao", "height"] },
+          "additionalProperties": { "type": "string" }
+        },
+        "match": {
+          "type": "object",
+          "required": ["verified"],
+          "additionalProperties": false,
+          "properties": {
+            "verified": { "type": "boolean", "description": "Passed the pixel-level same-content verifier." },
+            "related": { "type": "boolean", "description": "Retrieved as related artwork (e.g. embedding >= 0.75 or exact path) but not verified." },
+            "method": { "enum": ["exact_path", "normalized_name", "perceptual_hash", "embedding", "semantic", "dependency", "curated", "other"] },
+            "embedding_score": { "type": "number", "minimum": -1, "maximum": 1.0001 },
+            "phash_distance": { "type": "integer", "minimum": 0 },
+            "verifier_rule": { "type": "string" }
+          }
+        },
+        "metrics": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/metrics" }] }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["classic_px", "candidate_px", "resolution_ratio", "aspect_match"],
+      "additionalProperties": false,
+      "properties": {
+        "classic_px": { "$ref": "#/$defs/size" },
+        "candidate_px": { "$ref": "#/$defs/size" },
+        "resolution_ratio": { "type": "number", "exclusiveMinimum": 0, "description": "Candidate pixels / Classic pixels." },
+        "aspect_match": { "type": "boolean" },
+        "bit_identical": { "type": "boolean" },
+        "psnr_db": { "type": "number", "minimum": 0, "maximum": 99 },
+        "ssim": { "type": "number", "minimum": -1, "maximum": 1 },
+        "layout_ssim": { "type": "number", "minimum": -1, "maximum": 1 },
+        "delta_e": { "type": "number", "minimum": 0 },
+        "hist_intersection": { "type": "number", "minimum": 0, "maximum": 1.0001 },
+        "blockiness_classic": { "type": "number", "minimum": 0 },
+        "blockiness_candidate": { "type": "number", "minimum": 0 },
+        "blockiness_excess": { "type": "number" },
+        "artefact_index": { "type": "number" },
+        "sharpness_classic": { "type": "number", "minimum": 0, "description": "Laplacian variance of the Classic luminance (0..1 scale)." },
+        "sharpness_ratio": { "type": "number", "minimum": 0 },
+        "detail_energy": { "type": "number", "minimum": 0 },
+        "alpha_mae": { "type": "number", "minimum": 0, "maximum": 1 },
+        "candidate_alpha_present": { "type": "boolean" }
+      }
+    },
+    "size": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 2, "maxItems": 2 },
+    "decision": {
+      "type": "object",
+      "required": ["result", "base_source", "rule_fired", "reason", "selected_candidate", "requires_opt_in"],
+      "additionalProperties": false,
+      "properties": {
+        "result": {
+          "enum": ["classic", "classic_fallback", "hd", "classic_with_hd_maps", "hd_art_candidate"],
+          "description": "classic: Classic is the better source; classic_fallback: no usable candidate; hd: HD replaces the Classic pixels; classic_with_hd_maps: Classic albedo plus HD companion maps; hd_art_candidate: base stays Classic, candidate offered in the opt-in HD-art layer."
+        },
+        "base_source": { "enum": ["classic", "hd"] },
+        "rule_fired": { "$ref": "#/$defs/rule_id" },
+        "reason": { "type": "string" },
+        "selected_candidate": { "type": ["string", "null"] },
+        "requires_opt_in": { "type": "boolean" },
+        "companion_maps": { "type": "array", "items": { "enum": ["normal", "gloss", "ao", "height"] }, "uniqueItems": true },
+        "maps_candidate": { "type": "string" },
+        "hd_art": {
+          "type": "object",
+          "required": ["candidate_id", "status"],
+          "additionalProperties": false,
+          "properties": {
+            "candidate_id": { "type": "string" },
+            "status": { "enum": ["pending_owner_opt_in", "opted_in", "approved", "rejected"] }
+          }
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "result": { "const": "hd" } } }, "then": { "properties": { "base_source": { "const": "hd" }, "selected_candidate": { "type": "string" } } } },
+        { "if": { "properties": { "result": { "not": { "const": "hd" } } } }, "then": { "properties": { "base_source": { "const": "classic" }, "selected_candidate": { "type": "null" } } } },
+        { "if": { "properties": { "result": { "const": "hd_art_candidate" } } }, "then": { "required": ["hd_art"], "properties": { "requires_opt_in": { "const": true } } } },
+        { "if": { "properties": { "result": { "const": "classic_with_hd_maps" } } }, "then": { "required": ["companion_maps", "maps_candidate"] } }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "schema_version": "0.1.0",
+      "record_id": "sel-0123456789abcdef",
+      "asset_id": "classic_tfe:textures/example/wall.tex",
+      "category": "architecture",
+      "generated_at": "2026-11-27T12:00:00Z",
+      "generator": { "name": "sstre-assetcompiler", "version": "0.1.0.dev0" },
+      "policy": { "policy_id": "sstre-source-selection", "version": "0.1.0", "hd_art_opt_in": false, "thresholds": { "lossy_psnr_db": 40.0, "same_art_ssim_min": 0.8 } },
+      "classic": { "virtual_path": "Textures/Example/Wall.tex", "width_px": 256, "height_px": 256, "mex_width": 4096, "mex_height": 4096, "alpha_mode": "opaque" },
+      "candidates": [
+        {
+          "candidate_id": "hd_tfe:textures/example/wall",
+          "source_kind": "hd",
+          "edition": "hd_tfe",
+          "source_format": "bc1",
+          "match": { "verified": true, "method": "exact_path", "embedding_score": 0.97, "phash_distance": 2 },
+          "metrics": { "classic_px": [256, 256], "candidate_px": [256, 256], "resolution_ratio": 1.0, "aspect_match": true, "bit_identical": false, "psnr_db": 31.5, "ssim": 0.97, "layout_ssim": 0.99, "delta_e": 2.1, "hist_intersection": 0.95, "blockiness_classic": 1.0, "blockiness_candidate": 1.18, "blockiness_excess": 0.18, "artefact_index": 0.18, "sharpness_ratio": 0.97, "detail_energy": 0.0 }
+        }
+      ],
+      "rules_evaluated": [
+        { "rule_id": "R01_never_replace_category", "fired": false },
+        { "rule_id": "R02_no_candidate", "fired": false },
+        { "rule_id": "R03_unverified", "fired": false },
+        { "rule_id": "R04_uv_incompatible", "fired": false },
+        { "rule_id": "R06_equivalent", "fired": false, "detail": "psnr=31.5" },
+        { "rule_id": "R07_art_difference", "fired": false },
+        { "rule_id": "R10_same_res_cleaner", "fired": false },
+        { "rule_id": "R11_degraded_copy", "fired": true, "detail": "psnr=31.5 blk=0.18" }
+      ],
+      "decision": { "result": "classic", "base_source": "classic", "rule_fired": "R11_degraded_copy", "reason": "Lossy/blocky copy of the Classic art", "selected_candidate": null, "requires_opt_in": false },
+      "local_only": true
+    }
+  ]
+}
