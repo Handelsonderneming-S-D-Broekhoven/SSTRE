@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-11-27 |
 | Backlog items | Sprint 2 track E4 (engine); follow-up to EXP-012 §3 (raster import path) |
-| Status | complete. The TSE fix was verified at runtime only on TechTest (no TSE campaign level with a large texture) |
+| Status | complete. TSE verified on TechTest (4096², Vulkan + OpenGL) and on a normal load of 1_1_Palenque |
 | Environment | Windows 11 Pro 10.0.22631, Intel Core i5-11600K, NVIDIA RTX 4070 12 GB, driver 616.64 (Vulkan 1.4.351, OpenGL 4.6.0). VS 2022 17.5 / MSVC 14.35.32215 (v143), Windows SDK 10.0.22000.0, Vulkan SDK 1.4.363.0, WinFlexBison 2.5.25. Python 3.10.11 (numpy 2.2.6, Pillow 12.3.0). Crash capture: our own ctypes debugger `crashcatch.py` (local) using `C:\Windows\System32\dbghelp.dll` 10.0.22621.5471. No cdb/WinDbg/procdump is installed |
 | Inputs | SSTRE-Engine local branch `phase1/cvk-build` @ `ba0c12e8` (Classic-VK `510d36f` plus the EXP-001 build commits). AssetCompiler `main` @ `6e118a0` (`tex-replace`). User-owned Classic TFE and TSE (Steam) |
 | Code | SSTRE-Engine branch `sprint2/tex4096-crash` (local, not pushed): `15c567c0` (fix), `3a4d07cc` (limit and log) |
@@ -141,7 +141,12 @@ Batch C, 35 s per run, the `  started.` marker was reached in every run, and eve
   - [SRC/ASM] A full-size 4096² upload costs 4096²·4·4/3 ≈ 85 MiB of that pool (Vulkan maps every format, including RGB5, to `R8G8B8A8_UNORM`, `Texture.cpp:86-95`).
   - The pool is not chained. When it is exhausted, `Allocate` prints "Vulkan: Increase SvkMemoryPool…" and the texture is dropped [SRC `SvkMemoryPool.cpp:244`, `SvkTextures.cpp:314-322`]. No run printed that message.
 - **OpenGL:** C5 used 40 MiB more than C2. The two runs differ only in the floor's upload size (512² vs 4096²): every other TechTest texture is at most 512², so the area cap does not touch them. 40 MiB matches **16-bit** storage of 4096² with mips (4096²·2·4/3 = 42.7 MiB), not 32-bit (85 MiB). See §5.
-- The confirmation run of the final build (C3b, a GL baseline with the same settings and no loose texture) is recorded in "Deviations".
+- **Final-build confirmation** at `3a4d07cc` (`runs\batchC2.txt`, `gpu-lock.ps1 run` 00:30–00:33). The log now names the texture.
+  - C1 (Vulkan, default): 4096² loads, uploaded as 512×512.
+  - C4 (Vulkan, `tex_iNormalSize=12`): uploaded as 4096×4096.
+  - **C3b (OpenGL baseline, same custom settings, no loose texture) ended at 749 MiB, and C5 (same with the 4096² floor) at 789 MiB: +40 MiB.**
+  - D4 (TSE, OpenGL, `tex_iNormalSize=12`): 4096² loads, uploaded as 4096×4096, 810 MiB.
+  - All runs reached `started.` and were still responsive.
 
 ### 5. `tex_iNormalSize` and recompression (EXP-012 open question)
 
@@ -164,7 +169,7 @@ Batch C, 35 s per run, the `  started.` marker was reached in every run, and eve
   - a path in `run-game-e4.ps1` was broken by shell escaping. The first `run` of batch C (23:28) aborted before the game was launched, and the lock was released.
   - the first version of `crashcatch.py` had a wrong `MINIDUMP_EXCEPTION_INFORMATION` packing (fixed with `_pack_=4`).
 - **First log version printed an empty texture name**, because `GetName()` is not set during `Read_t`. Fixed in `3a4d07cc`, which passes the stream description. Batch C ran on the version before that fix. Engine logic is otherwise identical.
-- **Final-build confirmation.** After `3a4d07cc`, five runs (C1, C3b, C4, C5, D4 = TSE OpenGL 4096² at `tex_iNormalSize=12`) were scheduled through `gpu-lock.ps1 run` (`runs\batchC2.txt`). If they are not in this report, they had not run when it was written; the lead can rerun `batchC.ps1 -Only '^(C1-|C3b-|C4-|C5-|D4-)'`.
+- The final build was re-confirmed with five runs (§4, "Final-build confirmation"). Rerun with `batchC.ps1 -Only '^(C1-|C3b-|C4-|C5-|D4-)'`.
 - Not done:
   - a standalone Debug|x64 build (Release has full PDBs);
   - a pixel-exact check that the 4096² upload is sampled at full resolution (the 1280×720 view cannot resolve it);
