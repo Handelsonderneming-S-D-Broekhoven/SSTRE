@@ -62,7 +62,7 @@ Added after the first real exports (EXP-010).
 
 1. **Deletions are exported without content.** `git format-patch --irreversible-delete` is used, and `check` rejects any patch that carries the removed content of a deleted file. `apply` rebuilds such deletions from the pinned upstream file and refuses if that file does not match. This keeps the deletion of `Source/KTX` (Apache-2.0) from republishing its source.
 2. **Documented exceptions to "SSTRE-authored only"**, allowed if recorded in the series README and in THIRD_PARTY_NOTICES:
-   - **(a) Backports of commits from the same upstream project.** The original author and date are kept, and the upstream commit is referenced. Example: the RTGL1 shader fix that backports upstream `a2ad71e`.
+   - **(a) Backports of commits from the same upstream project.** The upstream commit, its author and its date are credited, either in the author field (a verbatim cherry-pick) or in the commit message (an adapted backport). Example: the RTGL1 shader fix that backports upstream `a2ad71e`.
    - **(b) Vendored third-party code** under a GPL-2.0-only-compatible licence, with its licence header intact and an upstream source digest recorded. Example: the zstd 1.5.7 single-file decompressor (BSD-3-Clause OR GPL-2.0) in the `rtgl1` series.
    - **(c) Regenerated build artefacts of upstream sources** (for example Bison/Flex output from upstream grammars), when the upstream tree already tracks the generated files. Follow-up: make the build regenerate them, so the patches can drop them.
 3. **Size limit:** the CI patch size limit is 1,280 KiB per patch, which fits exception (b). Larger patches need lead review.
