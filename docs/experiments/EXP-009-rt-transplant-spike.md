@@ -113,7 +113,7 @@ Plus 1 warning (`AllocateDescriptorSets-WrongType`). This is **exactly the set E
 **Setup:**
 
 - Scene: `08_Suburbs` with `cht_bGod=1; cht_bInvisible=1` (the player stays alive and enemies ignore him) and one ESC at 16 s to close NETRICSA. Captures at 22 s and 30 s.
-- Synthetic TommyGun override `Body{,_n,_rme}.ktx2`: BC7/BC5, from EXP-002's SSTRE generator.
+- Synthetic override `{,_n,_rme}.ktx2` (BC7/BC5, from EXP-002's SSTRE generator) for one first-person weapon texture. The asset path is kept locally only, in `G:\sstre-tmp\engine\scripts\session-d.ps1` (GATE-05).
 - Blue noise `BlueNoise_LDR_RGBA_128.ktx2`, 128 layers, which drives RTGL1's stochastic shadow/GI sampling.
 - Two runs per reader. Same engine binaries, same SPIR-V; only `RayTracedGL1.dll` differs (clean-room `42bdd141…`, libktx `055cdd12…`, SHA-256 prefixes of our own builds).
 - Metric on rows 90–1119 of the window, which excludes the title bar and the top console band (validation text).
@@ -135,7 +135,7 @@ Plus 1 warning (`AllocateDescriptorSets-WrongType`). This is **exactly the set E
 
 ### R7. Loose `.tex` (raster override) and `.ktx2` (RT override) coexist
 
-- A loose `Models\Weapons\TommyGun\Body.tex` in the game root (the owner's own archive texture of another weapon, used as a stand-in, local only) and the synthetic `.ktx2` override were present at the same time. Same scene and captures as R6.
+- A loose `.tex` at the same weapon texture's path in the game root (the owner's own archive texture of another weapon, used as a stand-in, local only) and the synthetic `.ktx2` override were present at the same time. Same scene and captures as R6.
 
 | Run | Weapon shows | Lower-half metric |
 |---|---|---|
