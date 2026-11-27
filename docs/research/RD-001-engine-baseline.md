@@ -429,3 +429,29 @@ That way AssetCompiler work is not blocked by the engine decision.
 3. Spike (time-boxed, after S1–S6): list each RT hook point with file:line, map it to its Classic-VK equivalent in `SamTFE/Sources/Engine`, and estimate port effort from that list.
 4. Investigate unifying Classic-VK's duplicated `SamTFE/Sources/Engine` and `SamTSE/Sources/Engine` trees (13 files differ) before any large engine change.
 5. Agent E: confirm the license items in §3.5. Agent B: confirm the edition file sets and GRO precedence. Agent D: RTGL1 version choice (v1.1.0 vs current `hl1` branch) and non-RT GPU behaviour.
+
+## 13. Phase 1 update (2026-11-27): measured results
+
+Added by the lead after the Phase 1 validation sprint. Labels: [EXP] measured, [SRC] source finding, [ASM] assumption. Full evidence: [EXP-001](../experiments/EXP-001-classic-vk-build.md), [EXP-002](../experiments/EXP-002-rt-build-and-s1.md), [EXP-003](../experiments/EXP-003-runtime-dependency-licensing.md), [EXP-005](../experiments/EXP-005-rt-port-estimate.md).
+
+| Question | SeriousSamClassic-VK @ `510d36f` | Serious-Engine-RT @ `0e7f223` + RTGL1 |
+|---|---|---|
+| Windows x64 build | [EXP] passes for TFE and TSE game targets (v143, SDK 10.0.22000, `UseOfMfc=false`). 6 build-only commits: trusted win_flex/win_bison, flex 2.6 fixes, `winres.h`. The editors need MFC, which is not installed | [EXP] passes for the TFE game targets (139 s clean). 7 build-only commits of the same kind. RTGL1 needed 1 shader fix for Vulkan SDK 1.4.363 (backport of upstream `a2ad71e`) |
+| Linux x64 build | [EXP] unmodified, in `ubuntu:22.04` pinned by digest, 62–67 s. **Two clean builds were byte-identical** | [SRC] not supported (Windows-only solution) |
+| RTGL1 revision | — | [EXP] `v1.1.0` = `b1eb3d8` confirmed: links, runs, and is the last RTGL1 commit before RT HEAD |
+| TFE runtime | [EXP] main menu plus 3 campaign levels, in Vulkan and OpenGL; 300 s and 280 s runs on Vulkan without a crash | [EXP] RT path-traced: main menu plus 3 levels, no crash. Single HUD readings at 1080p windowed: 93 and 65 FPS (not p50/p99) |
+| TSE runtime | [EXP] main menu plus 3 campaign levels, in Vulkan and OpenGL | [EXP] cannot be built with RT: TSE projects are Win32-only with no RT define (S7 fail) |
+| Raster in the same binary | [EXP] Vulkan and OpenGL both work | [EXP] Vulkan raster correct. **OpenGL broken** (untextured brushes, white sky) |
+| PBR override (`.ktx2`, `_n`/`_rme`) | [SRC] no loader | [EXP] works on the RT path with a synthetic texture; ignored by raster |
+| Validation layer | not tested | [EXP] 5 distinct error-severity VUIDs (S1.2 fail) |
+| Demo playback / frame times | [EXP] built-in demo profiler produced no profile in 3 attempts; frame times not measured | [EXP] `PlayDemo` broken by an x64 varargs defect (`Shell.h:28`) |
+| Network | [EXP] the dedicated server sends master-server heartbeats even with `ser_bEnumeration=0`; tests now run with no network access | not tested |
+
+**Port of the RT backend into Classic-VK** ([EXP] patch probes, [ASM] rates): about 10.6k lines of RT code transplant almost unchanged. The RT-only patch has 8 conflicting files (41 regions). The TFE and TSE engine trees are near-identical for the touched files. Core estimate **30 / 53 / 96 person-days** (TFE Windows, TSE, Linux), low-to-medium confidence. No shipped TSE campaign world uses terrain or SKA entities ([EXP] string scan), so those RT gaps do not block the TSE campaign.
+
+**Runtime KTX** ([EXP]): libktx (Apache-2.0) can be replaced in RTGL1 v1.1.0 by a ~360-line KTX2 container reader. It compiles, and it reads the same data as libktx on all test files, including 34,084 fuzzed inputs. Rendering with it is not tested yet.
+
+**Conclusion for ADR-0005:** the measurements support the provisional direction. Classic-VK is the stronger baseline: it builds on both OSes, gives reproducible Linux binaries, and runs both campaigns under both raster APIs. The RT fork is a working, TFE-only source of the RT backend and the PBR override mechanism. Still open before ADR-0005 can be final:
+- a measured frame-time and VRAM baseline, which needs a scripted demo and an input-isolated session;
+- a graphical Linux run on real hardware;
+- the time-boxed transplant spike that validates the port estimate.

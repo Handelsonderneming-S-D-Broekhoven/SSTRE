@@ -52,3 +52,15 @@ RTGL1 itself has no raster fallback for world geometry (RD-005). [ADR-0007](0007
 3. RD-001 criteria S1–S8 and RD-005 spike S1 are measured and reported, including a sized estimate for porting the RT backend.
 4. RD-007 confirms no license blocker in either base (for example, the unlicensed `Entities/*.es` files in the RT fork and the bundled `.gro` data).
 5. ~~The owner approves the decision and the history-import option.~~ Done for the provisional direction and the local import (2026-11-27). Publishing the upstream branches still requires the audit in item 4.
+
+## Acceptance-criteria status (Phase 1, 2026-11-27)
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Both candidates build from pinned revisions; failures recorded | **met**, with documented build-only modifications | EXP-001, EXP-002 |
+| 2 | Classic-VK launches TFE and TSE; RT fork launches TFE | **met** for loading: 3 levels per campaign per API; RT TFE 3 levels | EXP-001, EXP-002 |
+| 3 | RD-001 S1–S8 and RD-005 S1 measured; RT port sized | **partly met**: port sized (30/53/96 pd); S1.2 and S7 fail; frame-time baseline missing | EXP-002, EXP-005, RD-001 §13 |
+| 4 | No license blocker in either base | **source distribution resolved** by [ADR-0008](0008-engine-patch-distribution.md); **binary distribution still blocked** (RD-007 Q1, Q3, Q4) | EXP-003, EXP-004 |
+| 5 | Owner approval | provisional approval given 2026-11-27 | — |
+
+The status remains **provisional**. Proposed next step: a time-boxed transplant spike (about 8 person-days) that ports the RT backend for TFE on Windows into Classic-VK. It validates EXP-005's rates before larger implementation starts.
