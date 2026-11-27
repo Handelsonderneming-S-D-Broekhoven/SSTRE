@@ -1,0 +1,1357 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/build-manifest.schema.json",
+  "title": "SSTRE effective build manifest (frozen configuration + resolved per-asset layer plan)",
+  "$comment": "STATUS: PROPOSAL (sprint 2, track A2, EXP-015; ADR-0009 rules 2 and 3, ADR-0003). Written by 'sstre-ac plan'. effectiveConfig freezes everything the plan depends on (layers, quality and platform profiles, approvals, packs by version and hash, the source-selection record set by hash). Per asset it records which layer supplied the source, which layer processed it, the source ID and hash, the selection rule and scores (source-selection.schema.json) and the platform-profile result. Hashes: sha256 over RFC 8785 JCS. effectiveConfigHash = H(effectiveConfig); planHash = H({effectiveConfig, assets}); conflicts and summary are derived and excluded. Real manifests reference proprietary assets and stay local until GATE-05; examples are synthetic.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifestFormatVersion",
+    "kind",
+    "generator",
+    "layerOrder",
+    "effectiveConfig",
+    "effectiveConfigHash",
+    "assets",
+    "conflicts",
+    "summary",
+    "planHash",
+    "localOnly"
+  ],
+  "properties": {
+    "$comment": {
+      "type": "string"
+    },
+    "manifestFormatVersion": {
+      "type": "string",
+      "pattern": "^0\\.[0-9]+\\.[0-9]+$"
+    },
+    "kind": {
+      "const": "sstre-build-manifest"
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "gitCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "layerOrder": {
+      "description": "The fixed ADR-0009 order.",
+      "const": [
+        "classic-base",
+        "hd-quality",
+        "hd-material-maps",
+        "hd-artwork",
+        "hd-interface",
+        "ai-enhancement",
+        "overrides"
+      ]
+    },
+    "effectiveConfig": {
+      "$ref": "#/$defs/effectiveConfig"
+    },
+    "effectiveConfigHash": {
+      "$ref": "#/$defs/sha256"
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/asset"
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "assetId",
+          "kind",
+          "chosen"
+        ],
+        "properties": {
+          "assetId": {
+            "$ref": "#/$defs/assetId"
+          },
+          "kind": {
+            "enum": [
+              "multiple-selection-records"
+            ]
+          },
+          "chosen": {
+            "type": "string"
+          },
+          "others": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Derived aggregate counts; not part of planHash."
+    },
+    "planHash": {
+      "$ref": "#/$defs/sha256"
+    },
+    "localOnly": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "$ref": "build-provenance.schema.json#/$defs/sha256"
+    },
+    "layerId": {
+      "$ref": "build-config.schema.json#/$defs/layerId"
+    },
+    "assetId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "size": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "packInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packId",
+        "version",
+        "kind",
+        "priority",
+        "sha256",
+        "entryCount"
+      ],
+      "properties": {
+        "packId": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "ai-enhancement",
+            "curated",
+            "community"
+          ]
+        },
+        "priority": {
+          "type": "integer"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "entryCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "qualityProfile": {
+          "type": "string"
+        }
+      }
+    },
+    "effectiveConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configId",
+        "configFormatVersion",
+        "configHash",
+        "layers",
+        "qualityProfile",
+        "platformProfile",
+        "approvals",
+        "overridePacks",
+        "aiPacks",
+        "selection",
+        "assetFacts"
+      ],
+      "properties": {
+        "configId": {
+          "type": "string"
+        },
+        "configFormatVersion": {
+          "type": "string"
+        },
+        "configHash": {
+          "$ref": "#/$defs/sha256",
+          "description": "JCS hash of the build-config document as given."
+        },
+        "layers": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "layer",
+              "order",
+              "enabled"
+            ],
+            "properties": {
+              "layer": {
+                "$ref": "#/$defs/layerId"
+              },
+              "order": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "qualityProfile": {
+                "type": "string"
+              },
+              "roles": {
+                "type": "array",
+                "items": {
+                  "$ref": "platform-profile.schema.json#/$defs/mapRole"
+                }
+              },
+              "includeRelayout": {
+                "type": "boolean"
+              },
+              "requiresApproval": {
+                "const": true
+              }
+            }
+          }
+        },
+        "qualityProfile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "hash",
+            "definition"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "hash": {
+              "$ref": "#/$defs/sha256"
+            },
+            "definition": {
+              "$ref": "build-config.schema.json#/$defs/qualityProfile"
+            }
+          }
+        },
+        "platformProfile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "status",
+            "hash",
+            "profile"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "validated",
+                "provisional",
+                "hypothetical"
+              ]
+            },
+            "hash": {
+              "$ref": "#/$defs/sha256"
+            },
+            "profile": {
+              "$ref": "platform-profile.schema.json"
+            }
+          }
+        },
+        "approvals": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "approvalsId",
+                "sha256",
+                "count",
+                "entries"
+              ],
+              "properties": {
+                "approvalsId": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "assetId",
+                      "layer",
+                      "candidateId",
+                      "decision",
+                      "priority"
+                    ],
+                    "properties": {
+                      "assetId": {
+                        "$ref": "#/$defs/assetId"
+                      },
+                      "layer": {
+                        "enum": [
+                          "hd-artwork",
+                          "hd-interface"
+                        ]
+                      },
+                      "candidateId": {
+                        "type": "string"
+                      },
+                      "candidateSha256": {
+                        "$ref": "#/$defs/sha256"
+                      },
+                      "decision": {
+                        "enum": [
+                          "approved",
+                          "rejected"
+                        ]
+                      },
+                      "priority": {
+                        "type": "integer"
+                      },
+                      "approvedBy": {
+                        "type": "string"
+                      },
+                      "date": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "overridePacks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/packInfo"
+          }
+        },
+        "aiPacks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/packInfo"
+          }
+        },
+        "selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "recordCount",
+            "recordSetHash",
+            "policies"
+          ],
+          "properties": {
+            "recordCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "recordSetHash": {
+              "$ref": "#/$defs/sha256",
+              "description": "JCS hash of the sorted list of record hashes (each record without generated_at)."
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "policyId",
+                  "version",
+                  "thresholdsHash",
+                  "records"
+                ],
+                "properties": {
+                  "policyId": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "thresholdsHash": {
+                    "$ref": "#/$defs/sha256"
+                  },
+                  "records": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "assetFacts": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "sha256",
+                "onlyListed"
+              ],
+              "properties": {
+                "sha256": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "onlyListed": {
+                  "type": "boolean"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "layerStatus": {
+      "enum": [
+        "applied",
+        "superseded",
+        "disabled",
+        "awaiting-approval",
+        "rejected",
+        "blocked",
+        "not-applicable",
+        "dropped",
+        "off",
+        "not-eligible",
+        "suppressed",
+        "source-sufficient",
+        "awaiting-output",
+        "platform-capped"
+      ]
+    },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer",
+        "kind",
+        "id",
+        "decidedBy"
+      ],
+      "properties": {
+        "layer": {
+          "enum": [
+            "classic-base",
+            "hd-quality",
+            "hd-artwork",
+            "hd-interface",
+            "overrides"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "classic",
+            "hd",
+            "override"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "imageSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "px": {
+          "$ref": "#/$defs/size"
+        },
+        "format": {
+          "type": "string"
+        },
+        "decidedBy": {
+          "$ref": "#/$defs/layerId"
+        },
+        "layoutChanged": {
+          "type": "boolean"
+        },
+        "keepMaps": {
+          "type": "boolean"
+        },
+        "pack": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "packId",
+            "version",
+            "kind"
+          ],
+          "properties": {
+            "packId": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "curated",
+                "community"
+              ]
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "layer": {
+                "const": "classic-base"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "const": "classic"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "layer": {
+                "enum": [
+                  "hd-quality",
+                  "hd-artwork",
+                  "hd-interface"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "const": "hd"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "layer": {
+                "const": "overrides"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "pack",
+              "sha256"
+            ],
+            "properties": {
+              "kind": {
+                "const": "override"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetId",
+        "category",
+        "classic",
+        "selection",
+        "source",
+        "suppliedBy",
+        "processedBy",
+        "materialMaps",
+        "processing",
+        "layers",
+        "platform"
+      ],
+      "properties": {
+        "assetId": {
+          "$ref": "#/$defs/assetId"
+        },
+        "category": {
+          "$ref": "source-selection.schema.json#/properties/category"
+        },
+        "classic": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "imageSha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "px": {
+              "$ref": "#/$defs/size"
+            },
+            "alphaMode": {
+              "enum": [
+                "opaque",
+                "cutout",
+                "blend",
+                "none"
+              ]
+            },
+            "firstMip": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "selection": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "recordId",
+                "recordSha256",
+                "policyId",
+                "policyVersion",
+                "result",
+                "ruleFired",
+                "candidateId",
+                "scores"
+              ],
+              "properties": {
+                "recordId": {
+                  "$ref": "source-selection.schema.json#/properties/record_id"
+                },
+                "recordSha256": {
+                  "$ref": "#/$defs/sha256",
+                  "description": "JCS hash of the record without generated_at."
+                },
+                "policyId": {
+                  "type": "string"
+                },
+                "policyVersion": {
+                  "type": "string"
+                },
+                "result": {
+                  "$ref": "source-selection.schema.json#/$defs/decision/properties/result"
+                },
+                "ruleFired": {
+                  "$ref": "source-selection.schema.json#/$defs/rule_id"
+                },
+                "candidateId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "scores": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/sourceRef"
+        },
+        "suppliedBy": {
+          "enum": [
+            "classic-base",
+            "hd-quality",
+            "hd-artwork",
+            "hd-interface",
+            "overrides"
+          ]
+        },
+        "processedBy": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "const": "ai-enhancement"
+            }
+          ]
+        },
+        "materialMaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "layer",
+              "id"
+            ],
+            "properties": {
+              "role": {
+                "$ref": "platform-profile.schema.json#/$defs/mapRole"
+              },
+              "layer": {
+                "enum": [
+                  "hd-material-maps",
+                  "ai-enhancement",
+                  "overrides"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "px": {
+                "$ref": "#/$defs/size"
+              },
+              "pxAssumed": {
+                "type": "boolean"
+              },
+              "inferred": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "processing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "layer",
+            "qualityProfile",
+            "status"
+          ],
+          "properties": {
+            "layer": {
+              "const": "ai-enhancement"
+            },
+            "qualityProfile": {
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "off",
+                "not-eligible",
+                "suppressed",
+                "source-sufficient",
+                "platform-capped",
+                "awaiting-output",
+                "applied"
+              ]
+            },
+            "mode": {
+              "$ref": "build-config.schema.json#/$defs/aiMode"
+            },
+            "scale": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "plannedPx": {
+              "$ref": "#/$defs/size",
+              "description": "Target size the AI output should have, already clamped to the platform profile."
+            },
+            "plannedClampedFrom": {
+              "$ref": "#/$defs/size"
+            },
+            "output": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "packId",
+                "version",
+                "sha256",
+                "px",
+                "recipeHash"
+              ],
+              "properties": {
+                "packId": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "px": {
+                  "$ref": "#/$defs/size"
+                },
+                "recipeHash": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "provenanceSha256": {
+                  "$ref": "#/$defs/sha256"
+                }
+              }
+            },
+            "rejectedOutputs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "applied"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "output",
+                  "mode",
+                  "scale"
+                ]
+              }
+            }
+          ]
+        },
+        "layers": {
+          "description": "Status of every layer for this asset, in the fixed order.",
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "layer",
+              "order",
+              "status"
+            ],
+            "properties": {
+              "layer": {
+                "$ref": "#/$defs/layerId"
+              },
+              "order": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              },
+              "status": {
+                "$ref": "#/$defs/layerStatus"
+              },
+              "detail": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "platform": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "profileId",
+            "textures",
+            "actions"
+          ],
+          "properties": {
+            "profileId": {
+              "type": "string"
+            },
+            "classicPx": {
+              "$ref": "#/$defs/size"
+            },
+            "textures": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role",
+                  "inputPx",
+                  "targetPx",
+                  "formats",
+                  "preprocessing"
+                ],
+                "properties": {
+                  "role": {
+                    "enum": [
+                      "albedo",
+                      "normal",
+                      "gloss",
+                      "ao",
+                      "height"
+                    ]
+                  },
+                  "inputPx": {
+                    "$ref": "#/$defs/size"
+                  },
+                  "targetPx": {
+                    "$ref": "#/$defs/size"
+                  },
+                  "formats": {
+                    "description": "Format per platform target; null = the target does not take this role.",
+                    "type": "object",
+                    "additionalProperties": {
+                      "oneOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "$ref": "platform-profile.schema.json#/$defs/format"
+                        }
+                      ]
+                    }
+                  },
+                  "preprocessing": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "plannedPx": {
+                    "$ref": "#/$defs/size",
+                    "description": "Size once the awaited AI output exists (counted by the memory budget)."
+                  }
+                }
+              }
+            },
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "action"
+                ],
+                "properties": {
+                  "action": {
+                    "enum": [
+                      "first-mip-density-cap",
+                      "round-down-power-of-two",
+                      "downscale",
+                      "below-classic-resolution",
+                      "budget-halve",
+                      "size-unknown"
+                    ]
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "from": {
+                    "$ref": "#/$defs/size"
+                  },
+                  "to": {
+                    "$ref": "#/$defs/size"
+                  },
+                  "detail": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "estimatedBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "provenance": {
+          "description": "Filled by the build step after processing (not by the planner).",
+          "$ref": "build-provenance.schema.json"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "$comment": "Synthetic example: one invented asset; hashes are SHA-256 of 'SSTRE synthetic fixture: <label>' or JCS hashes of synthetic documents.",
+      "manifestFormatVersion": "0.1.0",
+      "kind": "sstre-build-manifest",
+      "generator": {
+        "name": "sstre-assetcompiler",
+        "version": "0.1.0.dev0"
+      },
+      "layerOrder": [
+        "classic-base",
+        "hd-quality",
+        "hd-material-maps",
+        "hd-artwork",
+        "hd-interface",
+        "ai-enhancement",
+        "overrides"
+      ],
+      "effectiveConfig": {
+        "configId": "syn",
+        "configFormatVersion": "0.1.0",
+        "configHash": "sha256:f0b6273245c285ecc639f8447c1db477aaad232753cd9c9199e70f665a645259",
+        "layers": [
+          {
+            "layer": "classic-base",
+            "order": 1,
+            "enabled": true
+          },
+          {
+            "layer": "hd-quality",
+            "order": 2,
+            "enabled": true
+          },
+          {
+            "layer": "hd-material-maps",
+            "order": 3,
+            "enabled": true,
+            "roles": [
+              "ao",
+              "gloss",
+              "height",
+              "normal"
+            ]
+          },
+          {
+            "layer": "hd-artwork",
+            "order": 4,
+            "enabled": false,
+            "requiresApproval": true
+          },
+          {
+            "layer": "hd-interface",
+            "order": 5,
+            "enabled": false,
+            "includeRelayout": false,
+            "requiresApproval": true
+          },
+          {
+            "layer": "ai-enhancement",
+            "order": 6,
+            "enabled": false,
+            "qualityProfile": "off"
+          },
+          {
+            "layer": "overrides",
+            "order": 7,
+            "enabled": false
+          }
+        ],
+        "qualityProfile": {
+          "id": "off",
+          "hash": "sha256:654b2d5aaa3d86a482a7692616863453e851bf8ddbe120741a8a4ac472f9fba3",
+          "definition": {
+            "enabled": false,
+            "description": "No AI processing; every asset keeps its selected source."
+          }
+        },
+        "platformProfile": {
+          "id": "synthetic-small",
+          "status": "hypothetical",
+          "hash": "sha256:6c189e3efef92d38d47e95f869aeeec6b1fc5098955b823f5616cbc9ed47d6b9",
+          "profile": {
+            "profileFormatVersion": "0.1.0",
+            "profileId": "synthetic-small",
+            "status": "hypothetical",
+            "textureLimits": {
+              "maxWidth": 256,
+              "maxHeight": 256,
+              "maxPixels": 65536,
+              "requirePowerOfTwo": true
+            },
+            "targets": [
+              {
+                "targetId": "raster",
+                "backend": "raster",
+                "container": "se1-tex-v4",
+                "status": "not-validated",
+                "allowedFormats": [
+                  "rgba8",
+                  "rgb8"
+                ],
+                "formats": {
+                  "color-opaque": "rgb8",
+                  "color-alpha": "rgba8"
+                },
+                "mips": "runtime-generated"
+              }
+            ],
+            "mipPolicy": {
+              "filter": "box"
+            },
+            "memoryBudget": {
+              "bytes": 1048576,
+              "accountingTarget": "raster",
+              "includeMips": true,
+              "policy": "reduce-largest"
+            },
+            "preprocessing": {
+              "downscale": {
+                "policy": "halve-until-fit",
+                "filter": "box",
+                "neverBelowClassic": false
+              }
+            },
+            "materialMaps": {
+              "enabled": false
+            }
+          }
+        },
+        "approvals": null,
+        "overridePacks": [],
+        "aiPacks": [],
+        "selection": {
+          "recordCount": 1,
+          "recordSetHash": "sha256:c02624f5ff09386498d26dfacb2ac52d1fe9c6af2f93cc0d9621637316a35623",
+          "policies": [
+            {
+              "policyId": "sstre-source-selection",
+              "version": "0.1.0",
+              "thresholdsHash": "sha256:871ab508ea457c0b1ec9903933d70740b27710701bf6574b078ee97e4449a709",
+              "records": 1
+            }
+          ]
+        },
+        "assetFacts": null
+      },
+      "effectiveConfigHash": "sha256:412203f5c6cb89a05b1772c7e00bba4330f63282d9c4eba8dadf3d078fb506cd",
+      "assets": [
+        {
+          "assetId": "synthetic:textures/test/wall.tex",
+          "category": "architecture",
+          "classic": {
+            "sha256": "sha256:f7e650575a20bc8483fb5c3dc630a1765df163f5e95518f4dbb9da076370c1e3",
+            "px": [
+              256,
+              256
+            ],
+            "alphaMode": "opaque"
+          },
+          "selection": {
+            "recordId": "sel-cc1ad2176889e5eb",
+            "recordSha256": "sha256:bb011bc3f883a2982507bc780eefe2aeb0f9952c1f1535bca250ca3e41d3fd96",
+            "policyId": "sstre-source-selection",
+            "policyVersion": "0.1.0",
+            "result": "hd",
+            "ruleFired": "R08_upscale_with_detail",
+            "candidateId": "synthetic-hd:textures/test/wall",
+            "scores": {
+              "resolution_ratio": 4.0,
+              "psnr_db": 33.0,
+              "ssim": 0.95,
+              "layout_ssim": 0.97,
+              "delta_e": 1.0,
+              "artefact_index": 0.05,
+              "detail_energy": 0.2
+            }
+          },
+          "source": {
+            "layer": "hd-quality",
+            "kind": "hd",
+            "id": "synthetic-hd:textures/test/wall",
+            "sha256": "sha256:dd5daf1960059970de0888dbe5072570032eb19f619f396e3d9adbab0f9bb08d",
+            "px": [
+              512,
+              512
+            ],
+            "format": "bc1",
+            "decidedBy": "hd-quality"
+          },
+          "suppliedBy": "hd-quality",
+          "processedBy": null,
+          "materialMaps": [],
+          "processing": {
+            "layer": "ai-enhancement",
+            "qualityProfile": "off",
+            "status": "off"
+          },
+          "layers": [
+            {
+              "layer": "classic-base",
+              "order": 1,
+              "status": "superseded",
+              "detail": "by hd-quality"
+            },
+            {
+              "layer": "hd-quality",
+              "order": 2,
+              "status": "applied",
+              "detail": "R08_upscale_with_detail"
+            },
+            {
+              "layer": "hd-material-maps",
+              "order": 3,
+              "status": "not-applicable"
+            },
+            {
+              "layer": "hd-artwork",
+              "order": 4,
+              "status": "not-applicable"
+            },
+            {
+              "layer": "hd-interface",
+              "order": 5,
+              "status": "not-applicable"
+            },
+            {
+              "layer": "ai-enhancement",
+              "order": 6,
+              "status": "off",
+              "detail": "quality profile off"
+            },
+            {
+              "layer": "overrides",
+              "order": 7,
+              "status": "not-applicable"
+            }
+          ],
+          "platform": {
+            "profileId": "synthetic-small",
+            "textures": [
+              {
+                "role": "albedo",
+                "inputPx": [
+                  512,
+                  512
+                ],
+                "targetPx": [
+                  256,
+                  256
+                ],
+                "formats": {
+                  "raster": "rgb8"
+                },
+                "preprocessing": [
+                  "colour-space:srgb",
+                  "downscale:halve-until-fit:box",
+                  "mips:box"
+                ]
+              }
+            ],
+            "actions": [
+              {
+                "action": "downscale",
+                "from": [
+                  512,
+                  512
+                ],
+                "to": [
+                  256,
+                  256
+                ],
+                "detail": "halve x1; limits: max-width,max-height,max-pixels",
+                "role": "albedo"
+              }
+            ],
+            "classicPx": [
+              256,
+              256
+            ],
+            "estimatedBytes": 262143
+          }
+        }
+      ],
+      "conflicts": [],
+      "summary": {
+        "assets": 1,
+        "suppliedBy": {
+          "hd-quality": 1
+        },
+        "decidedBy": {
+          "hd-quality": 1
+        },
+        "aiEnhancement": {
+          "off": 1
+        },
+        "materialMaps": {
+          "assets": 0,
+          "byLayer": {}
+        },
+        "layerStatus": {
+          "classic-base": {
+            "superseded": 1
+          },
+          "hd-quality": {
+            "applied": 1
+          },
+          "hd-material-maps": {
+            "not-applicable": 1
+          },
+          "hd-artwork": {
+            "not-applicable": 1
+          },
+          "hd-interface": {
+            "not-applicable": 1
+          },
+          "ai-enhancement": {
+            "off": 1
+          },
+          "overrides": {
+            "not-applicable": 1
+          }
+        },
+        "platformActions": {
+          "downscale": 1
+        },
+        "budget": {
+          "budgetBytes": 1048576,
+          "policy": "reduce-largest",
+          "accountingTarget": "raster",
+          "estimatedBytesBefore": 262143,
+          "estimatedBytes": 262143,
+          "budgetHalvings": 0,
+          "estimatedBytesWithoutPendingAi": 262143,
+          "withinBudget": true
+        }
+      },
+      "planHash": "sha256:47501788ced5a4a59b4a12e0e387123893777fc59dcb8da210eddbd4d8d990f7",
+      "localOnly": true
+    }
+  ]
+}

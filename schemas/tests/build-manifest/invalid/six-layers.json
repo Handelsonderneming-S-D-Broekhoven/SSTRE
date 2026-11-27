@@ -1,0 +1,1336 @@
+{
+ "manifestFormatVersion": "0.1.0",
+ "kind": "sstre-build-manifest",
+ "generator": {
+  "name": "sstre-assetcompiler",
+  "version": "0.1.0.dev0"
+ },
+ "layerOrder": [
+  "classic-base",
+  "hd-quality",
+  "hd-material-maps",
+  "hd-artwork",
+  "hd-interface",
+  "ai-enhancement",
+  "overrides"
+ ],
+ "effectiveConfig": {
+  "configId": "syn",
+  "configFormatVersion": "0.1.0",
+  "configHash": "sha256:98dc1f90454ac2ee54c7a6e9b9e10c8e84633d4d7fecfce5e08dd4f5656d5fbd",
+  "layers": [
+   {
+    "layer": "classic-base",
+    "order": 1,
+    "enabled": true
+   },
+   {
+    "layer": "hd-quality",
+    "order": 2,
+    "enabled": true
+   },
+   {
+    "layer": "hd-material-maps",
+    "order": 3,
+    "enabled": true,
+    "roles": [
+     "ao",
+     "gloss",
+     "height",
+     "normal"
+    ]
+   },
+   {
+    "layer": "hd-artwork",
+    "order": 4,
+    "enabled": true,
+    "requiresApproval": true
+   },
+   {
+    "layer": "hd-interface",
+    "order": 5,
+    "enabled": true,
+    "includeRelayout": true,
+    "requiresApproval": true
+   },
+   {
+    "layer": "ai-enhancement",
+    "order": 6,
+    "enabled": true,
+    "qualityProfile": "conservative"
+   },
+   {
+    "layer": "overrides",
+    "order": 7,
+    "enabled": true
+   }
+  ],
+  "qualityProfile": {
+   "id": "conservative",
+   "hash": "sha256:424ad8a56bc8a9bb15bfb2d6542d2c65348a6e1b50d73d67095efc84ef6b6ef8",
+   "definition": {
+    "enabled": true,
+    "description": "Deterministic SR x2 of opaque world textures; UI, fonts, technical maps and effects untouched.",
+    "defaultMode": "skip",
+    "processSources": [
+     "classic-base",
+     "hd-quality"
+    ],
+    "classes": {
+     "architecture": {
+      "mode": "sr",
+      "scale": 2
+     },
+     "terrain": {
+      "mode": "sr",
+      "scale": 2
+     },
+     "vegetation": {
+      "mode": "sr",
+      "scale": 2
+     },
+     "props": {
+      "mode": "sr",
+      "scale": 2
+     },
+     "items": {
+      "mode": "sr",
+      "scale": 2
+     },
+     "player": {
+      "mode": "sr",
+      "scale": 2
+     },
+     "enemy": {
+      "mode": "sr",
+      "scale": 2
+     },
+     "weapon": {
+      "mode": "sr",
+      "scale": 2
+     },
+     "sky": {
+      "mode": "sr",
+      "scale": 2
+     },
+     "detail": {
+      "mode": "sr",
+      "scale": 2
+     }
+    }
+   }
+  },
+  "platformProfile": {
+   "id": "pc-default",
+   "status": "provisional",
+   "hash": "sha256:58ae84b85f9001658af82dc0307e0c1a8c2cc83d6f2303c7b472a290811574f1",
+   "profile": {
+    "$comment": "Built-in SSTRE platform profile. Limits from EXP-012 (Classic-VK loaded 2048x2048, 2048x1024 and 2048x4096 = 8.4 Mpx; 4096x4096 crashed on Vulkan and OpenGL). Formats from RD-006 section 4 and EXP-014.",
+    "profileFormatVersion": "0.1.0",
+    "profileId": "pc-default",
+    "title": "PC (Windows/Linux), Classic-VK raster + experimental RT",
+    "status": "provisional",
+    "evidence": [
+     "EXP-012",
+     "EXP-014",
+     "RD-006"
+    ],
+    "textureLimits": {
+     "maxWidth": 4096,
+     "maxHeight": 4096,
+     "maxLongEdge": 4096,
+     "maxShortEdge": 2048,
+     "maxPixels": 8388608,
+     "requirePowerOfTwo": false,
+     "respectFirstMipDensity": true,
+     "notes": "Cap at the experimentally validated maximum until the 4096x4096 crash is understood. 4096x2048 (landscape) is inferred from symmetry, not tested."
+    },
+    "targets": [
+     {
+      "targetId": "raster",
+      "backend": "raster",
+      "container": "se1-tex-v4",
+      "status": "validated",
+      "allowedFormats": [
+       "rgb8",
+       "rgba8"
+      ],
+      "formats": {
+       "color-opaque": "rgb8",
+       "color-alpha": "rgba8"
+      },
+      "mips": "runtime-generated",
+      "evidence": [
+       "EXP-012"
+      ],
+      "notes": "Loose v4 .tex with identical mex; mip 0 only, the runtime builds mips. Material maps are not used by the raster baseline."
+     },
+     {
+      "targetId": "rt",
+      "backend": "rt",
+      "container": "ktx2",
+      "status": "partial",
+      "allowedFormats": [
+       "bc1",
+       "bc3",
+       "bc4",
+       "bc5",
+       "bc7",
+       "rgba8"
+      ],
+      "formats": {
+       "color-opaque": "bc7",
+       "color-alpha": "bc7",
+       "normal": "bc5",
+       "mask": "bc4"
+      },
+      "mips": "full-chain",
+      "evidence": [
+       "EXP-014",
+       "RD-006"
+      ],
+      "notes": "KTX2 reader validated against the Khronos tool (EXP-014); in-engine render test pending."
+     }
+    ],
+    "mipPolicy": {
+     "filter": "kaiser",
+     "alphaCoveragePreserve": true,
+     "wrapForTileable": true
+    },
+    "memoryBudget": {
+     "bytes": 2147483648,
+     "accountingTarget": "raster",
+     "includeMips": true,
+     "policy": "report"
+    },
+    "preprocessing": {
+     "downscale": {
+      "policy": "halve-until-fit",
+      "filter": "lanczos3",
+      "neverBelowClassic": true
+     },
+     "colorSpace": {
+      "color": "srgb",
+      "data": "linear",
+      "resampleInLinear": true
+     },
+     "alpha": {
+      "mode": "preserve",
+      "premultiply": false,
+      "dilateEdges": true,
+      "cutoutCoverage": true
+     },
+     "normals": {
+      "renormalizeAfterResample": true
+     }
+    },
+    "materialMaps": {
+     "enabled": true,
+     "roles": [
+      "normal",
+      "gloss",
+      "ao",
+      "height"
+     ]
+    }
+   }
+  },
+  "approvals": {
+   "approvalsId": "syn",
+   "sha256": "sha256:c59456831f83bde7941dfdd47d2810678217c89b10a23d57648eefc706609693",
+   "count": 2,
+   "entries": [
+    {
+     "assetId": "classic_tfe:models/syn/statue.tex",
+     "layer": "hd-artwork",
+     "candidateId": "hd_tfe:syn/statue",
+     "decision": "approved",
+     "priority": 0,
+     "approvedBy": "owner",
+     "date": "2026-11-27"
+    },
+    {
+     "assetId": "classic_tfe:textures/interface/syn_logo.tex",
+     "layer": "hd-interface",
+     "candidateId": "hd_tfe:syn/logo",
+     "decision": "approved",
+     "priority": 0
+    }
+   ]
+  },
+  "overridePacks": [
+   {
+    "packId": "cur",
+    "version": "1.0.0",
+    "kind": "curated",
+    "priority": 1,
+    "sha256": "sha256:b67ba71b50cb4f7b20c09ed941d783a1ddc255bd476d0800e3cae566cda870eb",
+    "entryCount": 2
+   }
+  ],
+  "aiPacks": [
+   {
+    "packId": "ai",
+    "version": "1.0.0",
+    "kind": "ai-enhancement",
+    "priority": 0,
+    "sha256": "sha256:4117546848bb696d5300d8a5690869a06fabb5ce9c1055dc3987f571a45bc6d6",
+    "entryCount": 1,
+    "qualityProfile": "conservative"
+   }
+  ],
+  "selection": {
+   "recordCount": 7,
+   "recordSetHash": "sha256:c86bf6d4a0cc8171cad72e117caa773166165f00aa3df3fc31802d25b99b80d2",
+   "policies": [
+    {
+     "policyId": "sstre-source-selection",
+     "version": "0.1.0",
+     "thresholdsHash": "sha256:871ab508ea457c0b1ec9903933d70740b27710701bf6574b078ee97e4449a709",
+     "records": 7
+    }
+   ]
+  },
+  "assetFacts": null
+ },
+ "effectiveConfigHash": "sha256:49201664d47853649e9edbcd2710e6c4ee9813c373f43db3cf997eb90337b467",
+ "assets": [
+  {
+   "assetId": "classic_tfe:fonts/syn.tex",
+   "category": "font",
+   "classic": {
+    "sha256": "sha256:2d7d987941e31f4d8a95e76c51bba6d9f09b8c4bbb50ec3b0baa5e6ac61cc386",
+    "px": [
+     256,
+     256
+    ],
+    "alphaMode": "opaque"
+   },
+   "selection": {
+    "recordId": "sel-12f70a93a5f79e23",
+    "recordSha256": "sha256:54c27a0aef65bae67ce3b34a45fbe364901e0eac596c7104d1c96f572d0fde93",
+    "policyId": "sstre-source-selection",
+    "policyVersion": "0.1.0",
+    "result": "classic",
+    "ruleFired": "R01_never_replace_category",
+    "candidateId": null,
+    "scores": {}
+   },
+   "source": {
+    "layer": "classic-base",
+    "kind": "classic",
+    "id": "classic_tfe:fonts/syn.tex",
+    "sha256": "sha256:2d7d987941e31f4d8a95e76c51bba6d9f09b8c4bbb50ec3b0baa5e6ac61cc386",
+    "px": [
+     256,
+     256
+    ],
+    "decidedBy": "classic-base"
+   },
+   "suppliedBy": "classic-base",
+   "processedBy": null,
+   "materialMaps": [],
+   "processing": {
+    "layer": "ai-enhancement",
+    "qualityProfile": "conservative",
+    "status": "not-eligible"
+   },
+   "layers": [
+    {
+     "layer": "classic-base",
+     "order": 1,
+     "status": "applied"
+    },
+    {
+     "layer": "hd-quality",
+     "order": 2,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-material-maps",
+     "order": 3,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-artwork",
+     "order": 4,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-interface",
+     "order": 5,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "ai-enhancement",
+     "order": 6,
+     "status": "not-eligible",
+     "detail": "category font"
+    }
+   ],
+   "platform": {
+    "profileId": "pc-default",
+    "textures": [
+     {
+      "role": "albedo",
+      "inputPx": [
+       256,
+       256
+      ],
+      "targetPx": [
+       256,
+       256
+      ],
+      "formats": {
+       "raster": "rgb8",
+       "rt": "bc7"
+      },
+      "preprocessing": [
+       "colour-space:srgb",
+       "mips:kaiser"
+      ]
+     }
+    ],
+    "actions": [],
+    "classicPx": [
+     256,
+     256
+    ],
+    "estimatedBytes": 262143
+   }
+  },
+  {
+   "assetId": "classic_tfe:models/syn/statue.tex",
+   "category": "props",
+   "classic": {
+    "sha256": "sha256:c363382d8ef72fc506b889b4b8e332aabe3df10e4b4201f30046df40c8907d13",
+    "px": [
+     256,
+     256
+    ],
+    "alphaMode": "opaque"
+   },
+   "selection": {
+    "recordId": "sel-e1c55561e1f471ee",
+    "recordSha256": "sha256:3abd6f99092399d382a78e7b2abea2cbdfc1af6788f51c62e8a29285fec4e40c",
+    "policyId": "sstre-source-selection",
+    "policyVersion": "0.1.0",
+    "result": "hd_art_candidate",
+    "ruleFired": "R07_art_difference",
+    "candidateId": "hd_tfe:syn/statue",
+    "scores": {
+     "resolution_ratio": 4.0,
+     "psnr_db": 33.0,
+     "ssim": 0.95,
+     "layout_ssim": 0.97,
+     "delta_e": 1.0,
+     "artefact_index": 0.05,
+     "detail_energy": 0.2
+    }
+   },
+   "source": {
+    "layer": "hd-artwork",
+    "kind": "hd",
+    "id": "hd_tfe:syn/statue",
+    "sha256": "sha256:cca2f0a90a3c41e78e250134051289661be079edfee85e75c3fe8ef6b862b50f",
+    "px": [
+     512,
+     512
+    ],
+    "format": "bc1",
+    "decidedBy": "hd-artwork"
+   },
+   "suppliedBy": "hd-artwork",
+   "processedBy": null,
+   "materialMaps": [],
+   "processing": {
+    "layer": "ai-enhancement",
+    "qualityProfile": "conservative",
+    "status": "not-eligible"
+   },
+   "layers": [
+    {
+     "layer": "classic-base",
+     "order": 1,
+     "status": "superseded",
+     "detail": "by hd-artwork"
+    },
+    {
+     "layer": "hd-quality",
+     "order": 2,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-material-maps",
+     "order": 3,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-artwork",
+     "order": 4,
+     "status": "applied",
+     "detail": "approved by owner"
+    },
+    {
+     "layer": "hd-interface",
+     "order": 5,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "ai-enhancement",
+     "order": 6,
+     "status": "not-eligible",
+     "detail": "source layer hd-artwork"
+    },
+    {
+     "layer": "overrides",
+     "order": 7,
+     "status": "not-applicable"
+    }
+   ],
+   "platform": {
+    "profileId": "pc-default",
+    "textures": [
+     {
+      "role": "albedo",
+      "inputPx": [
+       512,
+       512
+      ],
+      "targetPx": [
+       512,
+       512
+      ],
+      "formats": {
+       "raster": "rgb8",
+       "rt": "bc7"
+      },
+      "preprocessing": [
+       "colour-space:srgb",
+       "mips:kaiser"
+      ]
+     }
+    ],
+    "actions": [],
+    "classicPx": [
+     256,
+     256
+    ],
+    "estimatedBytes": 1048575
+   }
+  },
+  {
+   "assetId": "classic_tfe:textures/computer/syn_page.tex",
+   "category": "ui",
+   "classic": {
+    "sha256": "sha256:e39105278010013d1e207f6837966833ae6e71fb29fc529495ce00cb94cf031f",
+    "px": [
+     256,
+     256
+    ],
+    "alphaMode": "opaque"
+   },
+   "selection": {
+    "recordId": "sel-4cd456c9cad65355",
+    "recordSha256": "sha256:8b636d89b06961b22b76e056bf6f25eebf0ac8361c069e7ba2d4375e4054dc75",
+    "policyId": "sstre-source-selection",
+    "policyVersion": "0.1.0",
+    "result": "classic_fallback",
+    "ruleFired": "R03_unverified",
+    "candidateId": "hd_tfe:syn/page",
+    "scores": {
+     "resolution_ratio": 12.0,
+     "psnr_db": 33.0,
+     "ssim": 0.95,
+     "layout_ssim": 0.97,
+     "delta_e": 1.0,
+     "artefact_index": 0.05,
+     "detail_energy": 0.2
+    }
+   },
+   "source": {
+    "layer": "classic-base",
+    "kind": "classic",
+    "id": "classic_tfe:textures/computer/syn_page.tex",
+    "sha256": "sha256:e39105278010013d1e207f6837966833ae6e71fb29fc529495ce00cb94cf031f",
+    "px": [
+     256,
+     256
+    ],
+    "decidedBy": "classic-base"
+   },
+   "suppliedBy": "classic-base",
+   "processedBy": null,
+   "materialMaps": [],
+   "processing": {
+    "layer": "ai-enhancement",
+    "qualityProfile": "conservative",
+    "status": "not-eligible"
+   },
+   "layers": [
+    {
+     "layer": "classic-base",
+     "order": 1,
+     "status": "applied"
+    },
+    {
+     "layer": "hd-quality",
+     "order": 2,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-material-maps",
+     "order": 3,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-artwork",
+     "order": 4,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-interface",
+     "order": 5,
+     "status": "awaiting-approval",
+     "detail": "no per-asset approval; layout changes (2D UI only, mex may change)"
+    },
+    {
+     "layer": "ai-enhancement",
+     "order": 6,
+     "status": "not-eligible",
+     "detail": "category ui"
+    },
+    {
+     "layer": "overrides",
+     "order": 7,
+     "status": "not-applicable"
+    }
+   ],
+   "platform": {
+    "profileId": "pc-default",
+    "textures": [
+     {
+      "role": "albedo",
+      "inputPx": [
+       256,
+       256
+      ],
+      "targetPx": [
+       256,
+       256
+      ],
+      "formats": {
+       "raster": "rgb8",
+       "rt": "bc7"
+      },
+      "preprocessing": [
+       "colour-space:srgb",
+       "mips:kaiser"
+      ]
+     }
+    ],
+    "actions": [],
+    "classicPx": [
+     256,
+     256
+    ],
+    "estimatedBytes": 262143
+   }
+  },
+  {
+   "assetId": "classic_tfe:textures/interface/syn_logo.tex",
+   "category": "ui",
+   "classic": {
+    "sha256": "sha256:49d3e11eb6b0200588f0f23858d5142ed1bb95401a5dc2ad61ee011ed720db44",
+    "px": [
+     256,
+     256
+    ],
+    "alphaMode": "blend"
+   },
+   "selection": {
+    "recordId": "sel-cd87c3b41c9cb2c5",
+    "recordSha256": "sha256:d73bbc673a35bc4d084080416d9a1da603cba802944d7c65ca6b4b9103537e2d",
+    "policyId": "sstre-source-selection",
+    "policyVersion": "0.1.0",
+    "result": "hd_art_candidate",
+    "ruleFired": "R07_art_difference",
+    "candidateId": "hd_tfe:syn/logo",
+    "scores": {
+     "resolution_ratio": 4.0,
+     "psnr_db": 33.0,
+     "ssim": 0.95,
+     "layout_ssim": 0.97,
+     "delta_e": 1.0,
+     "artefact_index": 0.05,
+     "detail_energy": 0.2
+    }
+   },
+   "source": {
+    "layer": "classic-base",
+    "kind": "classic",
+    "id": "classic_tfe:textures/interface/syn_logo.tex",
+    "sha256": "sha256:49d3e11eb6b0200588f0f23858d5142ed1bb95401a5dc2ad61ee011ed720db44",
+    "px": [
+     256,
+     256
+    ],
+    "decidedBy": "overrides"
+   },
+   "suppliedBy": "classic-base",
+   "processedBy": null,
+   "materialMaps": [],
+   "processing": {
+    "layer": "ai-enhancement",
+    "qualityProfile": "conservative",
+    "status": "not-eligible"
+   },
+   "layers": [
+    {
+     "layer": "classic-base",
+     "order": 1,
+     "status": "applied"
+    },
+    {
+     "layer": "hd-quality",
+     "order": 2,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-material-maps",
+     "order": 3,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-artwork",
+     "order": 4,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-interface",
+     "order": 5,
+     "status": "superseded",
+     "detail": "overrides: use-classic"
+    },
+    {
+     "layer": "ai-enhancement",
+     "order": 6,
+     "status": "not-eligible",
+     "detail": "category ui"
+    },
+    {
+     "layer": "overrides",
+     "order": 7,
+     "status": "applied",
+     "detail": "cur@1.0.0 use-classic"
+    }
+   ],
+   "platform": {
+    "profileId": "pc-default",
+    "textures": [
+     {
+      "role": "albedo",
+      "inputPx": [
+       256,
+       256
+      ],
+      "targetPx": [
+       256,
+       256
+      ],
+      "formats": {
+       "raster": "rgba8",
+       "rt": "bc7"
+      },
+      "preprocessing": [
+       "colour-space:srgb",
+       "alpha:preserve",
+       "alpha:dilate-edges",
+       "mips:kaiser"
+      ]
+     }
+    ],
+    "actions": [],
+    "classicPx": [
+     256,
+     256
+    ],
+    "estimatedBytes": 349524
+   }
+  },
+  {
+   "assetId": "classic_tfe:textures/syn/maps.tex",
+   "category": "architecture",
+   "classic": {
+    "sha256": "sha256:8da9b49fe18bcc2bafe9fab00fac791bb8e10f00b77ca555e5810327ba699e4a",
+    "px": [
+     256,
+     256
+    ],
+    "alphaMode": "opaque"
+   },
+   "selection": {
+    "recordId": "sel-1d6dc54f43115347",
+    "recordSha256": "sha256:f38e3f2e2a4a9c460d2e992b0159e8ae67ac8cb8af4da92302de32ba7d9e8141",
+    "policyId": "sstre-source-selection",
+    "policyVersion": "0.1.0",
+    "result": "classic_with_hd_maps",
+    "ruleFired": "R11_degraded_copy",
+    "candidateId": "hd_tfe:syn/maps",
+    "scores": {
+     "resolution_ratio": 4.0,
+     "psnr_db": 33.0,
+     "ssim": 0.95,
+     "layout_ssim": 0.97,
+     "delta_e": 1.0,
+     "artefact_index": 0.05,
+     "detail_energy": 0.2
+    }
+   },
+   "source": {
+    "layer": "overrides",
+    "kind": "override",
+    "id": "cur:classic_tfe:textures/syn/maps.tex",
+    "sha256": "sha256:4c5185ab9076c8c710b6635d07c8c963e55cecc389908c4b8e9d7c35e6cce252",
+    "px": [
+     512,
+     512
+    ],
+    "pack": {
+     "packId": "cur",
+     "version": "1.0.0",
+     "kind": "curated"
+    },
+    "keepMaps": true,
+    "decidedBy": "overrides"
+   },
+   "suppliedBy": "overrides",
+   "processedBy": null,
+   "materialMaps": [
+    {
+     "role": "ao",
+     "layer": "hd-material-maps",
+     "id": "hd_tfe:syn/maps#ao",
+     "px": [
+      512,
+      512
+     ],
+     "pxAssumed": true
+    },
+    {
+     "role": "normal",
+     "layer": "hd-material-maps",
+     "id": "hd_tfe:syn/maps#normal",
+     "px": [
+      512,
+      512
+     ],
+     "pxAssumed": true
+    }
+   ],
+   "processing": {
+    "layer": "ai-enhancement",
+    "qualityProfile": "conservative",
+    "status": "suppressed"
+   },
+   "layers": [
+    {
+     "layer": "classic-base",
+     "order": 1,
+     "status": "superseded",
+     "detail": "by overrides"
+    },
+    {
+     "layer": "hd-quality",
+     "order": 2,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-material-maps",
+     "order": 3,
+     "status": "applied",
+     "detail": "M01 maps kept by the override (keepMaps)"
+    },
+    {
+     "layer": "hd-artwork",
+     "order": 4,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-interface",
+     "order": 5,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "ai-enhancement",
+     "order": 6,
+     "status": "suppressed",
+     "detail": "overrides"
+    },
+    {
+     "layer": "overrides",
+     "order": 7,
+     "status": "applied",
+     "detail": "cur@1.0.0 replace"
+    }
+   ],
+   "platform": {
+    "profileId": "pc-default",
+    "textures": [
+     {
+      "role": "albedo",
+      "inputPx": [
+       512,
+       512
+      ],
+      "targetPx": [
+       512,
+       512
+      ],
+      "formats": {
+       "raster": "rgb8",
+       "rt": "bc7"
+      },
+      "preprocessing": [
+       "colour-space:srgb",
+       "mips:kaiser"
+      ]
+     },
+     {
+      "role": "ao",
+      "inputPx": [
+       512,
+       512
+      ],
+      "targetPx": [
+       512,
+       512
+      ],
+      "formats": {
+       "raster": null,
+       "rt": "bc4"
+      },
+      "preprocessing": [
+       "colour-space:linear",
+       "mips:kaiser"
+      ]
+     },
+     {
+      "role": "normal",
+      "inputPx": [
+       512,
+       512
+      ],
+      "targetPx": [
+       512,
+       512
+      ],
+      "formats": {
+       "raster": null,
+       "rt": "bc5"
+      },
+      "preprocessing": [
+       "colour-space:linear",
+       "mips:kaiser"
+      ]
+     }
+    ],
+    "actions": [],
+    "classicPx": [
+     256,
+     256
+    ],
+    "estimatedBytes": 1048575
+   }
+  },
+  {
+   "assetId": "classic_tfe:textures/syn/plain.tex",
+   "category": "architecture",
+   "classic": {
+    "sha256": "sha256:c219c72bd761040a053f5d0411b515506954a8cb8d2a2a44408c82b75802f6dc",
+    "px": [
+     256,
+     256
+    ],
+    "alphaMode": "opaque"
+   },
+   "selection": {
+    "recordId": "sel-6e550987fb7b531c",
+    "recordSha256": "sha256:497151e52ef98aed4fc84e5ee6a30e4339fd0cf6f10607a194dc0d4d8fd63abe",
+    "policyId": "sstre-source-selection",
+    "policyVersion": "0.1.0",
+    "result": "classic",
+    "ruleFired": "R11_degraded_copy",
+    "candidateId": "hd_tfe:syn/plain",
+    "scores": {
+     "resolution_ratio": 1.0,
+     "psnr_db": 33.0,
+     "ssim": 0.95,
+     "layout_ssim": 0.97,
+     "delta_e": 1.0,
+     "artefact_index": 0.05,
+     "detail_energy": 0.2
+    }
+   },
+   "source": {
+    "layer": "classic-base",
+    "kind": "classic",
+    "id": "classic_tfe:textures/syn/plain.tex",
+    "sha256": "sha256:c219c72bd761040a053f5d0411b515506954a8cb8d2a2a44408c82b75802f6dc",
+    "px": [
+     256,
+     256
+    ],
+    "decidedBy": "classic-base"
+   },
+   "suppliedBy": "classic-base",
+   "processedBy": "ai-enhancement",
+   "materialMaps": [],
+   "processing": {
+    "layer": "ai-enhancement",
+    "qualityProfile": "conservative",
+    "mode": "sr",
+    "scale": 2,
+    "plannedPx": [
+     512,
+     512
+    ],
+    "status": "applied",
+    "output": {
+     "packId": "ai",
+     "version": "1.0.0",
+     "sha256": "sha256:22f71c8c3d54a87c850a351f8c9f53b3c0af9784d4d8a9a2e9e58047e2d62850",
+     "px": [
+      512,
+      512
+     ],
+     "recipeHash": "sha256:8443e7e917eb6c6f6bf4ba6f9d74a5f57ccf0a55ca0c34fe315700f4c5544955"
+    }
+   },
+   "layers": [
+    {
+     "layer": "classic-base",
+     "order": 1,
+     "status": "applied"
+    },
+    {
+     "layer": "hd-quality",
+     "order": 2,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-material-maps",
+     "order": 3,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-artwork",
+     "order": 4,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-interface",
+     "order": 5,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "ai-enhancement",
+     "order": 6,
+     "status": "applied",
+     "detail": "ai@1.0.0"
+    },
+    {
+     "layer": "overrides",
+     "order": 7,
+     "status": "not-applicable"
+    }
+   ],
+   "platform": {
+    "profileId": "pc-default",
+    "textures": [
+     {
+      "role": "albedo",
+      "inputPx": [
+       512,
+       512
+      ],
+      "targetPx": [
+       512,
+       512
+      ],
+      "formats": {
+       "raster": "rgb8",
+       "rt": "bc7"
+      },
+      "preprocessing": [
+       "colour-space:srgb",
+       "mips:kaiser"
+      ]
+     }
+    ],
+    "actions": [],
+    "classicPx": [
+     256,
+     256
+    ],
+    "estimatedBytes": 1048575
+   }
+  },
+  {
+   "assetId": "classic_tfe:textures/syn/upscale.tex",
+   "category": "props",
+   "classic": {
+    "sha256": "sha256:11a9681f6201d9cb8034a26d8c1ab2524f791ec93c200f962e4a304455c0c850",
+    "px": [
+     256,
+     256
+    ],
+    "alphaMode": "opaque"
+   },
+   "selection": {
+    "recordId": "sel-7672d9eee4e86cdf",
+    "recordSha256": "sha256:cf6455b6cd50a1621b2f05539643f253339b23be8307e888542d11f254e44e72",
+    "policyId": "sstre-source-selection",
+    "policyVersion": "0.1.0",
+    "result": "hd",
+    "ruleFired": "R08_upscale_with_detail",
+    "candidateId": "hd_tfe:syn/upscale",
+    "scores": {
+     "resolution_ratio": 16.0,
+     "psnr_db": 33.0,
+     "ssim": 0.95,
+     "layout_ssim": 0.97,
+     "delta_e": 1.0,
+     "artefact_index": 0.05,
+     "detail_energy": 0.2
+    }
+   },
+   "source": {
+    "layer": "hd-quality",
+    "kind": "hd",
+    "id": "hd_tfe:syn/upscale",
+    "sha256": "sha256:6fdc45d50698d769b3d5ec58fb97f2153ad86170c6b9ea7ff003cd98b9911892",
+    "px": [
+     1024,
+     1024
+    ],
+    "format": "bc1",
+    "decidedBy": "hd-quality"
+   },
+   "suppliedBy": "hd-quality",
+   "processedBy": null,
+   "materialMaps": [
+    {
+     "role": "gloss",
+     "layer": "hd-material-maps",
+     "id": "hd_tfe:syn/upscale#gloss",
+     "px": [
+      1024,
+      1024
+     ],
+     "pxAssumed": true
+    },
+    {
+     "role": "normal",
+     "layer": "hd-material-maps",
+     "id": "hd_tfe:syn/upscale#normal",
+     "px": [
+      1024,
+      1024
+     ],
+     "pxAssumed": true
+    }
+   ],
+   "processing": {
+    "layer": "ai-enhancement",
+    "qualityProfile": "conservative",
+    "mode": "sr",
+    "scale": 2,
+    "status": "source-sufficient"
+   },
+   "layers": [
+    {
+     "layer": "classic-base",
+     "order": 1,
+     "status": "superseded",
+     "detail": "by hd-quality"
+    },
+    {
+     "layer": "hd-quality",
+     "order": 2,
+     "status": "applied",
+     "detail": "R08_upscale_with_detail"
+    },
+    {
+     "layer": "hd-material-maps",
+     "order": 3,
+     "status": "applied",
+     "detail": "maps of the selected HD source"
+    },
+    {
+     "layer": "hd-artwork",
+     "order": 4,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "hd-interface",
+     "order": 5,
+     "status": "not-applicable"
+    },
+    {
+     "layer": "ai-enhancement",
+     "order": 6,
+     "status": "source-sufficient",
+     "detail": "source 1024x1024 >= x2"
+    },
+    {
+     "layer": "overrides",
+     "order": 7,
+     "status": "not-applicable"
+    }
+   ],
+   "platform": {
+    "profileId": "pc-default",
+    "textures": [
+     {
+      "role": "albedo",
+      "inputPx": [
+       1024,
+       1024
+      ],
+      "targetPx": [
+       1024,
+       1024
+      ],
+      "formats": {
+       "raster": "rgb8",
+       "rt": "bc7"
+      },
+      "preprocessing": [
+       "colour-space:srgb",
+       "mips:kaiser"
+      ]
+     },
+     {
+      "role": "gloss",
+      "inputPx": [
+       1024,
+       1024
+      ],
+      "targetPx": [
+       1024,
+       1024
+      ],
+      "formats": {
+       "raster": null,
+       "rt": "bc4"
+      },
+      "preprocessing": [
+       "colour-space:linear",
+       "mips:kaiser"
+      ]
+     },
+     {
+      "role": "normal",
+      "inputPx": [
+       1024,
+       1024
+      ],
+      "targetPx": [
+       1024,
+       1024
+      ],
+      "formats": {
+       "raster": null,
+       "rt": "bc5"
+      },
+      "preprocessing": [
+       "colour-space:linear",
+       "mips:kaiser"
+      ]
+     }
+    ],
+    "actions": [],
+    "classicPx": [
+     256,
+     256
+    ],
+    "estimatedBytes": 4194303
+   }
+  }
+ ],
+ "conflicts": [],
+ "summary": {
+  "assets": 7,
+  "suppliedBy": {
+   "classic-base": 4,
+   "hd-artwork": 1,
+   "hd-quality": 1,
+   "overrides": 1
+  },
+  "decidedBy": {
+   "classic-base": 3,
+   "hd-artwork": 1,
+   "hd-quality": 1,
+   "overrides": 2
+  },
+  "aiEnhancement": {
+   "applied": 1,
+   "not-eligible": 4,
+   "source-sufficient": 1,
+   "suppressed": 1
+  },
+  "materialMaps": {
+   "assets": 2,
+   "byLayer": {
+    "hd-material-maps": 4
+   }
+  },
+  "layerStatus": {
+   "classic-base": {
+    "applied": 4,
+    "superseded": 3
+   },
+   "hd-quality": {
+    "applied": 1,
+    "not-applicable": 6
+   },
+   "hd-material-maps": {
+    "applied": 2,
+    "not-applicable": 5
+   },
+   "hd-artwork": {
+    "applied": 1,
+    "not-applicable": 6
+   },
+   "hd-interface": {
+    "awaiting-approval": 1,
+    "not-applicable": 5,
+    "superseded": 1
+   },
+   "ai-enhancement": {
+    "applied": 1,
+    "not-eligible": 4,
+    "source-sufficient": 1,
+    "suppressed": 1
+   },
+   "overrides": {
+    "applied": 2,
+    "not-applicable": 5
+   }
+  },
+  "platformActions": {},
+  "budget": {
+   "budgetBytes": 2147483648,
+   "policy": "report",
+   "accountingTarget": "raster",
+   "estimatedBytesBefore": 8213838,
+   "estimatedBytes": 8213838,
+   "budgetHalvings": 0,
+   "estimatedBytesWithoutPendingAi": 8213838,
+   "withinBudget": true
+  }
+ },
+ "planHash": "sha256:6aaf02144cc54757be989f467ac9a583a67ec8f2a30bebd95fecdd18515ed13f",
+ "localOnly": true
+}

@@ -1,0 +1,44 @@
+{
+ "configFormatVersion": "0.1.0",
+ "configId": "syn",
+ "layers": {
+  "hd-artwork": {
+   "enabled": true
+  },
+  "hd-interface": {
+   "enabled": true,
+   "includeRelayout": true
+  },
+  "overrides": {
+   "enabled": true,
+   "packs": [
+    {
+     "packId": "cur",
+     "version": "1.0.0",
+     "kind": "curated",
+     "path": "packs/cur/pack.json",
+     "priority": 1
+    }
+   ]
+  },
+  "ai-enhancement": {
+   "qualityProfile": "conservative",
+   "packs": [
+    {
+     "packId": "ai",
+     "version": "1.0.0",
+     "kind": "ai-enhancement",
+     "path": "packs/ai/pack.json",
+     "priority": 0
+    }
+   ]
+  },
+  "classic-base": {
+   "enabled": false
+  }
+ },
+ "platformProfile": "pc-default",
+ "approvals": {
+  "path": "approvals.json"
+ }
+}

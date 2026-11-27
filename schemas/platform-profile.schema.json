@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/platform-profile.schema.json",
+  "title": "SSTRE platform (target) texture profile",
+  "$comment": "STATUS: PROPOSAL (sprint 2, track A2, EXP-015; ADR-0009 rule 5). A declarative description of what a runtime target accepts: texture size limits, containers and pixel/compression formats per render target, mip policy, memory budget and preprocessing. Independent of the asset layers. Referenced by id or inlined from build-config.schema.json and frozen into build-manifest.schema.json. Profiles marked 'hypothetical' are illustrations and contain no platform-SDK information.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profileFormatVersion", "profileId", "status", "textureLimits", "targets", "mipPolicy", "memoryBudget", "preprocessing"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "profileFormatVersion": { "type": "string", "pattern": "^0\\.[0-9]+\\.[0-9]+$" },
+    "profileId": { "$ref": "#/$defs/id" },
+    "title": { "type": "string" },
+    "status": {
+      "description": "validated: every limit measured; provisional: limits measured, some targets partial; hypothetical: illustration, nothing measured.",
+      "enum": ["validated", "provisional", "hypothetical"]
+    },
+    "evidence": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "textureLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxWidth", "maxHeight", "maxPixels"],
+      "properties": {
+        "maxWidth": { "type": "integer", "minimum": 1 },
+        "maxHeight": { "type": "integer", "minimum": 1 },
+        "maxLongEdge": { "type": "integer", "minimum": 1 },
+        "maxShortEdge": { "type": "integer", "minimum": 1 },
+        "maxPixels": { "type": "integer", "minimum": 1 },
+        "requirePowerOfTwo": { "type": "boolean" },
+        "respectFirstMipDensity": {
+          "type": "boolean",
+          "description": "Cap the density of a replacement with unchanged mex at 2^firstMip (EXP-012 raster import limit)."
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/target" }
+    },
+    "mipPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filter"],
+      "properties": {
+        "filter": { "enum": ["box", "kaiser", "lanczos3"] },
+        "alphaCoveragePreserve": { "type": "boolean" },
+        "wrapForTileable": { "type": "boolean" }
+      }
+    },
+    "memoryBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes", "accountingTarget", "policy"],
+      "properties": {
+        "bytes": { "type": ["integer", "null"], "minimum": 1, "maximum": 9007199254740991 },
+        "accountingTarget": { "$ref": "#/$defs/id", "description": "targetId whose formats are counted." },
+        "includeMips": { "type": "boolean" },
+        "policy": {
+          "description": "report: measure only; reduce-largest: halve the largest asset (ties: asset ID) until the total fits.",
+          "enum": ["report", "reduce-largest"]
+        }
+      }
+    },
+    "preprocessing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["downscale"],
+      "properties": {
+        "downscale": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["policy"],
+          "properties": {
+            "policy": { "enum": ["halve-until-fit", "fit-exact"] },
+            "filter": { "enum": ["box", "bilinear", "bicubic", "lanczos3", "kaiser"] },
+            "neverBelowClassic": { "type": "boolean", "description": "Budget reduction never goes below the Classic resolution." }
+          }
+        },
+        "colorSpace": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "color": { "enum": ["srgb", "linear"] },
+            "data": { "enum": ["linear"] },
+            "resampleInLinear": { "type": "boolean" }
+          }
+        },
+        "alpha": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": { "enum": ["preserve", "binarize", "drop-if-opaque"] },
+            "premultiply": { "type": "boolean" },
+            "dilateEdges": { "type": "boolean" },
+            "cutoutCoverage": { "type": "boolean" }
+          }
+        },
+        "normals": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "renormalizeAfterResample": { "type": "boolean" } }
+        }
+      }
+    },
+    "materialMaps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "roles": { "type": "array", "items": { "$ref": "#/$defs/mapRole" }, "uniqueItems": true }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+    "mapRole": { "enum": ["normal", "gloss", "ao", "height"] },
+    "format": {
+      "description": "Pixel / compression format ids understood by the AssetCompiler.",
+      "enum": ["rgba8", "rgb8", "rgba4444", "rgba5551", "rgb565", "bc1", "bc3", "bc4", "bc5", "bc7", "astc-4x4", "astc-6x6", "astc-8x8", "etc2-rgb8", "etc2-rgba8", "eac-r11", "eac-rg11", "pal8", "l8", "la8"]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetId", "backend", "container", "status", "allowedFormats", "formats", "mips"],
+      "properties": {
+        "targetId": { "$ref": "#/$defs/id" },
+        "backend": { "enum": ["raster", "rt"] },
+        "container": { "enum": ["se1-tex-v4", "ktx2", "dds", "png", "other"] },
+        "status": {
+          "description": "validated: loads in the engine (EXP evidence); partial: loader validated, render test pending; not-validated: placeholder.",
+          "enum": ["validated", "partial", "not-validated"]
+        },
+        "allowedFormats": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/format" }, "uniqueItems": true },
+        "formats": {
+          "description": "Default format per role slot. A missing slot means the target cannot take that role (e.g. material maps on the raster baseline).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["color-opaque"],
+          "properties": {
+            "color-opaque": { "$ref": "#/$defs/format" },
+            "color-alpha": { "$ref": "#/$defs/format" },
+            "normal": { "$ref": "#/$defs/format" },
+            "mask": { "$ref": "#/$defs/format" }
+          }
+        },
+        "mips": { "enum": ["runtime-generated", "full-chain", "none"] },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "string" }
+      }
+    }
+  },
+  "examples": [
+    {
+      "$comment": "Synthetic example.",
+      "profileFormatVersion": "0.1.0",
+      "profileId": "synthetic-small",
+      "status": "hypothetical",
+      "textureLimits": { "maxWidth": 256, "maxHeight": 256, "maxPixels": 65536, "requirePowerOfTwo": true },
+      "targets": [
+        { "targetId": "raster", "backend": "raster", "container": "se1-tex-v4", "status": "not-validated", "allowedFormats": ["rgba8", "rgb8"], "formats": { "color-opaque": "rgb8", "color-alpha": "rgba8" }, "mips": "runtime-generated" }
+      ],
+      "mipPolicy": { "filter": "box" },
+      "memoryBudget": { "bytes": 1048576, "accountingTarget": "raster", "includeMips": true, "policy": "reduce-largest" },
+      "preprocessing": { "downscale": { "policy": "halve-until-fit", "filter": "box", "neverBelowClassic": false } },
+      "materialMaps": { "enabled": false }
+    }
+  ]
+}
