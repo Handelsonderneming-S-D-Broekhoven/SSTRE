@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-11-28 |
 | Backlog items | Sprint 2 track VS-A (vertical slice, assets); ADR-0009 consequences 1–3; EXP-016 follow-ups ("platform profile that sets the texture cvars", "AssetCompiler support for `TEX_32BIT`", Vulkan pool) |
-| Status | Completed for slice v1 (both games packaged deterministically; in-engine pairs on the integrated VS-E build). Re-run on a newer VS-E build is up to the lead |
+| Status | Completed for slice v1: built deterministically from the AI1 level-1 packs with the sky rule; in-engine pairs on VS-E 0.1.0-preview2 (`c1537cfd`), raster and RT in both games |
 | Environment | Windows 11 Pro 10.0.22631, Intel Core i5-11600K, NVIDIA RTX 4070 12 GB, driver 616.64 (Vulkan 1.4.351). Python 3.10.11 venv `G:\sstre-tmp\assets\venv` (numpy 2.2.6, Pillow 12.3.0, jsonschema 4.26.0, pytest 9.2.0, reuse 5.0.2). Compressonator CLI 4.6.0 (as in EXP-002/EXP-013). KTX-Software `ktx` 4.4.2 as a black-box validator only (EXP-014) |
 | Inputs | Selection records and texture set 1 of EXP-012; the local HD image plugin output (EXP-012); AI1 layer-6 packs: the level-1 packs `classic-tfe-level1` and `classic-tse-level1` (version 0.1.0, profile `conservative`, EXP-013; local only). Slice v0 used only AI1's earlier seven-asset run; the owner's Steam Classic TFE and TSE installs (read-only). Test runtimes: data copied from E1's TFE runtime (EXP-009) and E4's TSE runtime (EXP-016); binaries copied from track VS-E's integrated build (SSTRE-Engine local `sprint2/integration`: Classic-VK + RT transplant (TFE) + `FilterBitmap` fix + upload log + master-server switch). No asset paths, hashes or images are published here (GATE-05) |
 | Code | SSTRE-AssetCompiler `feature/slice-packaging` (local, not pushed); umbrella `sprint2/exp-019` (two schema changes + this report) |
@@ -119,7 +119,7 @@ Platform profiles gain an optional `engineSettings` section: an ordered list of 
    - `ktx validate` on every `.ktx2`, then `SHA256SUMS`.
 5. **Runtimes** `scripts\make-runtimes.sh`, after `wait-quiet`:
    - `runtime-classic` and `runtime-slice` (TFE), `runtime-tse-classic` and `runtime-tse-slice`;
-   - each copies the source runtime's data with `Bin\` replaced by VS-E's build. TFE also gets the clean-room `RayTracedGL1.dll`; the integrated TSE build has no RT layer;
+   - each copies the source runtime's data with `Bin\` replaced by VS-E's build. TFE also gets the clean-room `RayTracedGL1.dll`; the first integrated TSE build had no RT layer. Options: `KEEP_BIN=1` keeps a runtime's existing `Bin\`; `RELEASE_BIN=<dir>` copies VS-E's release tree (binaries including RT, RT shaders and data) onto all four runtimes;
    - the overlay goes into the `*-slice` copies only. The source runtimes were not modified.
 6. **Upload probe** `scripts\make_probe.py <game>`:
    - our own synthetic 4096² pattern, written with `make_replacement` over the header of one level texture that is not in the overlay and whose firstMip allows 4096 px;
@@ -200,7 +200,7 @@ Platform profiles gain an optional `engineSettings` section: an ordered list of 
 | Texture, KTX2, Vulkan pool or RTGL1 errors | 0 in every run |
 | Warning lines, Classic vs slice of the same level and API | identical sets in every pair (joystick, EAX, missing mod files and the harness's own two script lines) |
 | Foreground at every capture | yes, in every run (no focus loss recorded) |
-| TSE ray tracing | not run: the integrated TSE build has no RT layer |
+| TSE ray tracing | not run in this session (that build had no TSE RT layer); see the re-run below |
 
 The engine log has no line per loaded override, so "loaded without errors" means "no error line", not a positive load count. In RT the overlay is visibly in use (see below).
 
@@ -218,6 +218,45 @@ The engine log has no line per loaded override, so "loaded without errors" means
 - The slice is visibly sharper on walls, rock and terrain. On some distant mountain and cloud textures in TFE the SR output looks posterised (flat regions with hard edges), in raster and RT alike. That is a quality observation for the AI profile, not a packaging defect.
 - In RT the slice frames show the AI textures as well, so RTGL1 uses the `OverridenTextures` KTX2 files. The frame rates of the pair are comparable (about 250 FPS in both RT runs; the raster runs are capped at about 144 FPS).
 - The TFE text crawl and the menus are animated. Pairs captured on them (session 4 and part of session 5) are kept locally but say nothing about textures.
+
+### Re-run: sky rule (`SKY_FLATTEN`) and VS-E preview2
+
+**Cause and rule** [EXP, measured by AI1, EXP-013]:
+- The posterised look on TFE sky and distant terrain came from SR flattening, not from quantisation. The SR model merges the source's rock and cloud grain into flat patches with hard edges. The SR output has more unique colours than a bicubic upscale, and the pipeline stays in float until the final 8-bit encode.
+- A per-asset metric did not separate the affected textures. AI1 therefore applied a class rule (lead decision): in the `conservative` profile, textures of class `sky` skip the SR attempt with reason `SKY_FLATTEN` (recorded in provenance) and go to the conventional resample (L1, Lanczos 3).
+- Smooth-area steps ≥ 3 levels on the affected sky frame dropped from 4.1 % of pixels with SR to 1.2 % with L1; steps ≥ 6 dropped from 1.5 % to 0.05 %.
+- Re-exported packs: TFE 111 SR / 34 L1 (142 entries); TSE 285 SR / 21 L1 (303 entries). Planner check unchanged: TFE 132 applied, TSE 260 applied, 0 rejected.
+
+**Slice v1 rebuilt** (the earlier build is kept locally for comparison):
+- Same configurations, same counts: TFE 133 assets / 272 files, TSE 262 / 534.
+- 24 TFE and 11 TSE assets changed, which is exactly the sky class of each game. Every other output is byte-identical to the earlier build.
+- Rebuild into a second directory: `diff -r` identical. `ktx validate`: 407 of 407 pass.
+- Vulkan pool estimate and halvings unchanged (TFE 37.9 %, TSE 84.6 %, nothing reduced), because L1 and SR targets have the same size.
+- `INSTALL.txt` is now generated from a template, and its title names the slice version.
+
+**Runtimes on VS-E preview2** (`sprint2/integration` `c1537cfd`, release manifest 0.1.0-preview2):
+- `make-runtimes.sh` gained `RELEASE_BIN=<dir>`. It copies VS-E's release tree per game on top of all four runtimes, Classic and slice alike, before the slice overlay. The tree holds `Bin\` including `RayTracedGL1.dll`, plus the RT shaders, blue-noise texture and RT menu file.
+- This build has an RT layer for TSE too, so TSE was also run in RT.
+- `KEEP_BIN` was not used.
+
+**Matrix** (one lock acquisition, 15.4 min, 16 runs: TFE `01_Hatshepsut` Vulkan + RT, TSE `1_0` and `1_1` Vulkan + RT, Classic vs slice):
+- Every run reached `started.` and stayed responsive. `WATCHDOG=ok` 16 / 16, foreground at every capture, 0 texture/KTX2/pool/RTGL1 errors.
+- The warning sets are identical in every pair. The settings `Echo` appears in every slice run only.
+- TSE captures now use one ESC for `1_1` and two for `1_0`, so both levels show the level view.
+
+| Pair (level, API, capture) | MAD | PSNR (dB) | px > 8 | Mean luma Classic / slice |
+|---|---|---|---|---|
+| TFE `01_Hatshepsut`, Vulkan, 115 s | 19.9 | 16.8 | 52 % | 130.4 / 130.9 |
+| TFE `01_Hatshepsut`, RT, 115 s | 10.7 | 21.5 | 40 % | 136.7 / 136.3 |
+| TSE `1_0`, Vulkan, 32 s | 8.6 | 25.2 | 38 % | 26.5 / 28.1 |
+| TSE `1_0`, RT, 32 s | 27.9 | 15.5 | 79 % | 158.4 / 155.4 |
+| TSE `1_1`, Vulkan, 32 s | 8.0 | 23.5 | 47 % | 32.4 / 32.6 |
+| TSE `1_1`, RT, 32 s | 15.3 | 20.0 | 66 % | 59.1 / 54.7 |
+
+- The RT pairs differ more than the raster pairs. RT frames also contain stochastic lighting and denoiser history, and the `1_0` capture is a moving intro camera. The figures are not a quality measure.
+- **Visual:** no wrong mapping, alpha errors or seams in either game or API. The TFE mountains and clouds now look like Classic, only sharper; the posterisation is gone.
+- **TSE `1_1` RT sky:** white and blue streaks in the sky appear identically in the Classic run. This is engine RT behaviour that was already there, not an overlay effect.
+- **Frame rate, TSE `1_1` RT:** 58.7 FPS (slice) against 61.9 FPS (Classic), about 5 % lower. This is a single on-screen reading in one frame, not a benchmark.
 
 ## Deviations, modifications and failures
 
@@ -240,13 +279,13 @@ The engine log has no line per loaded override, so "loaded without errors" means
 - **Capture timing.** Session 4 used batch-s2's single ESC at 15 s. In TFE `01_Hatshepsut` and TSE `1_0` that ESC opened the game menu, so all their captures showed the menu. In TSE `1_1` it closed Netricsa and the captures show the level. Session 5 used two ESCs (15 s and 17 s): TSE `1_0` then shows the level, TSE `1_1` the menu. TFE opens with a text crawl that is still running at 90 s, so session 6 captured TFE at 60, 90 and 115 s. The table above uses the one valid pair per level.
 - **Configurations.** Slice v1 uses new files `cfg\slice-v1-{tfe,tse}.json`, so `slice-v0` stays reproducible from its own configuration. Slice v1 lists only the level-1 pack of each game. The earlier seven-asset pack is not used.
 - **Runtimes.** VS-E's build tree had moved on (02:21) since the runtimes were made (01:4x). `make-runtimes.sh` gained `KEEP_BIN=1`, which keeps each runtime's existing `Bin\`. Slice v1 was therefore tested on the same VS-E binaries as the slice-v0 probes. A run on a newer VS-E build is a separate step.
-- The overlay's `INSTALL.txt` still names "slice v0" in its title line; the content applies to v1 unchanged.
+- The first slice-v1 build's `INSTALL.txt` named 'slice v0' in its title line. Fixed in the rebuild.
 
 ## Interpretation
 
 - The packaging path scales from a handful of assets to complete level sets: 133 (TFE) and 262 (TSE) assets, each rebuilt byte-identically, each `.ktx2` valid, within the planner's Vulkan pool estimate, and without any upload downscale at the `pc-default` settings.
 - The pool estimate did not change between slice v0 and slice v1, because pending AI targets were already counted at their planned size. TSE uses 85 % of the pool with one level pair resident; a full TSE episode with AI ×2 targets would exceed it. That supports the backlog item for a larger or chained pool before full-game AI builds.
-- The in-engine evidence is negative evidence (no error, no freeze, no visible defect) plus visual confirmation that both the raster and the RT path show the AI textures. It is not a quality judgement of the AI layer, apart from the posterisation noted above.
+- The in-engine evidence is negative evidence (no error, no freeze, no visible defect) plus visual confirmation that both the raster and the RT path show the AI textures. It is not a quality judgement of the AI layer. The one quality defect seen (SR flattening on sky textures) was fixed at the pack level by the sky rule, and the packaging consumed the new packs without any change.
 
 ## Impact on ADRs, dossiers and backlog
 
@@ -264,5 +303,4 @@ The engine log has no line per loaded override, so "loaded without errors" means
 
 ## Open questions
 
-- Owner: is the visible SR posterisation on distant terrain and cloud textures acceptable for the slice, or should those categories move to the conventional resample (L1) in the conservative profile?
 - Owner: the 10 TSE and 3 TFE textures whose category AI1 and the scope classify differently stay Classic. Should a later pass resolve this with explicit selection records?
