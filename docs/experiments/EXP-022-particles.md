@@ -66,7 +66,7 @@ Severity: S1 = effect missing or wrong in normal play, S2 = clearly visible diff
 | FXP-8 | RT (TSE) | First-person chainsaw cutting sparks and blood not drawn (crash before `c1537cfd`) | [SRC] `Player.es` `RenderHUD` draws them in the HUD pass, which has no RT scene; [EXP] R4 | HUD pass cannot submit to RT | **fixed** `78081e7a`, `srt_bParticlesFirstPerson` |
 | FXP-9 | RT | Additive and alpha-blended particles look weaker than in raster: explosion cores do not saturate, grey trails and debris sparks nearly vanish over bright ground, smoke/gore clouds are more transparent | [EXP] TSE demo 1 cp12: near-white pixels in the explosion 11.5 % (Vulkan) / 10.5 % (OpenGL) vs 0.6 % (RT); TFE demo 2 cp04 gore cloud | [SRC] RTGL1 draws rasterized geometry after tonemapping into the linear final image; vertex colour pow 2.2 and sRGB textures, so blending is in linear space while SE art was made for gamma-space blending (`VulkanDevice.cpp:841-861`, `RsRasterizer.vert:35-45`) | **open**: needs an RTGL1 change (gamma-space particle target), see Â§5 |
 | FXP-10 | RT | Particles are LDR overlays: not exposed/tonemapped with the scene (too bright in dark interiors, relatively dim in bright exteriors), no bloom, no HDR emissive, not in reflections/refractions | [SRC] as FXP-9 | design of the RT port | **open**, RD-017 step "HDR emissive + bloom"; M1 cost note Â§3 |
-| FXP-11 | RT | Particles behind or below refractive surfaces (water, glass) fail the depth test against the primary first-hit depth; raster draws translucent portals over particles | [SRC] `RaygenPrimary.inl:298`, `RsDepthCopying.frag`; raster order `Render.cpp:626` | depth buffer = first hit | **open**, RTGL1 (store the depth of the first non-refractive hit for the raster pass) |
+| FXP-11 | RT | Particles behind or below refractive surfaces (water, glass) fail the depth test against the primary first-hit depth; raster draws translucent portals over particles | [SRC] `RaygenPrimary.inl:298`, `RsDepthCopying.frag`; raster order `Render.cpp:626` | depth buffer = first hit | implemented, default off, repro deferred (A1): `srt_bRasterDepthBehindRefraction` |
 | FXP-12 | RT | No fog/haze attenuation of particles (raster attenuates per vertex) | [SRC] `RTParticles.cpp:91` passes no fog/haze | RT fog/haze not modelled (haze disabled in TSE, EXP-018) | open, depends on the RT fog decision (LIGHT/FXT) |
 | FXP-13 | RT | NETRICSA model previews lose their particles (`GameMP/CompModels.cpp`, own drawport, no RT scene) | [SRC] | as FXP-8 | open, S3 (UI) |
 | FXP-14 | RT | Sky (background) particles are oriented with the main camera axes and then rotated by the inverse background-viewer orientation | [SRC] `RTParticles.cpp` `RT_GetViewVectors`, `Scene.cpp:352-357` | | open, [ASM] only visible if a background viewer is rotated; not reproduced |
@@ -172,5 +172,41 @@ Proposed RTGL1 change (lead coordinates; not made): draw the rasterized DEFAULT 
 - Track handovers: FXT: FXP-6 changes the colour of `alpha_test_particles` geometry (lightning); TFE blood spill/stain models black in RT. R1: the checkpoint harness and the census are reusable.
 
 ## Open questions
-- Owner/lead: accept an RTGL1 change for gamma-space particle blending in M0.1 (Preview3), or defer to M1?
+- Answered by the lead: RTGL1 change in M0.1, see A1.
 
+## Addendum A1 (2026-11-28 evening): RTGL1 gamma-space particle blending and raster depth behind refraction
+
+Lead decision: build the RTGL1 change for M0.1. Generic (no game references), optional, preview2 behaviour kept.
+
+### Change
+- RTGL1 branch `m01/fxp-rtgl1` @ `243b8ee` (own worktree `G:\sstre-tmp\fxp\wt-rtgl1`, from `sprint2/rtgl1-sstre` `0eb4c4a`; the shared RTGL1 worktree is untouched). New public struct `RgDrawFrameRasterizedParams` (`RgDrawFrameInfo::pRasterizedParams`, null = off):
+  - `blendInGammaSpace`: around the draw of rasterized DEFAULT geometry into the final image, a compute pass (`CmRasterGamma.comp`) encodes the final image with gamma 2.2 and keeps the original in a new framebuffer; the geometry is drawn by a second pipeline set whose fragment shader writes gamma-encoded colour (specialization constant); a second pass decodes. Pixels the geometry did not change get their exact original value back. Without that copy, an in-place r11g11b10f round trip would change untouched pixels by up to 2.6 display codes [EXP, numeric simulation]. Lens flares are drawn after the decode, unchanged. Side effect, by design: particle contributions below one r11g11b10f ulp (1.6 % of the pixel value for R and G, 3.1 % for B) are dropped.
+  - `depthBehindRefraction`: the primary and reflect/refract raygen write a new `DepthRaster` framebuffer. Where the path went through refractive surfaces only, it holds the NDC depth of the surface seen behind them (never closer than the first hit); everywhere else it holds the first hit. The depth-copy pass uses it; split (checkerboarded) pixels take the farthest of their horizontal split neighbours.
+- Engine `m01/fxp`: `c0580ab6` sets the params from `srt_bRasterGammaBlend` (default **1**) and `srt_bRasterDepthBehindRefraction`; `769e62aa` sets the default of the latter to **0**, see below. The engine must be built against the new header and needs the new DLL and SPIR-V (46 shaders).
+- Scope: this changes every rasterized DEFAULT draw into the final image, not only particles. In SSTRE that also covers FXT's rasterized translucent geometry and the lightning after FXT `ea90c65c` (see the FXT note below).
+
+### Results ([EXP], TSE demo 1 / TFE demo 2, same demo frames, RT runs on the new binaries, Vulkan reused from session A/B)
+
+| Question | Result |
+|---|---|
+| FXP-9, explosion at 78 s and 36 s: particle contribution = capture minus the same frame with `gfx_bRenderParticles=0`, mean over the effect region | 78 s: Vulkan -8.0, RT linear -45.9, RT gamma **-8.6**; 36 s: Vulkan +3.1, RT linear -11.1, RT gamma **+3.2** |
+| Near-white share in the same regions (the metric of R2) | 78 s: Vulkan 11.5 %, RT linear 0.6 %, RT gamma 18.7 %; 36 s: 3.8 / 2.6 / 15.2 %. RT gamma overshoots because the RT background in these regions is brighter than in raster (mean 207 vs 161 at 36 s; exposure, FXP-10), not because of the blend |
+| TFE check (shared path): gore cloud, TFE demo 2 at 35 s | the cloud opacity is close to Vulkan with gamma blending; it was visibly too transparent before |
+| FXP-11 repro | not found: the TSE 1_1 spawn (under water) shows no particle beyond the surface, and TSE demos 2/3 contain no water/glass with particles (ledger `...210834-FXP-611`). **Deferred.** The 1_1 views with the setting off and on show no artifact (differences = water and bubble animation between two level runs) |
+| Cost: TSE demo 1 RT demo profile, both settings off vs on | 94.0 vs 93.8 FPS average (no measurable cost) |
+
+Decision: `srt_bRasterGammaBlend` defaults to 1, because the particle contribution now matches Vulkan within 1 display level in both test frames. `srt_bRasterDepthBehindRefraction` defaults to 0 until a water/glass scene shows it better (R1 regression scene `tfe-water-09m5` is a candidate).
+
+Residual difference: RT exterior backgrounds are brighter than raster, so additive particles saturate more there. That is exposure (FXP-10), not blending.
+
+### FXT coordination (lightning)
+- FXT `ea90c65c` (`srt_iAdditiveEffectMode`, default 1) moves `PBT_ADD`/`PBT_ADDALPHA` particle flushes, which includes lightning, off the alpha-tested traced path onto the rasterized blend path. With it:
+  - FXP-6 (the colour byte order in the traced path) no longer affects lightning; it only applies with `srt_iAdditiveEffectMode=0`.
+  - Lightning now goes through the raster blend and therefore **does depend on `srt_bRasterGammaBlend`**. Gamma blending makes additive bolts brighter over bright backgrounds, matching raster. FXT should check their lightning A/B with gamma blending on.
+- Merge: `ea90c65c` and FXP `0a85734c` both edit `RT_Particle_Flush` in `RTParticles.cpp` (`isRasterized` / alpha-test decision). Expect a textual conflict; the logic composes as `isAlphaTested = (forced && !additive) || (colorFix && PBT_TRANSPARENT)`.
+
+### Other findings logged for routing (lead to FXT or R1)
+- RDF candidate: in TFE demo 3 (Memphis Suburbs) at 28 s and 35 s, the blood spill/stain **models** render in RT as hard-edged, nearly black alpha-tested shapes. In Vulkan they are soft green translucent stains. The RT tuning table lists those textures as `fully_metallic`. They are models, not particles.
+- RDF-019: the EXP-009 synthetic tommygun overrides were present in the FXP TFE runtimes; they are now quarantined. Only the TFE demo 3 RT captures at 21 s show that weapon (ledger `20261128204310-FXP-7362`, invalidated); no particle finding used them.
+
+Coverage (A1): executed: D (gamma A/B, 1_1 water A/B, perf, TFE check) and E (demo 2/3 water survey, particles-off backgrounds); reused: Vulkan captures from A/B; deferred: FXP-11 repro.
