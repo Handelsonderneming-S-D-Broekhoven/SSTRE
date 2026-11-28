@@ -49,6 +49,7 @@ Side exits: `deferred` (to Preview4 or a later stage, with reason), `wont-fix` (
 | [RDF-015](#rdf-015-tse-chainsaw-model-shows-graphical-glitches) | TSE chainsaw model glitches | TSE | to establish | unknown | S3 | new | WPN | POC-97 |
 | [RDF-016](#rdf-016-ultrawide-aspect-ratios-match-no-aspect-adjuster-window) | Ultrawide aspect ratios match no adjuster window | TFE, TSE | all | engine | S2 | root-caused | WPN | POC-96 |
 | [RDF-017](#rdf-017-hud-scales-by-width-only-and-is-about-134-too-large-on-ultrawide) | HUD scales by width only (1.34× on ultrawide) | TFE, TSE | all | engine | S3 | root-caused | UI1 (follow-up) | POC-87 |
+| [RDF-018](#rdf-018-console-last-lines-overlap-the-corner-logo-in-the-menu-at-1440p) | Console last-lines overlap the menu corner logo at 1440p | TFE, TSE [ASM] | all | engine | S4 | triaged | UI1 (follow-up) | POC-87 |
 
 ## Entry template
 
@@ -413,7 +414,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Performance implications | none |
 | Owner track / POC | WPN (lead decision 2026-11-28), POC-96, together with RDF-011/014 |
 | Status | root-caused (2026-11-28, UI1) |
-| Links | RDF-014, RDF-017 |
+| Links | RDF-014, RDF-017, [EXP-024](experiments/EXP-024-responsive-menu.md) |
 
 ### RDF-017: HUD scales by width only and is about 1.34× too large on ultrawide
 
@@ -434,4 +435,25 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Performance implications | none |
 | Owner track / POC | UI1 follow-up (lead decision 2026-11-28), POC-87 |
 | Status | root-caused (2026-11-28, UI1) |
-| Links | RDF-016 |
+| Links | RDF-016, [EXP-024](experiments/EXP-024-responsive-menu.md) |
+
+### RDF-018: Console last-lines overlap the corner logo in the menu at 1440p
+
+| Field | Value |
+|---|---|
+| ID | RDF-018 |
+| Reported | 2026-11-28, UI1b (relayed by the lead) |
+| Reproduction | 2560×1440, main menu with console last-lines shown |
+| Campaign | to check both (TFE, TSE [ASM]) |
+| Renderer | all [ASM] |
+| Affected class | menu / console overlay layout |
+| Kind | engine (menu/console) |
+| Severity | S4 |
+| Suspected root cause | [ASM] the console last-lines and the menu corner logo are positioned independently, with no shared layout |
+| Confirmed root cause | not yet |
+| Proposed universal correction | lay out the console last-lines inside a menu safe area that excludes the logo (ADR-0017) |
+| Regression test | UI1 resolution list (POC-87) at 2560×1440 |
+| Performance implications | none |
+| Owner track / POC | UI1 follow-up, POC-87 |
+| Status | triaged (2026-11-28) |
+| Links | [EXP-024](experiments/EXP-024-responsive-menu.md) |
