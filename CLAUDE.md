@@ -13,6 +13,10 @@ Read and follow [docs/policies/github-communication.md](docs/policies/github-com
 - Owner directive received: acknowledge on the issue, update roadmap/backlog/dossiers/ADRs, assign agents, define acceptance criteria, link commits and PRs, report results, close only when accepted.
 - Need an owner decision: open a `decision-required` issue with context, options, trade-offs, complexity, recommendation and the cost of waiting; keep working on independent items.
 
+## Staged testing (binding, owner issue #26)
+
+Follow [docs/policies/testing-policy.md](docs/policies/testing-policy.md). Test stages: research → dev → integration → release. Only release candidates get the complete acceptance matrix; earlier stages use the cheapest test that answers a written-down question. Reuse results only when revision, config, assets and code paths still apply. Record every local runtime/GPU run in the shared ledger, and report executed / reused / skipped / deferred / invalidated explicitly. Never skip CI and never weaken benchmark methodology or exit criteria.
+
 ## Standing rules
 
 - Licensing: GPL-3.0-only (SSTRE, AssetCompiler, Toolkit), GPL-2.0-only (engine), Manifests CC0-1.0 / CC-BY-SA-4.0 ([notices policy](docs/policies/notices-policy.md)). Copyright "Handelsonderneming S.D. Broekhoven, trading as ITEagle Europe".
