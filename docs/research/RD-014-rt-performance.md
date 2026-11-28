@@ -136,6 +136,10 @@ Each row becomes work only when the profile shows it matters (§8 stop rule). "P
 
 Reuse the POC-28 harness; extend it for 1440p, render-mode tagging, 1 % lows, the FG guard and per-thread CPU. Re-measure all baselines at 1440p before any optimization. Profile two scenes per game with Nsight, rank H1–H12 by measured share, and run optimization packages only in that order, each with a before/after benchmark and quality check. Treat the Vulkan validation clean-up and the RTGL1 defects as Phase 1 work: they can hide synchronization costs and invalidate measurements.
 
+### 10.1 Scope added by owner [issue #34](https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/issues/34)
+
+Within M1, no duplicate packages: temporal AA/upscaling is POC-41 (characterization) plus POC-99 (motion vectors, jitter, history rejection, reactive masks, HUD exclusion, denoiser interaction); the persistent pipeline/shader cache, prewarming and invalidation are POC-100, with frame pacing in POC-40; the accessible benchmark mode with cold/warm cache figures is POC-101 on top of POC-33; hardware detection and recommended settings are POC-102, after the M1 evidence and always with manual override. The 100 FPS target stays unchanged, native, spatial and temporal modes are reported separately, frame generation never counts, and there is no silent quality reduction.
+
 ## 11. Decision dependencies
 
 - Owner: whether temporal upscaling may satisfy the target (U2); the meaning of "high settings" (U1); the Phase-1 budget for the stop rule.
