@@ -1,6 +1,6 @@
 # Research dossiers
 
-Canonical research dossiers: RD-001..008 from Phase 0, RD-009..014 added on 2026-11-28 for the post-demonstration stages ([roadmap](../roadmap.md)). Each one follows the format in the [project plan](../project-plan.md) §6. It separates observed facts, with sources, from assumptions, and ends with a recommendation, the decisions it depends on, and next steps. A dossier is evidence for a decision, not the decision itself. Decisions are recorded in [ADRs](../adr/).
+Canonical research dossiers: RD-001..008 from Phase 0, RD-009..014 added on 2026-11-28 for the post-demonstration stages ([roadmap](../roadmap.md)), RD-015 added on 2026-11-28 for pre-hardware Steam Deck testing. Each one follows the format in the [project plan](../project-plan.md) §6. It separates observed facts, with sources, from assumptions, and ends with a recommendation, the decisions it depends on, and next steps. A dossier is evidence for a decision, not the decision itself. Decisions are recorded in [ADRs](../adr/).
 
 | ID | Topic | Feeds |
 |---|---|---|
@@ -18,5 +18,6 @@ Canonical research dossiers: RD-001..008 from Phase 0, RD-009..014 added on 2026
 | [RD-012](RD-012-input-local-multiplayer.md) | Modern input architecture (SDL3), Steam Input/Deck, local multiplayer and split-screen | backlog M4/M5, proposed input ADR |
 | [RD-013](RD-013-geometry-enhancement.md) | Geometry enhancement: normal smoothing, terminator fix, subdivision, displacement | backlog M3, proposed render-only-geometry ADR |
 | [RD-014](RD-014-rt-performance.md) | RT and engine performance: measurement design, profiling tools, hypotheses, stop rule | backlog M1, proposed performance-target ADR |
+| [RD-015](RD-015-steam-deck-pre-hardware-testing.md) | Steam Deck testing before hardware: emulation and approximation options, what only hardware can validate | ADR-0007 Tier 2, backlog POC-64..74 |
 
 Status vocabulary: **draft** (written, not reviewed) → **reviewed** (lead-reviewed) → **superseded**.
