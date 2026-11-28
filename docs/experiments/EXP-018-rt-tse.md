@@ -235,3 +235,180 @@ Wall-clock time of this AI-agent run, from `G:\sstre-tmp\e5\logs\timelog.txt` an
 
 1. What quality bar applies to TSE RT (EXP-005 open question 1)? Placeholders are in place; tuning 13 worlds is the remaining M2 cost.
 2. Do the texture paths in the committed tuning tables (already public in the RT upstream source) pass GATE-05 for patch export, or should they move to a local file as well?
+
+## Addendum A1 (2026-11-28): TSE "dark beyond ~20 m" in RT, root cause and fix
+
+**Owner playtest finding:** in TSE under RT, beyond a radius of roughly 20 m around the player everything was pitch dark, so distant enemies and geometry were invisible.
+
+### Root cause
+
+**[SRC] The mechanism:**
+
+1. `RT_CheckViewerInHaze` (`Raytracing/RTModelCulling.cpp:268-300`) marks the camera as "in haze" when it is inside any brush sector whose entity reports SE1 **haze or fog** (`GetHaze(...) || GetFog(...)`).
+2. `Scene::IsCameraInHaze` (`Scene.cpp:211-213`) returns that flag only if the world allows haze (`CustomInfo::CanHazeBeApplied`, the tuning key `haze`). This is its only consumer.
+3. `SSRT.cpp:652` then sets `typeOfMediaAroundCamera = RG_MEDIA_TYPE_WATER`. The whole frame is rendered as if the camera were under water.
+4. RTGL1 attenuates every camera path by `exp(-distance * waterExtinction)` [SRC RTGL1 `Source/Shaders/Media.h:40-52`]. With the default extinction `(0.025, 0.016, 0.011) × water_density_multiplier 5` = 0.125 / 0.08 / 0.055 per metre:
+
+   | Distance | Transmittance (R / G / B) |
+   |---|---|
+   | 20 m | 8 / 20 / 33 % |
+   | 40 m | 0.7 / 4 / 11 % |
+
+   That is a bluish fade to black that matches the reported ~20 m radius.
+
+**Why TFE does not show it [SRC]:** Serious-Engine-RT's TFE tables disable haze on 7 outdoor worlds and keep it on the others only together with `haze_ignored_sectors` lists. The TSE table (R2) inherited RT's generic default, `haze = 1`, for every world, and TSE worlds use sector fog and haze widely.
+
+**Other candidates:**
+
+- [EXP] Missing exports are excluded for the tested views: with `haze = 0` the same geometry appears at full brightness.
+- [SRC] Ray length is special-cased only for TFE Luxor (`CustomInfo::GetRayLength`).
+- [ASM] Sector culling depth (8, the top of TFE's range) was not varied in this addendum. It cannot cause a distance *darkening*, only missing surfaces.
+
+### Experiments (session D 02:44–02:51, E 03:02–03:08, F 03:13–03:24, 2026-11-28)
+
+Paired captures at fixed views: Vulkan reference, RT with `haze = 1`, RT with `haze = 0`. Haze was toggled through the local tuning overlay. Same build, same position, 24 s after level start.
+
+| View | VK mean RGB | RT haze 1 mean RGB | RT haze 0 mean RGB | haze 1 vs haze 0 |
+|---|---|---|---|---|
+| `2_1_Ziggurrat` spawn (dry stone hall, far wall about 15–20 m) | 63/61/67 | **70/95/113**: blue cast, far wall dimmed | **120/130/137**: natural colour, far wall lit | MAD 36.5, 95 % of pixels differ |
+| `1_1_Palenque` spawn | 14/38/47 | 39/53/58 | 39/53/58 | no change (see below) |
+| `1_0_InTheLastEpisode` intro cutscene (session E) | — | — | — | brightness unchanged; the differences come from cutscene timing. The intro camera is not in a fog sector |
+
+| **Demo 3 (`3_1_GothicCastle`, `PlayDemo("auto-demo0003")`), 15 s, identical demo frame (same HUD and score)** | — | **48/51/58: cliffs and castle beyond ≈ 20 m pitch black**, only the near ground and the sky are lit (the reported symptom) | **83/82/81: cliffs, castle and distance fully lit** | MAD 32.1, 69 % of pixels differ |
+| Demo 3, 35 s | — | 7/9/9 | 25/24/18 | MAD 14.0 |
+| Demo 2 (`2_2_Persepolis`), 15 / 25 / 35 s | — | — | — | MAD 23.6 / 45.8 / 0.4. Brightness is similar, so the camera is mostly outside fog sectors |
+
+- The Vulkan demo frames are not time-aligned with RT: RT loads more slowly, so the same wall-clock second shows a different demo moment. The comparison that counts is RT haze 1 against RT haze 0, which is frame-identical (same RT load time).
+- **New failure, not caused by the fix:** demo 1 (`1_2_Palenque`) under RT logs a flood of `RTGL1 error 8 (RG_CANT_UPDATE_TRANSFORM)` and `Can't find static geometry with unique ID=…` [SRC `SceneBrushes.cpp:269`]. RT tries to move brushes it registered as static.
+  - With haze 1 the process hung and was killed at 163 s; with haze 0 it exited with code 1 at 15 s.
+  - Vulkan plays the same demo normally.
+  - This is a follow-up: moving brushes in TSE worlds that the RT exporter treats as static [ASM]. It was not seen in the slice levels' fixed views.
+
+- The **Ziggurrat A/B isolates the cause**: the only change is the `haze` flag, which has one consumer (the water-media switch). `haze = 0` removes the blue cast and the distance darkening.
+- **Correction to R3:** the Palenque "RT shows sky where raster shows the hillside" observation is **not** a geometry or culling defect.
+  - The player starts **under water** in the pool: bubbles are visible in both raster and RT.
+  - Raster draws the scene above the surface without refraction. RT refracts through the water surface, so it shows sky and hanging plants. This is RT behaving physically, not a bug.
+  - It also explains why the haze A/B makes no difference at that spot: the camera is genuinely in water there.
+- Test-method failures:
+  - The `cht_iGoToMarker=2` views respawn the player without NETRICSA, so the scripted ESC opened the game menu. Those 6 captures are unusable.
+  - The first demo attempt (session E) used a wrong `PlayDemo` argument; the correct form is the bare name, e.g. `PlayDemo("auto-demo0001")`.
+
+### Fix
+
+- `4e1053be` rt(data,tse): TSE `[defaults]` now sets **`haze = 0`**, and so do the two showcase worlds. It is a generic default, not a per-level hack, and needs no engine change. The TFE tables are unchanged.
+- **Consequence [ASM]:** SE1 sector fog and haze are not reproduced in RT at all for TSE. The raster look has distance fog; RT then has none.
+  - A proper mapping (SE1 fog/haze colour and distance → an RTGL1 volumetric or extinction parameter with media type "haze" instead of "water") is a follow-up engine item.
+  - Per-world opt-in stays possible with `haze = 1` plus `haze_ignored_sectors`, as in TFE.
+- **Slice levels:** `1_0_InTheLastEpisode` and `1_1_Palenque` now have explicit entries with `haze = 0`, and the comments record the findings above. Both stay at `tuned = 0` (not play-tested).
+
+### Effort (agent wall-clock)
+
+About 15 min of source analysis and fix, plus about 25 min of locked runs (sessions D, E and F: 33 runs), plus about 45 min of lock queue waiting (excluded).
+
+### Follow-ups (from A1)
+
+1. Map SE1 fog and haze to an RT effect that is not water, for example a light extinction or volumetric term derived from `CHazeParameters` and `CFogParameters`, so TSE regains its distance fog without the darkness.
+2. `1_2_Palenque`: `RG_CANT_UPDATE_TRANSFORM` (movable brushes exported as static), then an exit or hang under RT during demo playback.
+3. Harness: views from `cht_iGoToMarker` skip NETRICSA, so the scripted ESC must be omitted for them.
+
+## Addendum A2 (2026-11-28): TSE `1_2_Palenque` in RT, transform-update errors and crash, root cause and fix
+
+**Symptom (A1, session F):** demo 1 (`1_2_Palenque`) under RT logged `Can't find static geometry with unique ID=…` / `RTGL1 error 8 (RG_CANT_UPDATE_TRANSFORM)` from `SceneBrushes::SetMovableNewTransform`, then exited or hung. A1's guess "movable brushes exported as static" [ASM] is **wrong**; there were two independent defects.
+
+### Cause 1: RTGL1 geometry capacity exceeded silently [SRC + EXP]
+
+- [SRC] RTGL1 has a fixed capacity of `MAX_BOTTOM_LEVEL_GEOMETRIES_COUNT` = 4096 bottom-level geometries in total (static plus the dynamic geometry of each frame), plus 1 M static vertices and 1 M indexed triangles. `VertexCollector::AddGeometry` returns "no index" beyond that (only an `assert`, compiled out in release); `Scene::Upload` then returns `false`, and `rgUploadGeometry` ignores that and returns `RG_SUCCESS`. The engine therefore recorded IDs that RTGL1 never stored.
+- [SRC] The engine's brush exporter (`RTBrushes.cpp`) cut a new geometry at every material-state change between *consecutive* polygons of one sector, and at every sector boundary.
+- [EXP] Temporary debug counters in `SceneBrushes::RegisterBrush` (one demo-1 run, removed afterwards): `1_2_Palenque` produced **5127 static brush geometries** (≈ 10 vertices each; 274 movable parts). **Every failing ID was registered after geometry #4096, and no movable part before #4096 failed** (first failure at #4311). Hypothesis (b) "upload rejected silently" confirmed; (a) part-index mismatch and (c) reload ordering ruled out: the part indices of upload and update were identical.
+- Consequences beyond the log flood [SRC]: about 1000 static world parts were missing from the RT scene, and no slots were left for dynamic geometry (models, particles).
+
+### Cause 2: null scene in the RT particle path, TSE chainsaw [SRC + EXP]
+
+- [EXP] With cause 1 fixed, demo 1 ran without errors but crashed at 112 s: Windows Application event 1000, `0xc0000005` in `Engine.dll`, offset `0x1922d8`. The linker map resolves it to `RT_GetViewVectors` (`RTParticles.cpp`). The demo's capture at 110 s shows the player using the chainsaw.
+- [SRC] TSE's `Player.es` (`RenderHUD`) draws first-person chainsaw particles in the HUD pass (`Particle_PrepareEntity(…, this)` then `RenderChainsawParticles`). Under GAT_RT `Particle_RenderSquare` goes to `RT_Particle_RenderSquare`. `RT_GetViewVectors` checked only `_Particle_penCurrentViewer` before dereferencing `RT_sCurrentScene`, which is set only inside `RT_AddParticlesForEntity` and is null there. TFE has no chainsaw, so it never took this path.
+- This is hypothesis (d): the exit/hang was not a consequence of the error flood.
+
+### Fix (SSTRE-Engine `sprint2/rt-tse`)
+
+| Commit | Change |
+|---|---|
+| `1c59be04` | **Root cause 1:** `RTBrushes.cpp` collects the polygons of all active sectors of a brush entity and groups them by the existing batching key (textures, blending, polygon flags, visibility mask, mirror/warp, media flag), keeping the polygon order inside a group. The grouping is deterministic, so the `brushPartIndex` sequence is identical in the upload, tex-coord and rasterized passes. **Mitigation (in addition):** `SceneBrushes` tracks RTGL1's static budget with RTGL1's own accounting (geometries with 1024 slots reserved for dynamic geometry, vertices, indices). It does not upload parts that would be dropped, never records movable or tex-coord parts that were not uploaded (also on a non-success result), and prints one console line if anything was dropped. |
+| `958b2bd5` | **Root cause 2:** `RT_GetViewVectors` also requires the scene; `RT_Particle_RenderSquare/RenderLine/RenderQuad3D` return early without one. Such particles were never flushed anyway, so the visible output is unchanged. |
+
+- Both commits change the **TSE and the TFE tree**: the four RT files were byte-identical in both trees.
+- Effect on `1_2_Palenque` [EXP]: **5127 → 1405** static geometries, the same 79 176 indices (no triangle lost), 0 parts dropped by the budget.
+
+### Verification [EXP]
+
+Release x64 builds, clean-room RTGL1, window captures with focus recorded (focus held in every capture), harness watchdog active (no kills). `RTGL1_ERRORS` = count of logged failed RTGL1 calls; validation was off.
+
+| Run | Build | API | Duration | Result | RTGL1 errors |
+|---|---|---|---|---|---|
+| Demo 1 baseline (debug counters) | pre-fix + counters | RT | hung, 205 s | the error pairs, hang | 18 |
+| Demo 1 | `1c59be04` | RT | 60 s | correct rendering, no errors | 0 |
+| Demo 1 | `1c59be04` | RT | 112 s | **access violation** (cause 2) | 0 |
+| `1_2` level start | `1c59be04` | RT | 100 s | quit with code 1 (normal WinMain return, no crash event); **not reproduced** in two later 195 s runs [ASM: external input, the window had focus] | 0 |
+| **Demo 1** | `958b2bd5` | RT | **195 s** (to the end of the run; past the chainsaw) | OK, responsive | **0** |
+| **`1_2` level start** | `958b2bd5` | RT | **195 s**, twice | OK, responsive | **0 / 0** |
+| `1_1_Palenque` | `958b2bd5` | RT | 70 s | OK; mean RGB 39/52/58 = A1 value | 0 |
+| `2_1_Ziggurrat` | `958b2bd5` | RT | 70 s | OK; mean RGB 121/131/138 = A1 haze-0 value | 0 |
+| TFE `01_Hatshepsut` | `958b2bd5` (TFE tree) | RT | 70 s | OK; mean RGB as session B | 0 |
+| Demo 1 | `958b2bd5` | Vulkan | 195 s | OK | 0 |
+| `1_2` level start | `958b2bd5` | Vulkan | 120 s | OK (reference) | 0 |
+
+- **`1_2` spawn is black in RT, not a regression:** the level starts in a cave. Vulkan shows it dimly lit (mean RGB 17/23/16); RT shows a flat near-black frame. With the RT flashlight on, the cave geometry and the weapon appear, and the pre-fix engine (`4e1053be`, swapped in for one run) is equally black (2/1/0). The cave relies on SE1 light that has no RT equivalent; this is per-level tuning work (WP7), not an export defect.
+- The flood is gone in both routes; the earlier "hang" with haze 1 and the "exit at 15 s" with haze 0 (A1, session F) were not reproduced with the fixed builds.
+
+### Effort (agent wall-clock)
+
+About 35 min of source analysis, fix and builds (RTGL1 source read to confirm the silent drop), plus about 30 min of locked runs (1 debug, 1 + 6 + 3 + 2 + 5 runs), plus lock-queue waiting (excluded).
+
+### Follow-ups (from A2)
+
+1. RTGL1 (upstream behaviour): `rgUploadGeometry` should return an error when the geometry is dropped. That is a change in the RTGL1 tree, not in the engine; the engine-side budget guard covers it meanwhile.
+2. First-person chainsaw particles are not drawn in RT. They would need an RT-side first-person particle path.
+3. `1_2_Palenque` (and other cave starts) need RT lighting tuning; together with A1 follow-up 1 (fog/haze mapping) this is WP7 work.
+4. The engine-side budget reserves 1024 geometry slots for dynamic geometry; very model-heavy scenes could still exceed RTGL1's shared total per frame. Not observed so far.
+
+## Addendum A3 (2026-11-28): `1_2_Palenque` RT spawn cave black; flashlight key missing in existing profiles
+
+**Finding (VS-E, integration build with the A2 fixes):** the `1_2_Palenque` RT level start shows a completely black 3D view in the spawn cave for 190 s, with the HUD live; Vulkan is fine. Separately, the flashlight key had no effect.
+
+### Cause: cave lit only by static light entities that RT ignores [SRC + EXP]
+
+- [SRC] RT drops every static (non-dynamic) spherical SE1 light unless its entity has a visible model, or a model parent nearby, or the light matches a per-world `cutscene_light` position (`CustomInfo::IsSphericalLightIgnored`; `RTLights.cpp` `RT_AddLight`). RT relies on the sun, the sky, emissive textures and fire-texture "potential" lights instead.
+- [EXP] Temporary debug listing (one run, removed): 25 ignored static lights within 80 m of the spawn. Three bluish fill lights with about 20 m falloff run along the cave, and the rest are warm glow lights at the temple door. The cave is closed, so no sun or sky light reaches the spawn.
+- [EXP] It is not exposure: `tonemapping_min_log_luminance = -12` (local overlay) left the frame at mean RGB 2/2/1. With the RT flashlight on, the geometry is visible (A2). The pre-fix engine is equally black. Haze, media type and emissive textures are not involved, because the frame has no light at all.
+- A/B with the local overlay: whitelisting the 3 fill lights gives mean RGB 43/58/45, and all 25 gives 48/63/49 with the door area lit.
+
+### Cause: flashlight binding missing [SRC + EXP]
+
+- [SRC] The binding is in `Controls\00-Default.ctl` (`bf625709`). Existing player profiles (`Controls\ControlsN.ctl`) are never merged with new defaults.
+- [EXP] The local test profile has 37 buttons against the default's 38, with no flashlight. The harness does not send key L; the flashlight itself works (a scripted `ctl_bFlashlight=1` lights the view, A2).
+
+### Fix (SSTRE-Engine `sprint2/rt-tse`)
+
+| Commit | Kind | Change |
+|---|---|---|
+| `e479d6cc` | **data only** | `[world 1_2_Palenque]` in the TSE `WorldTuning.txt`: 25 `cutscene_light` positions (world coordinates, no texture paths), `haze = 0`, `sky_type = geometry`, still `tuned = 0` |
+| `40416ad4` | small code (GameMP) | `CControls::Load_t` adds the "Flashlight" button when a profile lacks it, bound to L unless L is already used, following the engine's old commented-out "Talk" injection. The game saves it back on exit. |
+
+### Verification [EXP]
+
+Session M on `e479d6cc` plus the GameMP build, and session N on `40416ad4`. Focus was held in every capture, the watchdog did not fire, and every run logged **0 RTGL1 errors**.
+
+| Run | Duration | Mean RGB | Result |
+|---|---|---|---|
+| `1_2` RT level start | 190 s; shots at 22/60/120/180 s | 48/63/49, 45/60/47, 47/62/49, 47/62/49 | cave, statue head, temple door and weapon clearly lit (brighter than Vulkan's 17/23/16 because of auto-exposure) |
+| `1_0` RT | 70 s | intro cutscene, then text card | OK |
+| `1_1` RT | 70 s | 38/52/57 | = A2 |
+| `2_1` RT | 70 s | 121/131/138 | = A2 |
+| TFE `01` RT | 70 s | 4/82/4 | = A2 |
+| Profile merge, 2 × `1_1` RT | 35 s each | — | the profile now holds exactly one flashlight button on L (38 buttons) after both runs, so the merge is idempotent |
+
+- Only the cave and the door area (lights within 80 m of the spawn) were checked. The rest of `1_2` was not walked [ASM]: other closed interiors in `1_2` and in the other TSE levels may need the same treatment.
+
+### Follow-ups (from A3)
+
+1. A generic rule instead of per-level positions, for example "keep static lights when the camera sector receives no sun". This needs an engine change and play-testing.
+2. Survey all TSE levels for closed areas lit only by static lights, using the same debug listing but without the distance limit (WP7).
