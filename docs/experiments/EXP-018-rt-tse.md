@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-11-28 |
 | Backlog items | POC-29 follow-up (EXP-005 M2: WP4, WP7 part, WP10 part; conditional C1) |
-| Status | **partial** (M2 port met). TSE runs the RT backend on Windows with raster as the default and RTGL1 optional. The per-level table is data-driven and the TFE values are migrated. **Not done:** artistic tuning of the 13 TSE worlds (placeholders only), CMake/Linux, play sessions longer than 35 s, menu navigation to "Ray Tracing" (RT was selected through `sam_iGfxAPI`) |
+| Status | **partial** (M2 port met). TSE runs the RT backend on Windows with raster as the default and RTGL1 optional. The per-level table is data-driven and the TFE values are migrated. **Not done:** artistic tuning of the 13 TSE worlds (placeholders only), CMake/Linux, active play (the longest RT run is a 160 s idle view), the Palenque culling probe, menu navigation to "Ray Tracing" (RT was selected through `sam_iGfxAPI`) |
 | Environment | Windows 11 Pro 22631, i5-11600K, RTX 4070 12 GB, driver 616.64. VS 2022 17.5 (v143), Windows SDK 10.0.22000.0, Vulkan SDK 1.4.363.0 (validation layer), WinFlexBison 2.5.25. `/p:UseOfMfc=false` |
 | Inputs | SSTRE-Engine `sprint2/rt-transplant` @ `005bd78c` (E1, EXP-009). RTGL1: E1's clean-room build (`sprint2/rtgl1-sstre` = `0eb4c4a`), DLL SHA-256 prefix `42bdd141`, copied with its 45 SPIR-V shaders into `G:\sstre-tmp\e5\rtgl1`. Game data: the owner's Steam *Serious Sam Classic: The Second Encounter* and *The First Encounter*, copied |
 
@@ -95,6 +95,11 @@
   - polygon, sector and World Base suppression, with indices from the level editor;
   - cutscene lights, sun animation, flashlight, haze, sky type, water;
   - texture classes.
+- **Showcase worlds (lead request):** `1_0_InTheLastEpisode` and `1_1_Palenque` have explicit, conservative entries (`f71bd2cc`):
+  - culling depth 8, the top of TFE's range, which favours complete geometry over speed;
+  - the default light threshold (2), haze on, geometry sky;
+  - no flashlight hint, because the template's player control profiles lack the new L binding.
+  The observed state and the Palenque artefact are written into the table as comments. Both stay at `tuned = 0` [ASM: these are not play-tested values]. All keys in both tables were checked offline against the loader's key set: 0 unknown keys.
 - **Local-only overlay (GATE-05):** a file-name heuristic found TSE water/fire candidates (2/0). They are written to the runtime's `WorldTuning.local.txt` only, unreviewed, and not committed.
 
 ### R3. Test matrix
@@ -115,7 +120,7 @@ All runs are OK: the process was still running and responding at the end, and le
 | TFE regression, Vulkan | OK | — | — | `01_Hatshepsut` OK |
 | TFE regression, OpenGL | OK | — | — | `01_Hatshepsut` OK |
 
-The four RT-free TSE runs log no RT init. Totals: session A 13 runs, session B 15 runs (6 TSE without RTGL1, 6 TFE, 1 TFE validation, 1 TSE long run, plus the 2 sync steps). **0 crashes, 0 hangs.**
+The four RT-free TSE runs log no RT init. Totals: session A 13 runs, session B 14 runs (6 TSE without RTGL1, 6 TFE, 1 TFE validation, 1 TSE long run). **0 crashes, 0 hangs.**
 
 - **Vulkan vs OpenGL on the same frames:**
 
@@ -160,6 +165,10 @@ The four RT-free TSE runs log no RT init. Totals: session A 13 runs, session B 1
 
 ## Deviations, modifications and failures
 
+- **Palenque culling-depth probe not run.** The planned probe (session C, `G:\sstre-tmp\e5\scripts\session-c.ps1`: depth 16 and 32 on Palenque, plus 1_0 intro captures in RT vs Vulkan) would have waited behind four lock holders.
+  - The first attempt's lock job never took a queue ticket and was stopped. The second was cancelled while queued, and nothing ran.
+  - The lead asked for a report as soon as the definition of done held, so the probe is a follow-up.
+
 - **`d9f86637` stays in the branch base** (TFE `Graphics.cpp`), because `sprint2/rt-tse` was branched from `sprint2/rt-transplant` as instructed. It is not replayed onto TSE. The TSE tree therefore has the *unfixed* FilterBitmap; E4's fix applies to both trees, which is the integration track's job.
 - **CustomInfo changes also touch the TFE tree** (`d1ddb552`), so the RT layer stays identical in both trees. TFE behaviour depends on `Scripts/RT/WorldTuning.txt` being present in the runtime. The sync script copies it, and the game-root template contains it.
 - **GATE-05 note for the lead:** the committed `WorldTuning.txt` files contain game texture paths. They are the same 68 paths that are already in Serious-Engine-RT's public `CustomInfo.cpp`, moved from code into data, plus level names. TSE-specific paths are kept local only. Please review before export.
@@ -170,6 +179,26 @@ The four RT-free TSE runs log no RT init. Totals: session A 13 runs, session B 1
   - A relative-glob `rm` was refused by the safety check. The E1 override files were moved, not deleted.
 - **Interruption:** the agent run was paused by an API usage limit after the first TSE build (about 00:55). Wall-clock times below may contain part of that pause.
 
+## Branches and commits (local, not pushed)
+
+SSTRE-Engine `sprint2/rt-tse`, based on `sprint2/rt-transplant` @ `005bd78c`, 11 commits, head `f71bd2cc`:
+
+| Commit | Subject |
+|---|---|
+| `adc4f40c` | rt(engine,tse): import the ray-tracing layer into the TSE engine tree |
+| `2b0cfa04` | rt(engine,tse): port the GAT_RT hooks into the TSE graphics/render code |
+| `d2ef76d1` | rt(engine,tse): make ray tracing runtime-optional in the TSE engine |
+| `c7d53e1e` | rt(game,tse): select GAT_RT at runtime in the TSE game exe |
+| `0a90724b` | rt(menu,tse): offer "Ray Tracing" as a graphics API in the TSE menu |
+| `d9e505d1` | rt(engine,tse): log failed RTGL1 calls in release builds (TSE) |
+| `61668251` | rt(entities,tse): port the RT entity hooks to EntitiesMP |
+| `bf625709` | rt(controls,tse): bind the RT flashlight in the default TSE controls |
+| `938ba5ab` | rt(engine,tse): load per-world RT tuning from Scripts/RT/WorldTuning.txt |
+| `d1ddb552` | rt(engine,tfe): use the runtime RT tuning table in the TFE tree too |
+| `f71bd2cc` | rt(data,tse): explicit RT entries for the showcase worlds 1_0 and 1_1 |
+
+All commits carry the `Co-Authored-By` trailer and no `Signed-off-by`. New files carry the SSTRE GPL-2.0-only notice; upstream and RT author notices are kept. No patches were exported (that is the integration track's job).
+
 ## Effort measurement vs EXP-005 M2
 
 Wall-clock time of this AI-agent run, from `G:\sstre-tmp\e5\logs\timelog.txt` and commit times. Lock waiting is excluded. These are **not** person-days.
@@ -179,7 +208,7 @@ Wall-clock time of this AI-agent run, from `G:\sstre-tmp\e5\logs\timelog.txt` an
 | WP4 replay onto TSE | 1 / 2 / 4 | **≈ 3 min** of patching (00:42 → 00:46), 7 commits, plus **12 min** to the first linked build (scripts, RTGL1 copy, 167 s build) | 0 conflict regions, 3 files by hand, 0 compile errors |
 | C1 data-driven `CustomInfo` (conditional) | 3 / 5 / 8 | ≈ 10–20 min (design, about 400 lines of loader, constructor rewrite, generators, count check). Bounded by the 00:55 pause | 2 commits, 28 keys, TFE migration verified |
 | WP7 TSE content (13 worlds plus texture lists) | 8 / 15 / 30 | **Not done**: placeholders only (≈ 2 min). One artefact identified | 13 placeholder sections |
-| WP10 (part) validation | — | ≈ 10 min of locked runs (A) plus session B; about 25 min of queue waiting | 2 + 13 + 14 runs |
+| WP10 (part) validation | — | about 32 min of locked runs (S0 1 min, A ≈ 11 min, B ≈ 19 min including the 160 s run), plus about 50 min of queue waiting (excluded) | 2 + 13 + 14 runs |
 
 - **Recalibration [ASM]:** WP4 is effectively free once the TFE port exists. The TFE and TSE engine files are identical, so E1's 39 resolutions carry over unchanged. Keep WP4 at ≤ 0.5 pd for human planning. C1's cheap variant (data only, position-dependent hooks kept in code) is well below its estimate.
 - **The M2 cost is now almost entirely WP7:** per-level artistic tuning with play-testing, plus finding polygon and sector indices in the editor. It is unchanged by this work, except that it no longer needs engine rebuilds: tuning means editing a text file and reloading the level.
