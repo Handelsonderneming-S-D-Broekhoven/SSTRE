@@ -50,6 +50,8 @@ Side exits: `deferred` (to Preview4 or a later stage, with reason), `wont-fix` (
 | [RDF-016](#rdf-016-ultrawide-aspect-ratios-match-no-aspect-adjuster-window) | Ultrawide aspect ratios match no adjuster window | TFE, TSE | all | engine | S2 | root-caused | WPN | POC-96 |
 | [RDF-017](#rdf-017-hud-scales-by-width-only-and-is-about-134-too-large-on-ultrawide) | HUD scales by width only (1.34× on ultrawide) | TFE, TSE | all | engine | S3 | root-caused | UI1 (follow-up) | POC-87 |
 | [RDF-018](#rdf-018-console-last-lines-overlap-the-corner-logo-in-the-menu-at-1440p) | Console last-lines overlap the menu corner logo at 1440p | TFE, TSE [ASM] | all | engine | S4 | triaged | UI1 (follow-up) | POC-87 |
+| [RDF-019](#rdf-019-tfe-weapon-shows-a-magentacyan-checker-texture-in-rt-test-override-shipped-in-preview2) | TFE weapon shows a checker test texture in RT (test override shipped) | TFE | RT | asset-processing (packaging) | S2 | root-caused | Integration / VS-A (R1 proposal) | POC-92 |
+| [RDF-020](#rdf-020-flashlight-hint-shown-in-tfe-rt-although-tfe-has-no-flashlight-binding) | Flashlight hint shown in TFE RT without a binding | TFE | RT | engine | S3 | triaged | UI1 / engine-other (lead) | — |
 
 ## Entry template
 
@@ -457,3 +459,45 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Owner track / POC | UI1 follow-up, POC-87 |
 | Status | triaged (2026-11-28) |
 | Links | [EXP-024](experiments/EXP-024-responsive-menu.md) |
+
+### RDF-019: TFE weapon shows a magenta/cyan checker texture in RT (test override shipped in preview2)
+
+| Field | Value |
+|---|---|
+| ID | RDF-019 |
+| Reported | 2026-11-28, R1 research sweep (EXP-025) |
+| Reproduction | TFE, RT, tommygun selected; checkpoints `tfe-out-06m2`, `tfe-hall-06m5`, `tfe-water-09m5` |
+| Campaign | TFE |
+| Renderer | RT only (raster does not use the KTX2 overrides); present in both the enhanced and the Classic preview2 TFE runtimes |
+| Affected class | first-person weapon material (RT texture override set: albedo, normal, roughness/metal/emission) |
+| Kind | **asset-processing / packaging** (not engine) |
+| Severity | S2: the default TFE weapon looks broken in every RT frame of the preview build |
+| Suspected root cause | — |
+| Confirmed root cause | [EXP] the preview2 TFE runtimes contain three synthetic test override files for one weapon, created for the EXP-009 RT tests on 2026-11-27. They are byte-identical to the files E5 quarantined, and the same files are in the VS-A runtime templates that the preview was assembled from. File names and hashes are kept in R1's local notes (GATE-05) |
+| Proposed universal correction | remove the test overrides from the VS-A runtime templates and the packaging input; add a packaging gate that rejects any override file that the slice manifest did not produce (a manifest diff) |
+| Regression test | `tfe-out-06m2` `rt-enh` and `rt-orig`: weapon without checker pattern; packaging manifest check |
+| Performance implications | none |
+| Owner track / POC | Integration / VS-A (POC-92), proposed by R1 |
+| Status | root-caused (2026-11-28, R1) |
+| Links | [EXP-025](experiments/EXP-025-rendering-audit.md), [EXP-009](experiments/EXP-009-rt-transplant-spike.md) |
+
+### RDF-020: Flashlight hint shown in TFE RT although TFE has no flashlight binding
+
+| Field | Value |
+|---|---|
+| ID | RDF-020 |
+| Reported | 2026-11-28, R1 research sweep (EXP-025) |
+| Reproduction | TFE, RT, a dark area (`tfe-corr-03m8`, `tfe-room-04m6`, `tfe-water-09m5`): the centre of the screen shows "Press a Flashlight button to toggle it" |
+| Campaign | TFE |
+| Renderer | RT |
+| Affected class | HUD hint (RT flashlight tutorial) |
+| Kind | engine |
+| Severity | S3: misleading prompt, because TFE has no flashlight control (preview2 known issue) |
+| Suspected root cause | [ASM] the RT flashlight tutorial hint (`srt_bFlashlightEnableTutorial`, `hud_bShowFlashlightHint`) is enabled in TFE although TFE has no Flashlight control |
+| Confirmed root cause | not yet |
+| Proposed universal correction | show the hint only if a control is bound to the flashlight action; add the TFE binding (the TSE `40416ad4` approach) |
+| Regression test | `tfe-corr-03m8` `rt-enh`: no hint without a binding |
+| Performance implications | none |
+| Owner track / POC | UI1 or engine-other (lead to assign) |
+| Status | triaged (2026-11-28) |
+| Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
