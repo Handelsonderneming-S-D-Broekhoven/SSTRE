@@ -42,9 +42,13 @@ Side exits: `deferred` (to Preview4 or a later stage, with reason), `wont-fix` (
 | [RDF-008](#rdf-008-rt-options-listed-in-the-vulkan-rendering-options-menu) | RT options listed in the Vulkan rendering-options menu | TFE, TSE | Vulkan raster, OpenGL [ASM] | engine | S4 | triaged | UI1 | POC-87 |
 | [RDF-009](#rdf-009-sky-instead-of-distant-hillside-in-tse-1_1_palenque-rt) | Sky drawn instead of distant hillside in TSE `1_1_Palenque` RT | TSE | RT | not a defect | — | root-caused, proposed wont-fix | none | POC-89 |
 | [RDF-010](#rdf-010-under-water-looks-like-open-air-in-tse-rt-no-water-medium) | Under water looks like open air in TSE RT | TSE | RT | engine | S3 | root-caused | FXT (R1 proposal, with RDF-006) | POC-80 |
-| [RDF-011](#rdf-011-first-person-weapon-framed-differently-in-rt-weapon-fov-ignored) | First-person weapon framed differently in RT (weapon FOV ignored) | TFE, TSE | RT | engine | S2 | root-caused | engine-other (R1 proposal) → lead | POC-89 |
+| [RDF-011](#rdf-011-first-person-weapon-framed-differently-in-rt-weapon-fov-ignored) | First-person weapon framed differently in RT (weapon FOV ignored) | TFE, TSE | RT | engine | S2 | root-caused | WPN (R1 proposal) | POC-96 |
 | [RDF-012](#rdf-012-lens-flares-and-light-coronas-missing-in-vulkan-raster) | Lens flares and light coronas missing in Vulkan raster | TSE (TFE to check) | Vulkan raster | engine | S3 | triaged | engine-other (R1 proposal) → lead | POC-89 |
 | [RDF-013](#rdf-013-sunlit-outdoor-scenes-brighter-and-flatter-in-rt-than-in-raster) | Sunlit outdoor scenes brighter and flatter in RT | TSE | RT | engine | S3 | triaged | LIGHT | POC-76 |
+| [RDF-014](#rdf-014-weapon-viewmodel-clips-into-walls-layers-not-separated-framing-too-zoomed-out) | Weapon viewmodel clipping, layering and framing | TFE, TSE [ASM] | to establish | engine | S2 | triaged | WPN | POC-96 |
+| [RDF-015](#rdf-015-tse-chainsaw-model-shows-graphical-glitches) | TSE chainsaw model glitches | TSE | to establish | unknown | S3 | new | WPN | POC-97 |
+| [RDF-016](#rdf-016-ultrawide-aspect-ratios-match-no-aspect-adjuster-window) | Ultrawide aspect ratios match no adjuster window | TFE, TSE | all | engine | S2 | root-caused | unassigned (engine-other / WPN) | — |
+| [RDF-017](#rdf-017-hud-scales-by-width-only-and-is-about-134-too-large-on-ultrawide) | HUD scales by width only (1.34× on ultrawide) | TFE, TSE | all | engine | S3 | root-caused | unassigned (UI1 follow-up) | — |
 
 ## Entry template
 
@@ -130,7 +134,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Kind | unknown: asset-processing, renderer or both |
 | Severity | S2: conspicuous effect in the presentation levels |
 | Suspected root cause | [ASM] RGB in zero-alpha texels or halos from enhancement made visible by additive blending/filtering, and/or missing emissive treatment in RT. See RD-017 H2, H3 |
-| Confirmed root cause | not yet (POC-82) |
+| Confirmed root cause | not yet (POC-82). Update 2026-11-28 (A3 via lead): **renderer side, not assets.** The texture is the original one and only looks right with additive blending; in RT, the tuning texture class `alpha_test_particles` (`Engine/Raytracing/CustomInfo.cpp:228`, checked at `:862`) forces alpha test on it. FXT owns the fix |
 | Proposed universal correction | generic effect semantics (POC-83) and alpha-aware effect-texture recipes with fallback (POC-85); no lightning-only workaround before the class check |
 | Regression test | lightning checkpoints in C1..C7 + corrected RT (P3-5); alpha metrics (P3-6) |
 | Performance implications | RT emissive path cost to be measured |
@@ -302,7 +306,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | apply the weapon projection: either scale the first-person geometry in view space by `tan(worldFOV/2) / tan(weaponFOV/2)` (x/y) before upload, or give RTGL1 a first-person projection (RTGL1 already has a first-person visibility class). Keep the first-person depth range so the weapon does not clip into walls |
 | Regression test | weapon silhouette overlap RT vs `vk-orig` on `tse-out-1_3m10` and `tfe-out-06m2` (frozen frame) |
 | Performance implications | none |
-| Owner track / POC | **R1 proposal: engine-other** (no M0.1 track owns weapons; FXT is closest because it owns model upload) |
+| Owner track / POC | **R1 proposal: WPN** (POC-96, together with RDF-014) |
 | Status | root-caused (2026-11-28, R1) |
 | Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
@@ -347,3 +351,87 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Owner track / POC | LIGHT (RD-016), POC-76 |
 | Status | triaged (2026-11-28) |
 | Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
+
+### RDF-014: Weapon viewmodel clips into walls, layers not separated, framing too zoomed out
+
+| Field | Value |
+|---|---|
+| ID | RDF-014 |
+| Reported | 2026-11-28, owner issue #28 (relayed by the lead) |
+| Reproduction | walk up to a wall with a first-person weapon; compare weapon framing with the original (arm ends and stocks visible) |
+| Campaign | to be established (TFE, TSE [ASM]) |
+| Renderer | to be established; RT framing differs additionally, see RDF-011 |
+| Affected class | first-person weapon models (`CPlayerWeapons`, `RMF_WEAPON`), viewmodel projection and depth range |
+| Kind | engine |
+| Severity | S2: visible in normal play all the time |
+| Suspected root cause | under investigation (WPN). R1 note: raster uses a separate weapon projection (`wpn_fFOV` × `_fWeaponFOVAdjuster`, depth range 0–0.1, `EntitiesMP/PlayerWeapons.es:1043-1053`); RT ignores it (RDF-011, [SRC]); `_fWeaponFOVAdjuster` comes from the aspect adjusters (see RDF-016) |
+| Confirmed root cause | not yet |
+| Proposed universal correction | to be determined by WPN; one weapon projection per aspect ratio for all renderers |
+| Regression test | R1 checkpoints with a weapon near a wall (to be added) plus `tse-out-1_3m10`, `tfe-out-06m2` |
+| Performance implications | none expected |
+| Owner track / POC | WPN, POC-96 |
+| Status | triaged (2026-11-28) |
+| Links | RDF-011, RDF-016 |
+
+### RDF-015: TSE chainsaw model shows graphical glitches
+
+| Field | Value |
+|---|---|
+| ID | RDF-015 |
+| Reported | 2026-11-28, owner issue #31 (relayed by the lead) |
+| Reproduction | TSE, select the chainsaw; exact symptoms not yet established |
+| Campaign | TSE |
+| Renderer | to be established |
+| Affected class | first-person chainsaw weapon model (not its particles: those are RDF-005, FXP) |
+| Kind | unknown |
+| Severity | S3 (provisional, until the symptoms are known) |
+| Suspected root cause | not yet |
+| Confirmed root cause | not yet |
+| Proposed universal correction | to be determined |
+| Regression test | chainsaw first-person checkpoint (to be defined by WPN; harness `-Extra` can select the weapon) |
+| Performance implications | unknown |
+| Owner track / POC | WPN, POC-97 |
+| Status | new (2026-11-28) |
+| Links | RDF-005 (distinct) |
+
+### RDF-016: Ultrawide aspect ratios match no aspect adjuster window
+
+| Field | Value |
+|---|---|
+| ID | RDF-016 |
+| Reported | 2026-11-28, UI1 [SRC] (relayed by the lead) |
+| Reproduction | 3440×1440 (2.389) or 2560×1080 (2.370), any level |
+| Campaign | TFE, TSE |
+| Renderer | all |
+| Affected class | aspect-dependent in-game FOV and HUD adjusters |
+| Kind | engine |
+| Severity | S2 on ultrawide displays (wrong FOV and HUD values); none at 16:9/16:10 |
+| Suspected root cause | — |
+| Confirmed root cause | [SRC] (UI1) `SetAdjusters` (`SeriousSam/SeriousSam.cpp:573`) matches exact aspect windows only; the 21:9 window is 2.32–2.34, so 2.37 and 2.389 fall back to the defaults |
+| Proposed universal correction | derive the adjusters continuously from the aspect ratio (Hor+), or use nearest-window matching, for any aspect ratio |
+| Regression test | UI1 resolution list (POC-87) at 3440×1440 and 2560×1080; FOV/HUD values logged |
+| Performance implications | none |
+| Owner track / POC | unassigned (engine-other or WPN), lead to assign |
+| Status | root-caused (2026-11-28, UI1) |
+| Links | RDF-014, RDF-017 |
+
+### RDF-017: HUD scales by width only and is about 1.34× too large on ultrawide
+
+| Field | Value |
+|---|---|
+| ID | RDF-017 |
+| Reported | 2026-11-28, UI1 [SRC] (relayed by the lead) |
+| Reproduction | ultrawide resolution (e.g. 3440×1440), in-game HUD |
+| Campaign | TFE, TSE |
+| Renderer | all |
+| Affected class | in-game HUD layout |
+| Kind | engine |
+| Severity | S3 |
+| Suspected root cause | — |
+| Confirmed root cause | [SRC] (UI1) the HUD scale factor is computed from the width only |
+| Proposed universal correction | scale by min(width/640, height/480) (or height) with safe-area anchoring, ADR-0017 |
+| Regression test | UI1 resolution list (POC-87) |
+| Performance implications | none |
+| Owner track / POC | unassigned (UI1 follow-up), lead to assign |
+| Status | root-caused (2026-11-28, UI1) |
+| Links | RDF-016 |
