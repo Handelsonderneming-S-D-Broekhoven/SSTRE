@@ -449,6 +449,54 @@
               }
             }
           ]
+        },
+        "assetScope": {
+          "description": "Optional asset scope (e.g. the textures named by given levels, 'sstre-ac level-scope', EXP-019): the plan covers exactly these asset IDs.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "assetIds",
+            "idsHash",
+            "sources"
+          ],
+          "properties": {
+            "assetIds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "idsHash": {
+              "$ref": "#/$defs/sha256"
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "scopeHash",
+                  "assets"
+                ],
+                "properties": {
+                  "scopeHash": {
+                    "$ref": "#/$defs/sha256"
+                  },
+                  "edition": {
+                    "type": "string"
+                  },
+                  "levels": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "assets": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
