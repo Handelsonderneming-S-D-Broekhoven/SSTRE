@@ -143,7 +143,7 @@ Expanded configurations only where a found defect needed isolating (directive #2
 | RDF-021: is the missing beam an asset or renderer effect? | `tse-haze-3_3m5` `cvk`, `rt-orig` | beam in Classic-VK, missing in RT orig and enh: renderer |
 | RDF-004/010: do the original textures change the refracted sky? | `tse-sky-1_1m0` `cvk`, `rt-orig` | streaks and missing water tint with original textures too: engine |
 | RDF-002 harness re-run | `tse-vol-2_4m1-rerun` `vk-orig` | camera correct after the mouse fix; light shafts as in Classic-VK |
-| RDF-019: does the TFE Classic runtime show the checker weapon too? | `tfe-out-06m2-iso` `rt-orig` | PLACEHOLDER-ISO2 |
+| RDF-019: does the TFE Classic runtime show the checker weapon too? | `tfe-out-06m2-iso` `rt-orig` | skipped: the byte-identity of the files (both TFE runtimes) already answers it; R1's TFE runtimes were quarantined afterwards (lead procedure), so later TFE RT runs carry revision `preview2@7eeed884+q-exp009` |
 
 ### 4.4 Performance observations (for E3/M1, not measurements)
 
@@ -196,10 +196,10 @@ Engine vs asset: all defects are engine/RTGL1 defects except RDF-019, a packagin
   - 21 full-matrix runs before the directive;
   - 34 research-pair runs (17 checkpoints × 2);
   - 37 survey runs (raster);
-  - 6 + 2 isolation runs;
+  - 6 isolation runs (2 more skipped, see §4.3);
   - 7 smoke runs.
 
-  Invalidated: smoke1/2 (the freeze command failed), the `vk-orig` run of `tse-vol-2_4m1` (mouse) and the TFE RT captures with the tommygun (RDF-019 test override). Reused: none yet; the ledger hook exists since 19:20. Skipped: the full 7-configuration matrix on the 17 sweep checkpoints, which is reserved for the Preview3 candidate. Deferred: demos as checkpoints (the harness supports `-Demo`; no demo checkpoint is in the set yet), a community level (licensing not checked), decal and normal-map close-ups, menus (UI1).
+  Invalidated: smoke1/2 (the freeze command failed), the `vk-orig` run of `tse-vol-2_4m1` (mouse) and the 3 TFE RT captures with the tommygun (RDF-019 test override), recorded as ledger entries that reference the invalidated run ids. Reused: none yet; the ledger hook exists since 19:20. Skipped: the full 7-configuration matrix on the 17 sweep checkpoints, which is reserved for the Preview3 candidate. Deferred: demos as checkpoints (the harness supports `-Demo`; no demo checkpoint is in the set yet), a community level (licensing not checked), decal and normal-map close-ups, menus (UI1).
 - RDF-004 needs an A/B build: sky cubemap size and depth write of blended sky layers.
 - RDF-012 needs a Vulkan query trace.
 - RDF-015 (chainsaw) symptoms are still unknown.
