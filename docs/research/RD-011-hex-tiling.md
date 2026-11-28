@@ -109,4 +109,4 @@ Implement R as an optional, default-off generic RTGL1 material feature in the sh
 
 ## 10. Next steps
 
-POC-50 (prototype), POC-51 (eligibility), POC-52 (baked/hybrid), POC-53 (feature cost matrix) in the [backlog](../backlog.md#stage-m2--pbr-and-hex-tiling-directive-phase-2).
+POC-50 (prototype), POC-51 (eligibility), POC-52 (baked/hybrid), POC-53 (feature cost matrix) in the [backlog](../backlog.md#stage-m2--pbr-and-hex-tiling-after-m3-directive-phase-2).

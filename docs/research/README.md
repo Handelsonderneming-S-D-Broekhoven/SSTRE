@@ -16,11 +16,11 @@ Canonical research dossiers: RD-001..008 from Phase 0, RD-009..014 added on 2026
 | [RD-010](RD-010-homebrew-distribution.md) | Homebrew distribution: what may be distributed, channels, console homebrew out of scope | ADR-0007 review, RD-008 §11 |
 | [RD-011](RD-011-hex-tiling.md) | Realtime, baked and hybrid hex-tiling (Mikkelsen), as a generic RTGL1 feature | backlog M2, proposed material-contract ADR |
 | [RD-012](RD-012-input-local-multiplayer.md) | Modern input architecture (SDL3), Steam Input/Deck, local multiplayer and split-screen | backlog M4/M5, proposed input ADR |
-| [RD-013](RD-013-geometry-enhancement.md) | Geometry enhancement: normal smoothing, terminator fix, subdivision, displacement | backlog M3, proposed render-only-geometry ADR |
+| [RD-013](RD-013-geometry-enhancement.md) | Geometry enhancement: capture survey, normal smoothing, terminator fix, subdivision for brushes and models (M3, before M2 per issue #22), displacement as M2 follow-up | backlog M3 (POC-94, POC-54..56), POC-95, proposed render-only-geometry ADR |
 | [RD-014](RD-014-rt-performance.md) | RT and engine performance: measurement design, profiling tools, hypotheses, stop rule | backlog M1, proposed performance-target ADR |
 | [RD-015](RD-015-steam-deck-pre-hardware-testing.md) | Steam Deck testing before hardware: emulation and approximation options, what only hardware can validate | ADR-0007 Tier 2, backlog POC-64..74 |
 | [RD-016](RD-016-legacy-lighting-reconstruction.md) | Universal legacy lighting reconstruction in RT: lost and wrongly converted light contributions, native conversion, legacy ambient, lightmap-assisted compensation, probes (draft) | proposed ADR-0015, backlog POC-75..79 |
 | [RD-017](RD-017-legacy-effects-reconstruction.md) | Legacy atmospheric, translucent and particle effects: translucent light volumes, lightning and special effects, particles, effect-texture recipes (draft) | proposed ADR-0016, backlog POC-80..85 |
-| [RD-018](RD-018-menu-ui-modernization.md) | Menu asset enhancement and responsive, resolution-independent UI; SDF fonts; controller-ready focus (draft) | proposed ADR-0017, backlog POC-86..88 |
+| [RD-018](RD-018-menu-ui-modernization.md) | Menu asset enhancement and responsive, resolution-independent UI; MSDF font track per issue #21; controller-ready focus (draft) | proposed ADR-0017, backlog POC-86..88 |
 
 Status vocabulary: **draft** (written, not reviewed) → **reviewed** (lead-reviewed) → **superseded**.
