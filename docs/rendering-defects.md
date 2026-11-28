@@ -50,8 +50,9 @@ Side exits: `deferred` (to Preview4 or a later stage, with reason), `wont-fix` (
 | [RDF-016](#rdf-016-ultrawide-aspect-ratios-match-no-aspect-adjuster-window) | Ultrawide aspect ratios match no adjuster window | TFE, TSE | all | engine | S2 | root-caused | WPN | POC-96 |
 | [RDF-017](#rdf-017-hud-scales-by-width-only-and-is-about-134-too-large-on-ultrawide) | HUD scales by width only (1.34× on ultrawide) | TFE, TSE | all | engine | S3 | root-caused | UI1 (follow-up) | POC-87 |
 | [RDF-018](#rdf-018-console-last-lines-overlap-the-corner-logo-in-the-menu-at-1440p) | Console last-lines overlap the menu corner logo at 1440p | TFE, TSE [ASM] | all | engine | S4 | triaged | UI1 (follow-up) | POC-87 |
-| [RDF-019](#rdf-019-tfe-weapon-shows-a-magentacyan-checker-texture-in-rt-test-override-shipped-in-preview2) | TFE weapon shows a checker test texture in RT (test override shipped) | TFE | RT | asset-processing (packaging) | S2 | root-caused | Integration / VS-A (R1 proposal) | POC-92 |
-| [RDF-020](#rdf-020-flashlight-hint-shown-in-tfe-rt-although-tfe-has-no-flashlight-binding) | Flashlight hint shown in TFE RT without a binding | TFE | RT | engine | S3 | triaged | UI1 / engine-other (lead) | — |
+| [RDF-019](#rdf-019-tfe-weapon-shows-a-magentacyan-checker-texture-in-rt-test-override-shipped-in-preview2) | TFE weapon shows a checker test texture in RT (test override shipped) | TFE | RT | asset-processing (packaging) | S2 | fix-in-progress | Integration | POC-92 |
+| [RDF-020](#rdf-020-flashlight-hint-shown-in-tfe-rt-although-tfe-has-no-flashlight-binding) | Flashlight hint shown in TFE RT without a binding | TFE | RT | engine | S3 | triaged | engine-other | — |
+| [RDF-021](#rdf-021-blue-light-beam-effect-at-the-end-of-the-tse-3_3-corridor-missing-in-rt) | Blue light-beam effect missing in RT (TSE 3_3) | TSE | RT | engine | S3 | triaged | FXT (R1 proposal) | POC-80 |
 
 ## Entry template
 
@@ -325,7 +326,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Affected class | light-source lens flares (`CLensFlareType`), visibility via depth point checks |
 | Kind | engine (Vulkan back-end), inherited from Classic-VK; not an SSTRE regression |
 | Severity | S3: sun and torch glare is part of the original look |
-| Suspected root cause | [ASM] the Vulkan branch of `UpdateDepthPointsVisibility` (`Engine/Graphics/DepthCheck.cpp:199+`, occlusion queries) reports flare points as hidden (query timing or depth-range mismatch), or `gfx_iLensFlareQuality` differs per API. To verify with `-Extra "gfx_iLensFlareQuality=3;"` and a query-result trace |
+| Suspected root cause | [ASM] the Vulkan branch of `UpdateDepthPointsVisibility` (`Engine/Graphics/DepthCheck.cpp:199+`, occlusion queries) reports flare points as hidden (query timing or depth-range mismatch), or `gfx_iLensFlareQuality` differs per API. [EXP] Forcing `gfx_iLensFlareQuality=3` in the Vulkan run gives the identical frame (luma 111.6, no flare), so the setting is not the cause; the depth-point visibility path remains the suspect |
 | Confirmed root cause | not yet |
 | Proposed universal correction | fix the Vulkan depth-point visibility path (read the depth value or use the query result of the previous frame consistently) |
 | Regression test | `tse-out-1_3m10`, `tse-corr-2_1m3`: flare pixels present in `vk-orig` like in `gl-orig` |
@@ -477,8 +478,8 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | remove the test overrides from the VS-A runtime templates and the packaging input; add a packaging gate that rejects any override file that the slice manifest did not produce (a manifest diff) |
 | Regression test | `tfe-out-06m2` `rt-enh` and `rt-orig`: weapon without checker pattern; packaging manifest check |
 | Performance implications | none |
-| Owner track / POC | Integration / VS-A (POC-92), proposed by R1 |
-| Status | root-caused (2026-11-28, R1) |
+| Owner track / POC | Integration (POC-92, lead decision); the packaging check goes into the preview3 assembly script |
+| Status | fix-in-progress (2026-11-28): the lead quarantined the files in the VS-A and other track runtimes; preview2 stays unchanged as the reference |
 | Links | [EXP-025](experiments/EXP-025-rendering-audit.md), [EXP-009](experiments/EXP-009-rt-transplant-spike.md) |
 
 ### RDF-020: Flashlight hint shown in TFE RT although TFE has no flashlight binding
@@ -498,6 +499,27 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | show the hint only if a control is bound to the flashlight action; add the TFE binding (the TSE `40416ad4` approach) |
 | Regression test | `tfe-corr-03m8` `rt-enh`: no hint without a binding |
 | Performance implications | none |
-| Owner track / POC | UI1 or engine-other (lead to assign) |
+| Owner track / POC | engine-other (lead decision 2026-11-28) |
 | Status | triaged (2026-11-28) |
 | Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
+
+### RDF-021: Blue light-beam effect at the end of the TSE 3_3 corridor missing in RT
+
+| Field | Value |
+|---|---|
+| ID | RDF-021 |
+| Reported | 2026-11-28, R1 research sweep (EXP-025) |
+| Reproduction | TSE `3_3_CorridorOfDeath`, marker 5 (`tse-haze-3_3m5`): raster (Classic-VK, SSTRE Vulkan) shows a bright blue light cone above the far gate; RT orig and enh show nothing there |
+| Campaign | TSE |
+| Renderer | RT; original and enhanced alike, so not asset-processing |
+| Affected class | translucent/additive light-beam effect (exact entity/blend class to be identified by FXT) |
+| Kind | engine (RT layer) |
+| Severity | S3: one prominent landmark effect; same family as RDF-002 (light volumes) |
+| Suspected root cause | [ASM] the beam is an additive translucent model or brush. In RT, additive models are rasterized (`RT_ShouldBeRasterized`, `Engine/Raytracing/RTModels.cpp:70-88`), and translucent brushes are traced as alpha-tested opaque (`RTBrushes.cpp:116-122`). Either path can drop or hide it. Possibly culled by sector depth or angular size (`RTModelCulling.cpp:113-127`, `:234`), because it is far away |
+| Confirmed root cause | not yet |
+| Proposed universal correction | part of the RDF-002 blend/semantic classification (ADR-0016) |
+| Regression test | `tse-haze-3_3m5` `rt-enh` vs `vk-enh`: beam visible |
+| Performance implications | none expected |
+| Owner track / POC | FXT (R1 proposal), POC-80 |
+| Status | triaged (2026-11-28) |
+| Links | RDF-002, [EXP-025](experiments/EXP-025-rendering-audit.md) |
