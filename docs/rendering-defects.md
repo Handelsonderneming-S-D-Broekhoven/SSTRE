@@ -37,18 +37,18 @@ Side exits: `deferred` (to Preview4 or a later stage, with reason), `wont-fix` (
 | [RDF-003](#rdf-003-lightning-looks-like-an-outlined-flashing-texture) | Lightning looks like an outlined flashing texture | TSE [ASM: both] | unknown | unknown | S2 | triaged | FXT (FX1) + A3 | POC-82, POC-83, POC-85 |
 | [RDF-004](#rdf-004-sky-streaks-in-tse-1_1_palenque-rt) | Sky streaks in TSE `1_1_Palenque` RT | TSE | RT | engine | S3 | investigating | engine-other (R1 proposal) → lead | POC-89 |
 | [RDF-005](#rdf-005-chainsaw-first-person-particles-not-drawn-in-rt) | Chainsaw first-person particles not drawn in RT | TSE | RT | engine | S3 | triaged | FXP (FX2) | POC-84 |
-| [RDF-006](#rdf-006-se1-fog-and-haze-not-shown-in-rt) | SE1 fog and haze not shown in RT | TFE, TSE | RT | engine (+RTGL1) | S2 | root-caused | FXT (R1 proposal) → lead | POC-80, POC-83 |
-| [RDF-007](#rdf-007-engine-screenshots-grey-in-vulkan) | Engine screenshots grey in Vulkan | TFE, TSE | Vulkan raster, RT | engine | S4 | root-caused | engine-other (R1 proposal) → lead | POC-45 |
+| [RDF-006](#rdf-006-se1-fog-and-haze-not-shown-in-rt) | SE1 fog and haze not shown in RT | TFE, TSE | RT | engine (+RTGL1) | S2 | root-caused | FXT | POC-80, POC-83 |
+| [RDF-007](#rdf-007-engine-screenshots-grey-in-vulkan) | Engine screenshots grey in Vulkan | TFE, TSE | Vulkan raster, RT | engine | S4 | root-caused | engine-other (lead to assign) | POC-45 |
 | [RDF-008](#rdf-008-rt-options-listed-in-the-vulkan-rendering-options-menu) | RT options listed in the Vulkan rendering-options menu | TFE, TSE | Vulkan raster, OpenGL [ASM] | engine | S4 | triaged | UI1 | POC-87 |
-| [RDF-009](#rdf-009-sky-instead-of-distant-hillside-in-tse-1_1_palenque-rt) | Sky drawn instead of distant hillside in TSE `1_1_Palenque` RT | TSE | RT | not a defect | — | root-caused, proposed wont-fix | none | POC-89 |
-| [RDF-010](#rdf-010-under-water-looks-like-open-air-in-tse-rt-no-water-medium) | Under water looks like open air in TSE RT | TSE | RT | engine | S3 | root-caused | FXT (R1 proposal, with RDF-006) | POC-80 |
-| [RDF-011](#rdf-011-first-person-weapon-framed-differently-in-rt-weapon-fov-ignored) | First-person weapon framed differently in RT (weapon FOV ignored) | TFE, TSE | RT | engine | S2 | root-caused | WPN (R1 proposal) | POC-96 |
-| [RDF-012](#rdf-012-lens-flares-and-light-coronas-missing-in-vulkan-raster) | Lens flares and light coronas missing in Vulkan raster | TSE (TFE to check) | Vulkan raster | engine | S3 | triaged | engine-other (R1 proposal) → lead | POC-89 |
+| [RDF-009](#rdf-009-sky-instead-of-distant-hillside-in-tse-1_1_palenque-rt) | Sky drawn instead of distant hillside in TSE `1_1_Palenque` RT | TSE | RT | not a defect | — | wont-fix | none | POC-89 |
+| [RDF-010](#rdf-010-under-water-looks-like-open-air-in-tse-rt-no-water-medium) | Under water looks like open air in TSE RT | TSE | RT | engine | S3 | root-caused | FXT | POC-80 |
+| [RDF-011](#rdf-011-first-person-weapon-framed-differently-in-rt-weapon-fov-ignored) | First-person weapon framed differently in RT (weapon FOV ignored) | TFE, TSE | RT | engine | S2 | root-caused | WPN | POC-96 |
+| [RDF-012](#rdf-012-lens-flares-and-light-coronas-missing-in-vulkan-raster) | Lens flares and light coronas missing in Vulkan raster | TSE (TFE to check) | Vulkan raster | engine (inherited from Classic-VK) | S3 | triaged | FXT | POC-83 |
 | [RDF-013](#rdf-013-sunlit-outdoor-scenes-brighter-and-flatter-in-rt-than-in-raster) | Sunlit outdoor scenes brighter and flatter in RT | TSE | RT | engine | S3 | triaged | LIGHT | POC-76 |
 | [RDF-014](#rdf-014-weapon-viewmodel-clips-into-walls-layers-not-separated-framing-too-zoomed-out) | Weapon viewmodel clipping, layering and framing | TFE, TSE [ASM] | to establish | engine | S2 | triaged | WPN | POC-96 |
 | [RDF-015](#rdf-015-tse-chainsaw-model-shows-graphical-glitches) | TSE chainsaw model glitches | TSE | to establish | unknown | S3 | new | WPN | POC-97 |
-| [RDF-016](#rdf-016-ultrawide-aspect-ratios-match-no-aspect-adjuster-window) | Ultrawide aspect ratios match no adjuster window | TFE, TSE | all | engine | S2 | root-caused | unassigned (engine-other / WPN) | — |
-| [RDF-017](#rdf-017-hud-scales-by-width-only-and-is-about-134-too-large-on-ultrawide) | HUD scales by width only (1.34× on ultrawide) | TFE, TSE | all | engine | S3 | root-caused | unassigned (UI1 follow-up) | — |
+| [RDF-016](#rdf-016-ultrawide-aspect-ratios-match-no-aspect-adjuster-window) | Ultrawide aspect ratios match no adjuster window | TFE, TSE | all | engine | S2 | root-caused | WPN | POC-96 |
+| [RDF-017](#rdf-017-hud-scales-by-width-only-and-is-about-134-too-large-on-ultrawide) | HUD scales by width only (1.34× on ultrawide) | TFE, TSE | all | engine | S3 | root-caused | UI1 (follow-up) | POC-87 |
 
 ## Entry template
 
@@ -201,7 +201,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | (1) RTGL1 (generic, upstreamable): a cheap analytic distance + height fog term applied to primary-ray depth in compositing (colour, near/far or density, height band, direction), sky = far; (2) engine: per camera sector translate `CHazeParameters`/`CFogParameters` into it the way raster's `CRenderer::SetupFogAndHaze` does; (3) stop mapping haze to `RG_MEDIA_TYPE_WATER`. Behind a cvar; default on only after A/B (RD-016 Q11, RD-017 §6) |
 | Regression test | R1 scene set fog/haze checkpoints (EXP-025 §3: `tse-fog-*`, `tfe-fog-*`); RT vs `vk-orig` far-field luma; far-field brightness check of EXP-018 A1 must not regress |
 | Performance implications | analytic fog: one term per pixel, < 0.1 ms at 1440p [ASM]; volumetrics not needed for parity |
-| Owner track / POC | **R1 proposal: FXT** (atmospherics are RD-017; RTGL1 change coordinated by the lead), LIGHT consulted for exposure. POC-80/POC-83 |
+| Owner track / POC | FXT (lead decision 2026-11-28); RTGL1 change coordinated by the lead, LIGHT consulted for exposure. POC-80/POC-83 |
 | Status | root-caused (2026-11-28, R1) |
 | Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
@@ -222,7 +222,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | Vulkan: copy the last presented swapchain image (or the final colour target) to a host-visible buffer after the frame fence (`vkCmdCopyImageToBuffer`, BGRA->RGB); RT: RTGL1 has no read-back API in this tree, so either an RTGL1 "copy final image" entry point or a grab before present in the RT drawport |
 | Regression test | screenshot of a known frame matches an external capture within the quality guard |
 | Performance implications | none in normal play |
-| Owner track / POC | **R1 proposal: engine-other** (Vulkan back-end; not on the M0.1 critical path). The R1 harness does not need it: it captures the window with `PrintWindow`, which works in all 7 configurations. POC-45 |
+| Owner track / POC | engine-other (lead decision 2026-11-28), track to be assigned by the lead (Vulkan back-end; not on the M0.1 critical path). The R1 harness does not need it: it captures the window with `PrintWindow`, which works in all 7 configurations. POC-45 |
 | Status | root-caused (2026-11-28, R1) |
 | Links | — |
 
@@ -264,8 +264,8 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | none (physically correct RT behaviour) |
 | Regression test | distant-view checkpoint in `1_1_Palenque` |
 | Performance implications | none expected |
-| Owner track / POC | none (R1 proposes `wont-fix: not a defect`, lead approval) |
-| Status | root-caused (2026-11-28); proposed wont-fix |
+| Owner track / POC | none |
+| Status | **wont-fix** (lead decision 2026-11-28): intended behaviour. Evidence: [EXP] EXP-018 R3 correction — bubbles in both raster and RT prove the camera is under water at the start; raster draws the above-water scene without refraction, RT refracts through the water surface (Snell's law), so sky and hanging plants appear where raster shows the hillside. The real defects at this spot are RDF-004 (streaks in the refracted sky) and RDF-010 (no water medium) |
 | Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
 ### RDF-010: Under water looks like open air in TSE RT (no water medium)
@@ -285,7 +285,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | part of the RDF-006 fix: classify the camera sector from SE1 data (fog/haze parameters plus the water content type of the sector or the water brush) instead of one boolean; map real water to `RG_MEDIA_TYPE_WATER` with the sector's fog colour as extinction tint, and plain haze to the new fog term; no per-world `haze` switch |
 | Regression test | `tse-sky-1_1m0` (RT tint vs raster), `tfe-water-09m5`; EXP-018 A1 far-field check must not regress |
 | Performance implications | none (media type is already supported by RTGL1) |
-| Owner track / POC | **R1 proposal: FXT together with RDF-006** |
+| Owner track / POC | FXT (lead decision 2026-11-28), together with RDF-006 |
 | Status | root-caused (2026-11-28, R1) |
 | Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
@@ -306,7 +306,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | apply the weapon projection: either scale the first-person geometry in view space by `tan(worldFOV/2) / tan(weaponFOV/2)` (x/y) before upload, or give RTGL1 a first-person projection (RTGL1 already has a first-person visibility class). Keep the first-person depth range so the weapon does not clip into walls |
 | Regression test | weapon silhouette overlap RT vs `vk-orig` on `tse-out-1_3m10` and `tfe-out-06m2` (frozen frame) |
 | Performance implications | none |
-| Owner track / POC | **R1 proposal: WPN** (POC-96, together with RDF-014) |
+| Owner track / POC | WPN (lead decision 2026-11-28), POC-96, together with RDF-014/016 |
 | Status | root-caused (2026-11-28, R1) |
 | Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
@@ -320,14 +320,14 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Campaign | TSE (TFE to check) |
 | Renderer | Vulkan raster (Classic-VK and SSTRE alike); RT skips raster flares by design (`DrawPort.cpp:1323`, RT has `srt_bLensFlares`) |
 | Affected class | light-source lens flares (`CLensFlareType`), visibility via depth point checks |
-| Kind | engine (Vulkan back-end) — inherited from Classic-VK, not an SSTRE regression |
+| Kind | engine (Vulkan back-end), inherited from Classic-VK; not an SSTRE regression |
 | Severity | S3: sun and torch glare is part of the original look |
 | Suspected root cause | [ASM] the Vulkan branch of `UpdateDepthPointsVisibility` (`Engine/Graphics/DepthCheck.cpp:199+`, occlusion queries) reports flare points as hidden (query timing or depth-range mismatch), or `gfx_iLensFlareQuality` differs per API. To verify with `-Extra "gfx_iLensFlareQuality=3;"` and a query-result trace |
 | Confirmed root cause | not yet |
 | Proposed universal correction | fix the Vulkan depth-point visibility path (read the depth value or use the query result of the previous frame consistently) |
 | Regression test | `tse-out-1_3m10`, `tse-corr-2_1m3`: flare pixels present in `vk-orig` like in `gl-orig` |
 | Performance implications | negligible |
-| Owner track / POC | **R1 proposal: engine-other** (Vulkan back-end) |
+| Owner track / POC | FXT (lead decision 2026-11-28): flares are an effect class. Pre-existing Classic-VK defect, S3, not a Preview3 blocker |
 | Status | triaged (2026-11-28) |
 | Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
@@ -348,7 +348,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | calibrate sun/sky intensity and exposure from SE1 data (directional light colour, sector ambient) as part of RD-016; verify with `-FixedExposure` A/B |
 | Regression test | outdoor checkpoints: RT luma within ±15 % of `cvk` at fixed exposure |
 | Performance implications | none |
-| Owner track / POC | LIGHT (RD-016), POC-76 |
+| Owner track / POC | LIGHT (RD-016) (lead decision 2026-11-28), POC-76 |
 | Status | triaged (2026-11-28) |
 | Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
@@ -411,7 +411,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | derive the adjusters continuously from the aspect ratio (Hor+), or use nearest-window matching, for any aspect ratio |
 | Regression test | UI1 resolution list (POC-87) at 3440×1440 and 2560×1080; FOV/HUD values logged |
 | Performance implications | none |
-| Owner track / POC | unassigned (engine-other or WPN), lead to assign |
+| Owner track / POC | WPN (lead decision 2026-11-28), POC-96, together with RDF-011/014 |
 | Status | root-caused (2026-11-28, UI1) |
 | Links | RDF-014, RDF-017 |
 
@@ -432,6 +432,6 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Proposed universal correction | scale by min(width/640, height/480) (or height) with safe-area anchoring, ADR-0017 |
 | Regression test | UI1 resolution list (POC-87) |
 | Performance implications | none |
-| Owner track / POC | unassigned (UI1 follow-up), lead to assign |
+| Owner track / POC | UI1 follow-up (lead decision 2026-11-28), POC-87 |
 | Status | root-caused (2026-11-28, UI1) |
 | Links | RDF-016 |
