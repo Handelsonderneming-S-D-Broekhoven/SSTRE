@@ -2,6 +2,7 @@
 
 > **Changelog**
 > - 2026-11-27 (Phase 1, compliance auditor): added [§3.5](#35-legal-split-per-platform-four-separate-questions). It splits every console/handheld verdict into four separate questions, per owner direction and ADR-0007: technical homebrew feasibility, official distribution, platform SDK licensing, and game IP licensing. The single "blocked" verdicts in §3.2 and §8 are replaced by per-question verdicts. Added evidence P18–P25. Nothing else changed. Not legal advice.
+> - 2026-11-28 (track DECK-EMU): added [§7.1](#71-steam-deck-testing-before-hardware) pointing to [RD-015](./RD-015-steam-deck-pre-hardware-testing.md). Nothing else changed.
 
 | Field | Value |
 |---|---|
@@ -175,6 +176,14 @@ Run Spike S2 after RD-005 Spike S1 has produced builds.
 | S2.4 | RT under Proton or native Linux | SE-RT reaches the main menu and loads `01_Hatshepsut` (yes/no) |
 | S2.5 | macOS (optional) | Classic-VK raster runs on MoltenVK (yes/no). Absence of RT extensions confirmed |
 | S2.6 | Texture formats | One KTX2 BC7/BC5 override set loads identically on all PC targets (same hash in, visually identical screenshot within the RD-004 tolerance) |
+
+### 7.1 Steam Deck testing before hardware
+
+S2.2 needs a Deck. Until one is available, [RD-015](./RD-015-steam-deck-pre-hardware-testing.md) evaluates emulation and approximation options and ranks them by value per cost. In short:
+
+- Gamescope cannot be tested on the reference PC: WSLg is absent and there is no NVIDIA Vulkan ICD in WSL [EXP, RD-015 E1]. Its effects (1280×800, frame caps, FSR1) are emulated in the engine instead.
+- RT on the Deck runs today only through the Windows build under Proton, because the Linux build has `SE1_RAYTRACING=0`. RADV advertises the KHR RT extensions on gfx10.3+ [DOC, RD-015 D3]. RTGL1's full requirement set is checked against a Deck profile in POC-64.
+- RD-015 §6 lists what only real hardware can validate. Work packages are POC-64..74.
 
 ## 8. Recommendation (input for ADR-0007)
 
