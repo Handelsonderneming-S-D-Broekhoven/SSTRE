@@ -85,7 +85,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 |---|---|
 | ID | RDF-001 |
 | Reported | 2026-11-28, owner manual test of 0.1.0-preview2 |
-| Reproduction | Play interiors that are adequately lit in Vulkan raster with RT on, in both campaigns; exact checkpoints to be defined by R1 in POC-89 (several per campaign, incl. non-showcase levels). Historic case: TSE `1_2_Palenque` spawn cave was black in RT until per-level cutscene lights were added (EXP-017 R3/R12). **R1 checkpoints (non-showcase, no manual lights):** `tse-corr-2_1m3` (torch-lit corridor: raster luma 33.9, RT 1.8, 97 % of pixels near-black, the torch flame is the only visible object; the weapon is black too), `tse-vol-2_4m1` (hall: raster 39.4, RT 10.7); more in EXP-025 §4. Fixed exposure −4 gives the same result (luma 1.7), so it is missing light, not exposure |
+| Reproduction | Play interiors that are adequately lit in Vulkan raster with RT on, in both campaigns; exact checkpoints to be defined by R1 in POC-89 (several per campaign, incl. non-showcase levels). Historic case: TSE `1_2_Palenque` spawn cave was black in RT until per-level cutscene lights were added (EXP-017 R3/R12). **R1 checkpoints (non-showcase, no manual lights):** `tse-corr-2_1m3` (torch-lit corridor: raster luma 33.9, RT 1.8, 97 % of pixels near-black, the torch flame is the only visible object; the weapon is black too), `tse-vol-2_4m1` (hall: raster 39.4, RT 10.7). The research sweep (`vk-enh` vs `rt-enh`) found the same in `tse-room-2_2m1`, `tse-part-2_2m20`, `tse-cave-3_1m20` and `tse-cave-3_2m18` (RT almost black; only emissive surfaces and particles visible), and in `tse-dark-1_3m20` (the red light colour of the room is lost: RT grey-brown). Outdoor and moonlit checkpoints (`tse-out-1_3m10`, `tse-snow-3_2m1`, `tse-night-3_1m1`) are lit. Local light sources (torches, lit windows) add nothing in RT. Details in EXP-025 §4. Fixed exposure −4 gives the same result (luma 1.7), so it is missing light, not exposure |
 | Campaign | TFE, TSE |
 | Renderer | RT; original and enhanced textures |
 | Affected class | world lighting: sector ambient, brush shadowmap illumination, light entities (classes to be listed by POC-75) |
@@ -190,7 +190,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 |---|---|
 | ID | RDF-006 |
 | Reported | 2026-11-28, preview2 release notes (known issue) |
-| Reproduction | TSE levels with sector fog or haze, RT on, compare with Vulkan raster |
+| Reproduction | TSE levels with sector fog or haze, RT on, compare with Vulkan raster. R1 checkpoint `tse-haze-3_3m5` (TSE `3_3_CorridorOfDeath`): the yellow-green distance haze of raster is absent in RT |
 | Campaign | TSE; TFE to check (Serious-Engine-RT disables haze on several TFE worlds) |
 | Renderer | RT |
 | Affected class | sector fog and haze |
@@ -337,7 +337,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 |---|---|
 | ID | RDF-013 |
 | Reported | 2026-11-28, R1 (EXP-025) |
-| Reproduction | `tse-out-1_3m10`: mean luma raster 111.6, RT 141.9 (orig) / 136.5 (enh); paving looks washed out, contact darkening from shadowmaps missing |
+| Reproduction | `tse-out-1_3m10`: mean luma raster 111.6, RT 141.9 (orig) / 136.5 (enh); paving looks washed out, contact darkening from shadowmaps missing. `tse-snow-3_2m1`: raster 98.4, RT 161.7 (snow near clipping) |
 | Campaign | TSE (TFE to check on `tfe-out-06m2`) |
 | Renderer | RT |
 | Affected class | sun-lit brush surfaces; exposure/tonemapping |
