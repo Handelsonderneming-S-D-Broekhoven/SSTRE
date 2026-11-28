@@ -104,6 +104,10 @@ The roadmap and backlog update that adds this section addresses the first criter
 4. **POC-94 gameplay-capture survey (CPU-only, runs first, may overlap M1):** pass: ≥ 6 scenes per campaign [ASM]; each finding classified as shading facet or silhouette angularity and as world brush, character, enemy, prop or curved architecture, with a visibility score; ranked top 10 per campaign.
 5. **POC-95 displacement (M2 follow-up):** pass: amplitude limit respected on 100 % of vertices; no visible separation of walkable surfaces from collision; gameplay end-state identical; costs against the M1 baseline.
 
+### 7.1 Animation interpolation (Origin: owner [issue #35](https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/issues/35))
+
+POC-103 runs in parallel with M3 and is not a Preview3 or M1 gate. First review the existing SE1 model animation interpolation and separate authored limitations, frame-rate coupling and mesh or shading defects. Then evaluate smoother pose interpolation for legacy models, characters, enemies and weapons, including compatibility with selective subdivision. Animation durations, attack timing, hitboxes, collision, event triggers and networking semantics must not change, and no motion is invented. Coordinate with POC-96 and POC-97 so that first-person presentation fixes are kept. Measure CPU, GPU, VRAM and BLAS/TLAS impact; escalate complex animation rewrites only if the evidence supports them.
+
 ## 8. Recommendation
 
 Start with the POC-94 survey, so that work follows the most visible problems. Do 1 and 2 together first: they are cheap, runtime-only and change no gameplay data, and they fix shading facets. Do 3 where the survey shows silhouette angularity or where 1+2 leave visible facets, for world brushes and model meshes separately. Do 4 only after the M2 PBR stage provides height maps (POC-95) and the cost is known. Keep all four as explicit settings in the quality profiles.
