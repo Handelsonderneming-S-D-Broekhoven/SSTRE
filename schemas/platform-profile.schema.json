@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Handelsonderneming-S-D-Broekhoven/SSTRE/schemas/platform-profile.schema.json",
   "title": "SSTRE platform (target) texture profile",
-  "$comment": "STATUS: PROPOSAL (sprint 2, track A2, EXP-015; ADR-0009 rule 5). A declarative description of what a runtime target accepts: texture size limits, containers and pixel/compression formats per render target, mip policy, memory budget and preprocessing. Independent of the asset layers. Referenced by id or inlined from build-config.schema.json and frozen into build-manifest.schema.json. Profiles marked 'hypothetical' are illustrations and contain no platform-SDK information.",
+  "$comment": "STATUS: PROPOSAL (sprint 2, track A2, EXP-015; ADR-0009 rule 5). A declarative description of what a runtime target accepts: texture size limits, containers and pixel/compression formats per render target, mip policy, memory budget and preprocessing. Independent of the asset layers. Referenced by id or inlined from build-config.schema.json and frozen into build-manifest.schema.json. Profiles marked 'hypothetical' are illustrations and contain no platform-SDK information. Sprint 2 VS-A (EXP-019): optional engineSettings (console variables the AssetCompiler writes to an SSTRE settings script; shipped GLSettings scripts are never replaced) and additionalBudgets (further memory constraints such as the fixed Classic-VK Vulkan texture pool, EXP-016).",
   "type": "object",
   "additionalProperties": false,
   "required": ["profileFormatVersion", "profileId", "status", "textureLimits", "targets", "mipPolicy", "memoryBudget", "preprocessing"],
@@ -111,6 +111,61 @@
       "properties": {
         "enabled": { "type": "boolean" },
         "roles": { "type": "array", "items": { "$ref": "#/$defs/mapRole" }, "uniqueItems": true }
+      }
+    },
+    "engineSettings": {
+      "description": "Runtime console variables for this profile, written by the packager to the settings script. tex_iNormalSize = N implies textureLimits.maxPixels <= 4^N (checked by the AssetCompiler).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cvars"],
+      "properties": {
+        "engine": { "type": "string" },
+        "script": {
+          "description": "Path relative to the game root; never a shipped GLSettings script.",
+          "type": "string",
+          "pattern": "^Scripts/[A-Za-z0-9_][A-Za-z0-9_./-]{0,200}\\.ini$",
+          "not": { "pattern": "^[Ss][Cc][Rr][Ii][Pp][Tt][Ss]/[Gg][Ll][Ss][Ee][Tt][Tt][Ii][Nn][Gg][Ss]/" }
+        },
+        "activation": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "cvars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$" },
+              "value": {
+                "oneOf": [
+                  { "type": "integer" },
+                  { "type": "number", "not": { "type": "integer" } },
+                  { "type": "string", "pattern": "^[^\"\\\\\\r\\n]*$" }
+                ]
+              },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "additionalBudgets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["budgetId", "bytes", "accountingTarget", "policy"],
+        "properties": {
+          "budgetId": { "$ref": "#/$defs/id" },
+          "bytes": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+          "accountingTarget": { "$ref": "#/$defs/id" },
+          "accountingFormat": { "$ref": "#/$defs/format", "description": "Count every texture the target takes in this format (e.g. Vulkan stores all as RGBA8)." },
+          "includeMips": { "type": "boolean" },
+          "scope": { "description": "per-game: one budget per game (asset-ID prefix), since a runtime loads one game.", "enum": ["all", "per-game"] },
+          "policy": { "enum": ["report", "reduce-largest"] },
+          "evidence": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+          "notes": { "type": "string" }
+        }
       }
     }
   },
