@@ -369,3 +369,46 @@ About 35 min of source analysis, fix and builds (RTGL1 source read to confirm th
 2. First-person chainsaw particles are not drawn in RT. They would need an RT-side first-person particle path.
 3. `1_2_Palenque` (and other cave starts) need RT lighting tuning; together with A1 follow-up 1 (fog/haze mapping) this is WP7 work.
 4. The engine-side budget reserves 1024 geometry slots for dynamic geometry; very model-heavy scenes could still exceed RTGL1's shared total per frame. Not observed so far.
+
+## Addendum A3 (2026-11-28): `1_2_Palenque` RT spawn cave black; flashlight key missing in existing profiles
+
+**Finding (VS-E, integration build with the A2 fixes):** the `1_2_Palenque` RT level start shows a completely black 3D view in the spawn cave for 190 s, with the HUD live; Vulkan is fine. Separately, the flashlight key had no effect.
+
+### Cause: cave lit only by static light entities that RT ignores [SRC + EXP]
+
+- [SRC] RT drops every static (non-dynamic) spherical SE1 light unless its entity has a visible model, or a model parent nearby, or the light matches a per-world `cutscene_light` position (`CustomInfo::IsSphericalLightIgnored`; `RTLights.cpp` `RT_AddLight`). RT relies on the sun, the sky, emissive textures and fire-texture "potential" lights instead.
+- [EXP] Temporary debug listing (one run, removed): 25 ignored static lights within 80 m of the spawn. Three bluish fill lights with about 20 m falloff run along the cave, and the rest are warm glow lights at the temple door. The cave is closed, so no sun or sky light reaches the spawn.
+- [EXP] It is not exposure: `tonemapping_min_log_luminance = -12` (local overlay) left the frame at mean RGB 2/2/1. With the RT flashlight on, the geometry is visible (A2). The pre-fix engine is equally black. Haze, media type and emissive textures are not involved, because the frame has no light at all.
+- A/B with the local overlay: whitelisting the 3 fill lights gives mean RGB 43/58/45, and all 25 gives 48/63/49 with the door area lit.
+
+### Cause: flashlight binding missing [SRC + EXP]
+
+- [SRC] The binding is in `Controls\00-Default.ctl` (`bf625709`). Existing player profiles (`Controls\ControlsN.ctl`) are never merged with new defaults.
+- [EXP] The local test profile has 37 buttons against the default's 38, with no flashlight. The harness does not send key L; the flashlight itself works (a scripted `ctl_bFlashlight=1` lights the view, A2).
+
+### Fix (SSTRE-Engine `sprint2/rt-tse`)
+
+| Commit | Kind | Change |
+|---|---|---|
+| `e479d6cc` | **data only** | `[world 1_2_Palenque]` in the TSE `WorldTuning.txt`: 25 `cutscene_light` positions (world coordinates, no texture paths), `haze = 0`, `sky_type = geometry`, still `tuned = 0` |
+| `40416ad4` | small code (GameMP) | `CControls::Load_t` adds the "Flashlight" button when a profile lacks it, bound to L unless L is already used, following the engine's old commented-out "Talk" injection. The game saves it back on exit. |
+
+### Verification [EXP]
+
+Session M on `e479d6cc` plus the GameMP build, and session N on `40416ad4`. Focus was held in every capture, the watchdog did not fire, and every run logged **0 RTGL1 errors**.
+
+| Run | Duration | Mean RGB | Result |
+|---|---|---|---|
+| `1_2` RT level start | 190 s; shots at 22/60/120/180 s | 48/63/49, 45/60/47, 47/62/49, 47/62/49 | cave, statue head, temple door and weapon clearly lit (brighter than Vulkan's 17/23/16 because of auto-exposure) |
+| `1_0` RT | 70 s | intro cutscene, then text card | OK |
+| `1_1` RT | 70 s | 38/52/57 | = A2 |
+| `2_1` RT | 70 s | 121/131/138 | = A2 |
+| TFE `01` RT | 70 s | 4/82/4 | = A2 |
+| Profile merge, 2 × `1_1` RT | 35 s each | — | the profile now holds exactly one flashlight button on L (38 buttons) after both runs, so the merge is idempotent |
+
+- Only the cave and the door area (lights within 80 m of the spawn) were checked. The rest of `1_2` was not walked [ASM]: other closed interiors in `1_2` and in the other TSE levels may need the same treatment.
+
+### Follow-ups (from A3)
+
+1. A generic rule instead of per-level positions, for example "keep static lights when the camera sector receives no sun". This needs an engine change and play-testing.
+2. Survey all TSE levels for closed areas lit only by static lights, using the same debug listing but without the distance limit (WP7).
