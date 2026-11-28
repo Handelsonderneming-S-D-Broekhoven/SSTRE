@@ -105,7 +105,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Kind | unknown; engine (blend translation) or RTGL1 (transparency handling) suspected |
 | Severity | S2: conspicuous, recurring |
 | Suspected root cause | [ASM] SE blend mode or translucency flag mistranslated to RTGL1, so the surface is lit and composited as a white volume. See [RD-017](research/RD-017-legacy-effects-reconstruction.md) H1 |
-| Confirmed root cause | not yet (POC-80) |
+| Confirmed root cause | not yet (POC-80). **R1 [SRC] pointers for FXT:** `RT_GetPassThroughType` maps every `BPOF_TRANSLUCENT` brush polygon to `RG_GEOMETRY_PASS_THROUGH_TYPE_ALPHA_TESTED` (`Engine/Raytracing/RTBrushes.cpp:116-122`), `RT_ShouldBeRasterized` returns false for brushes (`:82-86`), and `IGNORE_BRUSH_COLOR` (`:143`, `:283-287`) drops the polygon colour; so a translucent brush is traced as a lit, alpha-tested opaque surface. R1 regression checkpoint `tse-vol-2_4m1` (light shafts) |
 | Proposed universal correction | correct blend translation → semantic classification from flags/entity class (ADR-0016) → depth-correct compositing pass → optional volumetric replacement / HDR emissive with bloom |
 | Regression test | light-volume checkpoints (P3-4) and transparent-material checkpoints (P3-7) |
 | Performance implications | compositing pass cost to be measured; volumetrics configurable |
@@ -140,20 +140,20 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 |---|---|
 | ID | RDF-004 |
 | Reported | 2026-11-28, preview2 release notes (known issue) |
-| Reproduction | TSE `1_1_Palenque`, RT, look at the sky |
+| Reproduction | TSE `1_1_Palenque`, RT, level start (player under water): the sky seen **through the water surface** shows white/blue diagonal bands; checkpoint `tse-sky-1_1m0` |
 | Campaign | TSE |
 | Renderer | RT; visible with original and enhanced textures |
 | Affected class | sky (RT sky type / background geometry) |
 | Kind | engine (not the textures: classic textures show it too) |
 | Severity | S3 |
-| Suspected root cause | [ASM] RT sky handling (sky type or background-geometry tuning) for this world; possibly related to RDF-009 |
-| Confirmed root cause | not yet |
-| Proposed universal correction | to be determined; generic sky/background handling rather than a per-world table entry |
+| Suspected root cause | [ASM] RT sky handling (sky type or background-geometry tuning) for this world; possibly related to RDF-009. **R1 (2026-11-28):** same spot as RDF-009; the streaks are in the refracted sky. Refracted/reflected rays that miss geometry sample RTGL1's sky **cubemap**, which the engine creates at `rasterizedSkyCubemapSize = 256` per face (`Engine/Raytracing/SSRT.cpp:360`) and fills by rasterizing the background brushes per material layer with `DEPTH_TEST|DEPTH_WRITE` also for blended layers (`SceneBrushes.cpp:203-210`; RTGL1 `Rasterizer::DrawSkyToCubemap`). H1: low cubemap resolution stretched over a refracted, magnified view; H2: blended cloud layers writing depth make layer order matter in the cubemap. Primary-ray sky (drawn to the albedo buffer at screen resolution) is not affected in the outdoor checkpoints [EXP pending] |
+| Confirmed root cause | not yet: needs an A/B build (cubemap 1024; blended sky layers without depth write) |
+| Proposed universal correction | if H1: cubemap size as a quality setting (e.g. 512/1024); if H2: depth write off for blended sky layers (raster parity). Both generic |
 | Regression test | sky checkpoint in `1_1_Palenque` (POC-89) |
 | Performance implications | none expected |
-| Owner track / POC | R1 to triage, lead to assign |
-| Status | triaged (2026-11-28) |
-| Links | [EXP-018](experiments/EXP-018-rt-tse.md) |
+| Owner track / POC | **R1 proposal: engine-other (RT sky), lead to assign**; FXT if H2 (blend/depth state). POC-89 |
+| Status | investigating (2026-11-28, R1) |
+| Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
 ### RDF-005: Chainsaw first-person particles not drawn in RT
 
@@ -189,13 +189,13 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Kind | engine (RT layer) |
 | Severity | S2: atmospheric intent lost in many TSE areas |
 | Suspected root cause | [SRC] EXP-018 A1: RT haze darkened everything beyond ~20 m, so preview2 sets RT haze off by default; SE1 fog is not translated into an RT medium |
-| Confirmed root cause | partly (haze default); fog translation not yet investigated |
-| Proposed universal correction | translate SE fog/haze parameters into a configurable RT medium or compositing term with correct brightness (RD-016 Q11, RD-017 §6) |
-| Regression test | fog/haze checkpoints; far-field brightness check of EXP-018 A1 must not regress |
-| Performance implications | volumetric cost to be measured; configurable |
-| Owner track / POC | LIGHT or FXT (lead to assign), POC-75 / POC-80 |
-| Status | triaged (2026-11-28) |
-| Links | [EXP-018](experiments/EXP-018-rt-tse.md) |
+| Confirmed root cause | **[SRC] (R1): the RT layer renders no SE1 fog or haze at all.** The only consumer is a boolean "camera is in a fog/haze sector": `RT_CheckViewerInHaze` (`Engine/Raytracing/RTModelCulling.cpp:269-300`) calls `GetHaze`/`GetFog` into dummy `CHazeParameters`/`CFogParameters` that are discarded and sets `Scene::SetCameraIsInHaze`; `SSRT.cpp:652` then sets `typeOfMediaAroundCamera = RG_MEDIA_TYPE_WATER` (water extinction from `srt_vWaterExtinction` x `srt_fWaterDensityMultiplier`, not the sector's colour or distances). That is the blue cast / far darkening of EXP-018 A1. Haze (`hp_colColor`, `hp_fNear`, `hp_fFar`, `hp_fDensity`) and fog (`fp_colColor`, `fp_fH0..H3`, `fp_fFar`, `fp_fDensity`, `fp_vFogDir`) never reach RTGL1; `RTLights.cpp:647` keeps `fFogHazeFade = 1`. RTGL1 in this tree has no fog/volumetric parameter (`RTGL1.h:1054`: media VACUUM/WATER/GLASS only). TFE uses the same code [SRC]; RT vs raster captures in EXP-025 |
+| Proposed universal correction | (1) RTGL1 (generic, upstreamable): a cheap analytic distance + height fog term applied to primary-ray depth in compositing (colour, near/far or density, height band, direction), sky = far; (2) engine: per camera sector translate `CHazeParameters`/`CFogParameters` into it the way raster's `CRenderer::SetupFogAndHaze` does; (3) stop mapping haze to `RG_MEDIA_TYPE_WATER`. Behind a cvar; default on only after A/B (RD-016 Q11, RD-017 §6) |
+| Regression test | R1 scene set fog/haze checkpoints (EXP-025 §3: `tse-fog-*`, `tfe-fog-*`); RT vs `vk-orig` far-field luma; far-field brightness check of EXP-018 A1 must not regress |
+| Performance implications | analytic fog: one term per pixel, < 0.1 ms at 1440p [ASM]; volumetrics not needed for parity |
+| Owner track / POC | **R1 proposal: FXT** (atmospherics are RD-017; RTGL1 change coordinated by the lead), LIGHT consulted for exposure. POC-80/POC-83 |
+| Status | root-caused (2026-11-28, R1) |
+| Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
 ### RDF-007: Engine screenshots grey in Vulkan
 
@@ -205,17 +205,17 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Reported | 2026-11-28, preview2 release notes (known issue); also EXP-011 issue 8 |
 | Reproduction | Vulkan raster, take an engine screenshot |
 | Campaign | TFE, TSE |
-| Renderer | Vulkan raster |
-| Affected class | screen grab / read-back |
+| Renderer | Vulkan raster and RT |
+| Affected class | screen grab / read-back (engine screenshots, and every other `CDrawPort::GrabScreen` user, e.g. save-game and demo thumbnails) |
 | Kind | engine |
 | Severity | S4 for players; it blocks in-engine captures for the comparison harness (POC-90) and the quality guard (POC-45) |
 | Suspected root cause | [ASM] the Vulkan back-end's screen grab does not read back the presented image |
-| Confirmed root cause | not yet |
-| Proposed universal correction | a proper swapchain or render-target read-back in the Vulkan path |
+| Confirmed root cause | **[SRC] (R1): not implemented.** `CDrawPort::GrabScreen` (`Engine/Graphics/DrawPort.cpp:1188-1291`) fills the buffer with `memset(..., 128, ...)` (uniform grey) and only OpenGL (`pglReadPixels`) and D3D overwrite it; the `GAT_VK` and `GAT_RT` branches (`:1277-1289`) only print "not implemented" in debug builds |
+| Proposed universal correction | Vulkan: copy the last presented swapchain image (or the final colour target) to a host-visible buffer after the frame fence (`vkCmdCopyImageToBuffer`, BGRA->RGB); RT: RTGL1 has no read-back API in this tree, so either an RTGL1 "copy final image" entry point or a grab before present in the RT drawport |
 | Regression test | screenshot of a known frame matches an external capture within the quality guard |
 | Performance implications | none in normal play |
-| Owner track / POC | R1 (harness need) → lead to assign; POC-90 / POC-45 |
-| Status | triaged (2026-11-28) |
+| Owner track / POC | **R1 proposal: engine-other** (Vulkan back-end; not on the M0.1 critical path). The R1 harness does not need it: it captures the window with `PrintWindow`, which works in all 7 configurations. POC-45 |
+| Status | root-caused (2026-11-28, R1) |
 | Links | — |
 
 ### RDF-008: RT options listed in the Vulkan rendering-options menu
@@ -252,10 +252,10 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Kind | engine (RT layer) |
 | Severity | S3 |
 | Suspected root cause | [ASM] background geometry or World Base handling that Serious-Engine-RT solved per TFE level; TSE has only generic defaults |
-| Confirmed root cause | not yet |
-| Proposed universal correction | generic background/World Base classification rather than per-world ignore lists |
+| Confirmed root cause | **[EXP] EXP-018 "Correction to R3": not a defect.** At the level start the player is under water; raster draws the scene above the surface without refraction, RT refracts through the water surface and shows sky. R1 re-check in EXP-025 (spawn view, `vk-orig` vs `rt-orig`) |
+| Proposed universal correction | none (physically correct RT behaviour) |
 | Regression test | distant-view checkpoint in `1_1_Palenque` |
 | Performance implications | none expected |
-| Owner track / POC | R1 to triage, lead to assign |
-| Status | triaged (2026-11-28) |
-| Links | [EXP-018](experiments/EXP-018-rt-tse.md) |
+| Owner track / POC | none (R1 proposes `wont-fix: not a defect`, lead approval) |
+| Status | root-caused (2026-11-28); proposed wont-fix |
+| Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
