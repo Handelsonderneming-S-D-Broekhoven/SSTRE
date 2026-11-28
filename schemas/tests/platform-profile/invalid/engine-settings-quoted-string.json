@@ -1,0 +1,157 @@
+{
+ "$comment": "Built-in SSTRE platform profile. Upload limit and engine settings from EXP-016 (tex_iNormalSize=11 = 2048x2048 upload area; the >2048 px width crash of EXP-012 is fixed in the engine); Vulkan texture pool from EXP-016. Formats from RD-006 section 4, EXP-014 and EXP-009.",
+ "profileFormatVersion": "0.1.0",
+ "profileId": "pc-default",
+ "title": "PC (Windows/Linux), Classic-VK raster + experimental RT",
+ "status": "provisional",
+ "evidence": [
+  "EXP-012",
+  "EXP-014",
+  "EXP-016",
+  "EXP-009",
+  "RD-006"
+ ],
+ "textureLimits": {
+  "maxWidth": 4096,
+  "maxHeight": 4096,
+  "maxLongEdge": 4096,
+  "maxShortEdge": 2048,
+  "maxPixels": 4194304,
+  "requirePowerOfTwo": false,
+  "respectFirstMipDensity": true,
+  "notes": "The runtime uploads at most 4^tex_iNormalSize pixels (EXP-016); with the engine settings below that is a 2048x2048 area, so larger sources are reduced here instead of at load time. Widths above 2048 need the FilterBitmap fix (EXP-016)."
+ },
+ "targets": [
+  {
+   "targetId": "raster",
+   "backend": "raster",
+   "container": "se1-tex-v4",
+   "status": "validated",
+   "allowedFormats": [
+    "rgb8",
+    "rgba8"
+   ],
+   "formats": {
+    "color-opaque": "rgb8",
+    "color-alpha": "rgba8"
+   },
+   "mips": "runtime-generated",
+   "evidence": [
+    "EXP-012"
+   ],
+   "notes": "Loose v4 .tex with identical mex; mip 0 only, the runtime builds mips. Material maps are not used by the raster baseline."
+  },
+  {
+   "targetId": "rt",
+   "backend": "rt",
+   "container": "ktx2",
+   "status": "partial",
+   "allowedFormats": [
+    "bc1",
+    "bc3",
+    "bc4",
+    "bc5",
+    "bc7",
+    "rgba8"
+   ],
+   "formats": {
+    "color-opaque": "bc7",
+    "color-alpha": "bc7",
+    "normal": "bc5",
+    "mask": "bc4"
+   },
+   "mips": "full-chain",
+   "evidence": [
+    "EXP-014",
+    "EXP-009",
+    "RD-006"
+   ],
+   "notes": "OverridenTextures/Compressed/<texture path>{,_n,_rme}.ktx2; coexists with loose .tex (EXP-009 R7). Reader render test passed (EXP-009 R6)."
+  }
+ ],
+ "mipPolicy": {
+  "filter": "kaiser",
+  "alphaCoveragePreserve": true,
+  "wrapForTileable": true
+ },
+ "memoryBudget": {
+  "bytes": 2147483648,
+  "accountingTarget": "raster",
+  "includeMips": true,
+  "policy": "report"
+ },
+ "preprocessing": {
+  "downscale": {
+   "policy": "halve-until-fit",
+   "filter": "lanczos3",
+   "neverBelowClassic": true
+  },
+  "colorSpace": {
+   "color": "srgb",
+   "data": "linear",
+   "resampleInLinear": true
+  },
+  "alpha": {
+   "mode": "preserve",
+   "premultiply": false,
+   "dilateEdges": true,
+   "cutoutCoverage": true
+  },
+  "normals": {
+   "renormalizeAfterResample": true
+  }
+ },
+ "materialMaps": {
+  "enabled": true,
+  "roles": [
+   "normal",
+   "gloss",
+   "ao",
+   "height"
+  ]
+ },
+ "engineSettings": {
+  "engine": "classic-vk",
+  "script": "Scripts/SSTRE/TextureProfile.ini",
+  "activation": "command-line +script",
+  "evidence": [
+   "EXP-016"
+  ],
+  "cvars": [
+   {
+    "name": "sam_iVideoSetup",
+    "value": 3,
+    "note": "custom video setup: the shipped GLSettings scripts are not re-applied over these values"
+   },
+   {
+    "name": "tex_iNormalSize",
+    "value": 11,
+    "note": "upload area up to 2048x2048 (shipped default 9 = 512x512)"
+   },
+   {
+    "name": "tex_iNormalQuality",
+    "value": 22,
+    "note": "32-bit uploads on OpenGL (no RGB5/RGBA4 plus dithering)"
+   },
+   {
+    "name": "x_s",
+    "value": "a\"b"
+   }
+  ]
+ },
+ "additionalBudgets": [
+  {
+   "budgetId": "vulkan-texture-pool",
+   "bytes": 536870912,
+   "accountingTarget": "raster",
+   "accountingFormat": "rgba8",
+   "includeMips": true,
+   "scope": "per-game",
+   "policy": "reduce-largest",
+   "evidence": [
+    "EXP-016"
+   ],
+   "notes": "Classic-VK suballocates every raster texture from one device-local pool allocated up front (256*256*4*4/3 x 512 x 3 = 536870912 bytes) and stores every format as RGBA8; the pool does not grow, and a texture that does not fit is dropped. Counted per game over all planned assets (an upper bound: a level loads a subset)."
+  }
+ ]
+}

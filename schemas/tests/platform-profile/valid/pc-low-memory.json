@@ -2,10 +2,11 @@
  "$comment": "Built-in SSTRE platform profile for PCs with little VRAM or RAM (illustrative budget; not measured).",
  "profileFormatVersion": "0.1.0",
  "profileId": "pc-low-memory",
- "title": "PC, low memory (2048 px cap, 512 MiB texture budget)",
+ "title": "PC, low memory (1024x1024 upload area, 512 MiB texture budget)",
  "status": "provisional",
  "evidence": [
   "EXP-012",
+  "EXP-016",
   "RD-006"
  ],
  "textureLimits": {
@@ -13,7 +14,7 @@
   "maxHeight": 2048,
   "maxLongEdge": 2048,
   "maxShortEdge": 2048,
-  "maxPixels": 4194304,
+  "maxPixels": 1048576,
   "requirePowerOfTwo": false,
   "respectFirstMipDensity": true
  },
@@ -97,5 +98,45 @@
   "roles": [
    "normal"
   ]
- }
+ },
+ "engineSettings": {
+  "engine": "classic-vk",
+  "script": "Scripts/SSTRE/TextureProfile.ini",
+  "activation": "command-line +script",
+  "evidence": [
+   "EXP-016"
+  ],
+  "cvars": [
+   {
+    "name": "sam_iVideoSetup",
+    "value": 3,
+    "note": "custom video setup: the shipped GLSettings scripts are not re-applied over these values"
+   },
+   {
+    "name": "tex_iNormalSize",
+    "value": 10,
+    "note": "upload area up to 1024x1024 (EXP-016 suggestion for low-VRAM targets, untested)"
+   },
+   {
+    "name": "tex_iNormalQuality",
+    "value": 22,
+    "note": "32-bit uploads on OpenGL"
+   }
+  ]
+ },
+ "additionalBudgets": [
+  {
+   "budgetId": "vulkan-texture-pool",
+   "bytes": 536870912,
+   "accountingTarget": "raster",
+   "accountingFormat": "rgba8",
+   "includeMips": true,
+   "scope": "per-game",
+   "policy": "reduce-largest",
+   "evidence": [
+    "EXP-016"
+   ],
+   "notes": "Classic-VK suballocates every raster texture from one device-local pool allocated up front (256*256*4*4/3 x 512 x 3 = 536870912 bytes) and stores every format as RGBA8; the pool does not grow, and a texture that does not fit is dropped. Counted per game over all planned assets (an upper bound: a level loads a subset)."
+  }
+ ]
 }
