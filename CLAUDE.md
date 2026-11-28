@@ -17,6 +17,10 @@ Read and follow [docs/policies/github-communication.md](docs/policies/github-com
 
 Follow [docs/policies/testing-policy.md](docs/policies/testing-policy.md). Test stages: research → dev → integration → release. Only release candidates get the complete acceptance matrix; earlier stages use the cheapest test that answers a written-down question. Reuse results only when revision, config, assets and code paths still apply. Record every local runtime/GPU run in the shared ledger, and report executed / reused / skipped / deferred / invalidated explicitly. Never skip CI and never weaken benchmark methodology or exit criteria.
 
+## Model allocation and token efficiency (binding, owner issue #29)
+
+Follow [docs/policies/model-allocation.md](docs/policies/model-allocation.md). Use the cheapest tier that reliably does the job: script/tool for mechanical work, `haiku` for bounded navigation, extraction and simple edits, `sonnet` for ordinary implementation, tests and scoped analysis, `opus` for renderer/RTGL1 design, hard cross-subsystem debugging, high-risk integration, licensing/security and consequential review. Escalate when stuck or unreliable. Narrow briefs that point to existing docs. Review and validation never depend on the model used. Report measured telemetry as measured and missing telemetry as unavailable.
+
 ## Standing rules
 
 - Licensing: GPL-3.0-only (SSTRE, AssetCompiler, Toolkit), GPL-2.0-only (engine), Manifests CC0-1.0 / CC-BY-SA-4.0 ([notices policy](docs/policies/notices-policy.md)). Copyright "Handelsonderneming S.D. Broekhoven, trading as ITEagle Europe".
