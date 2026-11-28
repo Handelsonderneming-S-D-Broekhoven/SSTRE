@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-11-28 |
 | Backlog items | Sprint 2 track VS-E (vertical slice, engine integration); POC-27 follow-up (per-path context), POC-29/30/32, E3/E4 fixes, E5 TSE ray tracing (EXP-005 M2, EXP-018) |
-| Status | **complete for 0.1.0-preview2**: E1, E3, E4, E5 (incl. the TSE haze fix and the two `1_2_Palenque` RT fixes) integrated, built, tested, exported. Open: the `1_2_Palenque` RT spawn cave renders black (E5 tuning issue, R3) |
+| Status | **complete for 0.1.0-preview2**: E1, E3, E4, E5 (incl. the TSE haze fix and the two `1_2_Palenque` RT fixes) integrated, built, tested, exported. Head `7eeed884` adds E5's 1_2 cave lights and the flashlight button for existing profiles (R8); the black `1_2_Palenque` RT spawn cave of R3 is fixed |
 | Environment | Windows 11 Pro 10.0.22631, Intel i5-11600K, RTX 4070 12 GB, driver 616.64. VS 2022 17.5 / MSVC 14.35.32215 (v143), Windows SDK 10.0.22000.0, WinFlexBison 2.5.25 (trusted copy), Vulkan SDK 1.4.363.0, Git 2.55.0.windows.3, Python 3.10.11. Linux: Docker 20.10.23, `ubuntu:22.04@sha256:b000e69a50ff940390233025e7a337fb8469b509e2334fa4d018ac30f3e18cdb` (gcc 11.4.0, CMake 3.22.1, Bison 3.8.2, Flex 2.6.4), runtime/audit image `sstre-e2-netaudit:local` (EXP-010) |
 | Inputs | SSTRE-Engine local branches `sprint2/no-master-server` (`f7c3605f` = `phase1/cvk-build` + POC-32), `sprint2/tex4096-crash` (E4), `sprint2/rt-transplant` (E1), `sprint2/bench-fixes` (E3, head `b7c7e998`), `sprint2/rt-tse` (E5, head `958b2bd5`). RTGL1 clean-room build of `sprint2/ktx2-cleanroom` `0eb4c4a` (EXP-009, DLL SHA-256 prefix `42bdd141`). Owner's Steam *Serious Sam Classic* TFE and TSE data, copied into private runtimes |
 
@@ -22,7 +22,7 @@ All scripts, logs, screenshots and runtimes are local under `G:\sstre-tmp\vse\` 
 1. **Branch.** `git -C …\SSTRE-Engine worktree add G:\sstre-tmp\vse\wt-engine -b sprint2/integration sprint2/no-master-server` (all git calls with `-c core.autocrlf=false`). Cherry-picks, in order: `15c567c0 3a4d07cc` (E4), `2f9251dc 7c0fcf50 e62b6fcc 1fd1cd9f 7d80a7d7 750b1047 005bd78c` (E1, **`d9f86637` skipped**), `9c8c06b9 b7c7e998` (E3), then E5's `sprint2/rt-tse` commits above `005bd78c` (R1). No `(cherry picked from …)` lines; the mapping is the R1 table. `git diff sprint2/tex4096-crash HEAD -- '*/Graphics/Graphics.cpp'` is empty: only E4's `FilterBitmap` fix is present.
 2. **Credit.** Every RT port commit carries one message paragraph naming the secondary upstream and its author ("Ported code: Serious-Engine-RT (…, GPL-2.0-only) by Sultim Tsyrendashiev; original copyright notices kept."). Trees, authors and author dates are unchanged.
 3. **VS-E adaptations, folded into the original commits:** the RT menu options live in the new SSTRE files `SamT?E/SSTRE/Menu/RenderingOptionsRT.cfg`; the retail `Scripts/Menu/RenderingOptions.cfg` gets one `Include: TFNM SSTRE\Menu\RenderingOptionsRT.cfg` line (new `Include:` keyword in `SeriousSam/VarList.cpp`). The RT world tuning tables moved from `Scripts/RT/` to `SamT?E/SSTRE/RT/WorldTuning.txt` (loader paths in `CustomInfoTuning.cpp`). Linux: `SE1_RAYTRACING` (1 for MSVC x64 Vulkan builds, 0 for CMake), stubs for the `CGfxLibrary` RT entry points and `RT_Particle_*` hooks, `#if SE1_RAYTRACING` around the blocks that use SSRT types; TFE in `4e642c39`, TSE in `c8fcfbf8`.
-4. **Publication rule for the TSE tuning table (lead decision):** it may contain only level names and texture paths that also appear in the public TFE table. Check after every E5 data change: `comm -23` of the sorted `.tex` lines of the TSE file vs the TFE file must be empty. At `c1537cfd`: **empty** (57 lines in each file).
+4. **Publication rule for the TSE tuning table (lead decision):** it may contain only level names and texture paths that also appear in the public TFE table. Check after every E5 data change: `comm -23` of the sorted `.tex` lines of the TSE file vs the TFE file must be empty. At `c1537cfd` and at `7eeed884`: **empty** (57 lines in each file; the new `1_2_Palenque` entry holds world coordinates only).
 5. **Windows build.** `scripts\build-win.ps1` (EXP-001/EXP-016 procedure): `MSBuild SamT?E.sln /m /t:Ecc;Engine;Entities(MP);Game(MP);Shaders;SeriousSam;libogg;libvorbis;libvorbisfile;amp11lib /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0.22000.0 /p:UseOfMfc=false /p:RTGL1_SDK_PATH=<copy of RTGL1 Include> /p:RTGL1_LIB_PATH=<clean-room build>`, trusted win_flex/win_bison first on `PATH`, `TEMP` on G:. `scripts\build-all.ps1` runs TFE, TSE and the Linux build, each after `gpu-lock.ps1 wait-quiet`.
 6. **Linux build.** `git archive HEAD` → the EXP-001 container script unchanged (`cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build && cmake --install`, TFE + TSE), clean container. The apt step needs the network; nothing is run there.
 7. **Runtimes.** `scripts\assemble.ps1 [-BinOnly]`: robocopy of the Phase-1 runtimes `local-work\runtime\cvk-t?e` (Steam data) without `Bin`, logs and persistent settings, plus our `Bin`, the branch's `Scripts\Menu\RenderingOptions.cfg`, `Controls\00-Default.ctl` and `SSTRE\` tree, and for both games the RT data of EXP-009 (45 SPIR-V, blue noise, water normal map) and the clean-room `RayTracedGL1.dll`.
@@ -40,7 +40,7 @@ All scripts, logs, screenshots and runtimes are local under `G:\sstre-tmp\vse\` 
 
 ### R1. Integrated commit list (`sprint2/integration`, local, not pushed)
 
-Base `f7c3605f` = `sprint2/no-master-server` (Classic-VK `510d36f9` + 6 build commits `d4c43f15 9cb83850 bbf04b04 4677963f 4206e38f ba0c12e8` + POC-32 `f7c3605f`). On top, linear, 27 commits; all applied without conflicts:
+Base `f7c3605f` = `sprint2/no-master-server` (Classic-VK `510d36f9` + 6 build commits `d4c43f15 9cb83850 bbf04b04 4677963f 4206e38f ba0c12e8` + POC-32 `f7c3605f`). On top, linear, 29 commits (27 at `c1537cfd`, 2 more in R8); all applied without conflicts:
 
 | # | Commit | Source commit (track) | Subject |
 |---|---|---|---|
@@ -72,6 +72,8 @@ Base `f7c3605f` = `sprint2/no-master-server` (Classic-VK `510d36f9` + 6 build co
 | 32 | `804448a8` | `4e1053be` (E5) | rt(data,tse): disable RT "haze" by default; fixes darkness beyond ~20 m (path mapped to `SamTSE/SSTRE/RT/WorldTuning.txt`) |
 | 33 | `67faf472` | `1c59be04` (E5) | rt(tse,tfe): batch brush polygons per entity; respect RTGL1 static capacity |
 | 34 | `c1537cfd` | `958b2bd5` (E5) | rt(tse,tfe): don't build RT particles outside the RT particle pass |
+| 35 | `d5ded43b` | `e479d6cc` (E5) | rt(data,tse): light the 1_2_Palenque start cave in RT (path mapped to `SamTSE/SSTRE/RT/WorldTuning.txt` by git's rename detection; added lines identical) |
+| 36 | `7eeed884` | `40416ad4` (E5) | rt(controls,tse): add the flashlight button to existing control profiles |
 
 Head **`c1537cfd4574971da3f2903e363eb9ee606279a3`**, tree **`3d2a6261a59c2db2a958fed67d3d2ee60f278798`**. "+ VS-E" = adaptation folded in (procedure step 3). Authorship and author dates are preserved; there is no Signed-off-by anywhere. `67faf472` and `c1537cfd` touch the same RT-layer paths in both trees as on `sprint2/rt-tse`, so no path mapping was needed. [SRC, E5/EXP-018] `67faf472`: RTGL1 holds at most 4096 static BLAS geometries and silently drops the rest. The brush exporter cut a geometry at every material change, so `1_2_Palenque` produced 5127 parts; it now produces 1405. `c1537cfd` fixes a null-scene crash in `RTParticles.cpp` caused by TSE first-person chainsaw particles.
 
@@ -161,13 +163,31 @@ The tuning tables are SSTRE files under `SSTRE/RT/`, not under the flagged retai
 | `d0fa5559` | feat(patches): 0015 keeps the RT menu options out of the retail script; review list |
 | `e7486eef` | feat(patches): classic-vk series with the TSE ray-tracing port (E5), 31 patches |
 | `9fe05505` | docs(patches): lead reviews of 0013/0015/0024/0027 |
-| **`ecb285c5`** | feat(patches): classic-vk 0032–0034 (TSE RT haze default, 1_2 RT fixes); README table |
+| `ecb285c5` | feat(patches): classic-vk 0032–0034 (TSE RT haze default, 1_2 RT fixes); README table |
+| **`2ef1cfec`** | feat(patches): classic-vk 0035–0036 (1_2 RT cave lights, flashlight in existing profiles); README table |
 
 The branch contains neither `upstream/classic-vk-main` nor `upstream/rt-main`, only patches, docs and tools.
 
 ### R7. Local release binary set (0.1.0-preview2)
 
-`G:\sstre-tmp\vse\release-bin\`: 142 files + `manifest.json` (name "SSTRE Classic-VK integrated engine 0.1.0-preview2", commit `c1537cfd`, tree, toolchain, SHA-256 per file). It holds the Windows `SamTFE/` and `SamTSE/` game-root overlays (`Bin` incl. the clean-room `RayTracedGL1.dll`, `Scripts/Menu/RenderingOptions.cfg`, `Controls/00-Default.ctl`, `SSTRE/` incl. the haze-0 TSE tuning table, 45 SPIR-V, blue-noise texture) and the Linux `Bin` sets. Local disk only (ADR-0006); not distributed.
+`G:\sstre-tmp\vse\release-bin\`: 142 files + `manifest.json` (name "SSTRE Classic-VK integrated engine 0.1.0-preview2", refreshed at commit `7eeed884`; first built at `c1537cfd`; tree, toolchain, SHA-256 per file). It holds the Windows `SamTFE/` and `SamTSE/` game-root overlays (`Bin` incl. the clean-room `RayTracedGL1.dll`, `Scripts/Menu/RenderingOptions.cfg`, `Controls/00-Default.ctl`, `SSTRE/` incl. the haze-0 TSE tuning table, 45 SPIR-V, blue-noise texture) and the Linux `Bin` sets. Local disk only (ADR-0006); not distributed.
+
+### R8. Update to `7eeed884` (E5 `e479d6cc`, `40416ad4`; lead-reviewed)
+
+- **Commits:** `d5ded43b` (data only: `[world 1_2_Palenque]` with 25 `cutscene_light` positions that whitelist the invisible static lights of the start cave) and `7eeed884` (`GameMP/Controls.cpp`: an existing control profile without a "Flashlight" button gets one, on L if no other button uses L). Integration head **`7eeed8846a8c33216d13217aa22dfbb0f764814e`**, tree **`aeb4ba97c1ff8462023165dd87d761f30ec87af8`**.
+- **Builds:** Windows TSE exit 0 (23 s incremental, `GameMP.dll` rebuilt; the TFE tree is unchanged and was not rebuilt); Linux clean container rc 0, 123 s, 20 output files. Runtimes refreshed with `assemble.ps1 -BinOnly`.
+- **Tests** (`session-tse-rt.ps1 -Part D`, one lock hold 16:01–16:08, watchdog at defaults):
+
+| Run | API | Result | RTGL1 / validation errors | Watchdog |
+|---|---|---|---|---|
+| R12 `1_2_Palenque` level start, 190 s | RT | OK; **the cave is lit** in all four captures (24/32/90/180 s): cave walls, statue head, temple door and weapon visible, ~72 FPS | 0 / 0 | ok |
+| R13 `1_1_Palenque`, 70 s | RT | OK | 0 / 0 | ok |
+| R14 `1_2_Palenque`, 70 s | Vulkan | OK | 0 / 0 | ok |
+| R15 `1_2_Palenque` + L at 41 s, 70 s | RT | OK. L injected as a hardware scan code (`SendInput`/`keybd_event`, new `run-game.ps1 -ScanKeys/-ScanAt`, only with the game window in the foreground): sent at 41 s with focus. **No visible flashlight**: the centre-region brightness was 58.6 / 54.8 / 58.5 at 36 / 50 / 60 s (the change at 50 s is the weapon animation). After the run, the player profile `Controls0.ctl` contains "TTRS Flashlight" on L (saved on exit), so `7eeed884` adds the binding. The flashlight toggle itself remains **unverified**: [ASM] either the injected key does not reach the game's input, or the light is not visible in the now-lit cave | 0 / 0 | ok |
+
+  Sockets: 0 TCP/UDP at every sampling point; focus held in every capture. The first attempt of this session started no game (harness bug: `$r.keys` on a PowerShell hashtable returns its key collection; fixed with `ContainsKey('keys')`).
+- **Series:** 36 patches; 0001–0034 unchanged, new 0035 (tuning data) and 0036 (`Controls.cpp`). verify round-trip tree `aeb4ba97…` = integration tree; applied head `f11f8bd6127fac49796d10a86c2a4def077b92d3`. `check` without `--allow-flagged`: 50 patches (all series), **0 errors**, 67 warnings. Neither new patch touches an EXP-004 flagged path (`GameMP/` is not flagged), so no review entry was needed.
+- **release-bin** refreshed at `7eeed884`: 142 files + manifest.
 
 ## Deviations, modifications and failures
 
@@ -189,7 +209,7 @@ The branch contains neither `upstream/classic-vk-main` nor `upstream/rt-main`, o
 
 - ADR-0008 item 4: `--flagged-context 1` is the tool default; flagged sections pass CI only with a per-patch lead review entry.
 - ADR-0007 / EXP-009 open question 1: the build-time switch `SE1_RAYTRACING` (0 for CMake builds) exists in both trees; Windows x64 keeps RT runtime-optional.
-- Backlog: VS-E engine integration is done for 0.1.0-preview2. Follow-ups: `1_2_Palenque` RT spawn lighting (E5); RTGL1 should report dropped uploads (RTGL1 tree); fix the M01–M04 harness (park the pointer outside the window) and the in-game key injection (flashlight); RT on Linux (WP6).
+- Backlog: VS-E engine integration is done for 0.1.0-preview2. Follow-ups: verify the flashlight toggle with real input; RTGL1 should report dropped uploads (RTGL1 tree); fix the M01–M04 harness (park the pointer outside the window) and the in-game key injection (flashlight); RT on Linux (WP6).
 
 ## Open questions
 
