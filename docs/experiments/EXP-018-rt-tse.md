@@ -310,3 +310,62 @@ About 15 min of source analysis and fix, plus about 25 min of locked runs (sessi
 1. Map SE1 fog and haze to an RT effect that is not water, for example a light extinction or volumetric term derived from `CHazeParameters` and `CFogParameters`, so TSE regains its distance fog without the darkness.
 2. `1_2_Palenque`: `RG_CANT_UPDATE_TRANSFORM` (movable brushes exported as static), then an exit or hang under RT during demo playback.
 3. Harness: views from `cht_iGoToMarker` skip NETRICSA, so the scripted ESC must be omitted for them.
+
+## Addendum A2 (2026-11-28): TSE `1_2_Palenque` in RT, transform-update errors and crash, root cause and fix
+
+**Symptom (A1, session F):** demo 1 (`1_2_Palenque`) under RT logged `Can't find static geometry with unique ID=…` / `RTGL1 error 8 (RG_CANT_UPDATE_TRANSFORM)` from `SceneBrushes::SetMovableNewTransform`, then exited or hung. A1's guess "movable brushes exported as static" [ASM] is **wrong**; there were two independent defects.
+
+### Cause 1: RTGL1 geometry capacity exceeded silently [SRC + EXP]
+
+- [SRC] RTGL1 has a fixed capacity of `MAX_BOTTOM_LEVEL_GEOMETRIES_COUNT` = 4096 bottom-level geometries in total (static plus the dynamic geometry of each frame), plus 1 M static vertices and 1 M indexed triangles. `VertexCollector::AddGeometry` returns "no index" beyond that (only an `assert`, compiled out in release); `Scene::Upload` then returns `false`, and `rgUploadGeometry` ignores that and returns `RG_SUCCESS`. The engine therefore recorded IDs that RTGL1 never stored.
+- [SRC] The engine's brush exporter (`RTBrushes.cpp`) cut a new geometry at every material-state change between *consecutive* polygons of one sector, and at every sector boundary.
+- [EXP] Temporary debug counters in `SceneBrushes::RegisterBrush` (one demo-1 run, removed afterwards): `1_2_Palenque` produced **5127 static brush geometries** (≈ 10 vertices each; 274 movable parts). **Every failing ID was registered after geometry #4096, and no movable part before #4096 failed** (first failure at #4311). Hypothesis (b) "upload rejected silently" confirmed; (a) part-index mismatch and (c) reload ordering ruled out: the part indices of upload and update were identical.
+- Consequences beyond the log flood [SRC]: about 1000 static world parts were missing from the RT scene, and no slots were left for dynamic geometry (models, particles).
+
+### Cause 2: null scene in the RT particle path, TSE chainsaw [SRC + EXP]
+
+- [EXP] With cause 1 fixed, demo 1 ran without errors but crashed at 112 s: Windows Application event 1000, `0xc0000005` in `Engine.dll`, offset `0x1922d8`. The linker map resolves it to `RT_GetViewVectors` (`RTParticles.cpp`). The demo's capture at 110 s shows the player using the chainsaw.
+- [SRC] TSE's `Player.es` (`RenderHUD`) draws first-person chainsaw particles in the HUD pass (`Particle_PrepareEntity(…, this)` then `RenderChainsawParticles`). Under GAT_RT `Particle_RenderSquare` goes to `RT_Particle_RenderSquare`. `RT_GetViewVectors` checked only `_Particle_penCurrentViewer` before dereferencing `RT_sCurrentScene`, which is set only inside `RT_AddParticlesForEntity` and is null there. TFE has no chainsaw, so it never took this path.
+- This is hypothesis (d): the exit/hang was not a consequence of the error flood.
+
+### Fix (SSTRE-Engine `sprint2/rt-tse`)
+
+| Commit | Change |
+|---|---|
+| `1c59be04` | **Root cause 1:** `RTBrushes.cpp` collects the polygons of all active sectors of a brush entity and groups them by the existing batching key (textures, blending, polygon flags, visibility mask, mirror/warp, media flag), keeping the polygon order inside a group. The grouping is deterministic, so the `brushPartIndex` sequence is identical in the upload, tex-coord and rasterized passes. **Mitigation (in addition):** `SceneBrushes` tracks RTGL1's static budget with RTGL1's own accounting (geometries with 1024 slots reserved for dynamic geometry, vertices, indices). It does not upload parts that would be dropped, never records movable or tex-coord parts that were not uploaded (also on a non-success result), and prints one console line if anything was dropped. |
+| `958b2bd5` | **Root cause 2:** `RT_GetViewVectors` also requires the scene; `RT_Particle_RenderSquare/RenderLine/RenderQuad3D` return early without one. Such particles were never flushed anyway, so the visible output is unchanged. |
+
+- Both commits change the **TSE and the TFE tree**: the four RT files were byte-identical in both trees.
+- Effect on `1_2_Palenque` [EXP]: **5127 → 1405** static geometries, the same 79 176 indices (no triangle lost), 0 parts dropped by the budget.
+
+### Verification [EXP]
+
+Release x64 builds, clean-room RTGL1, window captures with focus recorded (focus held in every capture), harness watchdog active (no kills). `RTGL1_ERRORS` = count of logged failed RTGL1 calls; validation was off.
+
+| Run | Build | API | Duration | Result | RTGL1 errors |
+|---|---|---|---|---|---|
+| Demo 1 baseline (debug counters) | pre-fix + counters | RT | hung, 205 s | the error pairs, hang | 18 |
+| Demo 1 | `1c59be04` | RT | 60 s | correct rendering, no errors | 0 |
+| Demo 1 | `1c59be04` | RT | 112 s | **access violation** (cause 2) | 0 |
+| `1_2` level start | `1c59be04` | RT | 100 s | quit with code 1 (normal WinMain return, no crash event); **not reproduced** in two later 195 s runs [ASM: external input, the window had focus] | 0 |
+| **Demo 1** | `958b2bd5` | RT | **195 s** (to the end of the run; past the chainsaw) | OK, responsive | **0** |
+| **`1_2` level start** | `958b2bd5` | RT | **195 s**, twice | OK, responsive | **0 / 0** |
+| `1_1_Palenque` | `958b2bd5` | RT | 70 s | OK; mean RGB 39/52/58 = A1 value | 0 |
+| `2_1_Ziggurrat` | `958b2bd5` | RT | 70 s | OK; mean RGB 121/131/138 = A1 haze-0 value | 0 |
+| TFE `01_Hatshepsut` | `958b2bd5` (TFE tree) | RT | 70 s | OK; mean RGB as session B | 0 |
+| Demo 1 | `958b2bd5` | Vulkan | 195 s | OK | 0 |
+| `1_2` level start | `958b2bd5` | Vulkan | 120 s | OK (reference) | 0 |
+
+- **`1_2` spawn is black in RT, not a regression:** the level starts in a cave. Vulkan shows it dimly lit (mean RGB 17/23/16); RT shows a flat near-black frame. With the RT flashlight on, the cave geometry and the weapon appear, and the pre-fix engine (`4e1053be`, swapped in for one run) is equally black (2/1/0). The cave relies on SE1 light that has no RT equivalent; this is per-level tuning work (WP7), not an export defect.
+- The flood is gone in both routes; the earlier "hang" with haze 1 and the "exit at 15 s" with haze 0 (A1, session F) were not reproduced with the fixed builds.
+
+### Effort (agent wall-clock)
+
+About 35 min of source analysis, fix and builds (RTGL1 source read to confirm the silent drop), plus about 30 min of locked runs (1 debug, 1 + 6 + 3 + 2 + 5 runs), plus lock-queue waiting (excluded).
+
+### Follow-ups (from A2)
+
+1. RTGL1 (upstream behaviour): `rgUploadGeometry` should return an error when the geometry is dropped. That is a change in the RTGL1 tree, not in the engine; the engine-side budget guard covers it meanwhile.
+2. First-person chainsaw particles are not drawn in RT. They would need an RT-side first-person particle path.
+3. `1_2_Palenque` (and other cave starts) need RT lighting tuning; together with A1 follow-up 1 (fog/haze mapping) this is WP7 work.
+4. The engine-side budget reserves 1024 geometry slots for dynamic geometry; very model-heavy scenes could still exceed RTGL1's shared total per frame. Not observed so far.
