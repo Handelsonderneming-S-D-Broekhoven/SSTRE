@@ -107,9 +107,11 @@ HAT and DAT were not tested because their weights are only on Google Drive or Ba
 - **`.tex`:** all 16 originals rebuild byte-identically through A1's codec from the set1 sidecars. 9 replacements were written: wall 1024², terrain 1024², palm 1024², werebull 1024², tommygun 2048², sky 2048×1024, detail 512², sphinx 1024², effect 256² ×23. mex is unchanged and firstMip is lowered by 1–2. UI, font, bump and specular textures (firstMip 0) cannot gain pixels without changing mex, so they get **no `.tex`**: PNG/KTX2 only (`TexCodecError` recorded).
 - **KTX2:** 15 albedo (BC7) and 1 normal (BC5, terrain) files, 22 KB–5.6 MB, produced in 0.3–3 s each. Not render-tested: this needs E1's RT build.
 - **Comparison 1** (wall-clock-synced). The menu Intro flyover over Karnak was captured at the log marker `Adding player` + 28/33/38/43 s, on VK and GL. `+demo` was not available in the Phase 1 binary, and campaign level starts open Netricsa. All replacements loaded on both APIs with no log errors. Camera jitter of a few frames dominates pixel metrics (SSIM 0.50–0.97 per pair), so these are not texture-quality numbers. Laplacian-variance ratio enhanced/original is 0.96–0.99: no over-sharpening at screen scale. Zoomed crops: palm fronds cleaner and less blocky; other surfaces indistinguishable at that distance.
-- **Comparison 2** (frame-exact demo playback): see §5b.
+- **Comparison 2** (frame-exact demo playback): see §5b (affected by the 512² upload cap) and the corrected addendum §5c.
 
 ### 5b. Frame-exact demo comparison (Classic-VK, E3 `+demo` build)
+
+> **Affected by the 512² upload cap (EXP-016).** These runs used the shipped settings: `tex_iNormalSize=9` uploads at most a 512² area, OpenGL uploads world textures as 16-bit dithered without `TEX_32BIT`, and `Initial.ini` sets `tex_iFiltering=-2` (sharpen). Replacements above 512² were uploaded downscaled. The numbers are kept for the record; the corrected comparison is in the addendum §5c.
 
 - Method [SRC+EXP]. The engine exposes `dem_fSyncRate` (`Engine/Network/Network.cpp:760`): with a rate N the demo clock advances exactly 1/N s per rendered frame. `dem_iAnimFrame` (`GameMP/Game.cpp:598, 2825–2844`) saves every rendered frame as `ScreenShots\Anim_NNNNN.tga`. With `dem_fSyncRate=20; dem_iAnimFrame=0;` and E3's `+demo` option (engine `sprint2/bench-fixes` `b7c7e998`; binaries copied into the private runtime, E3's tree untouched), frame k shows the same demo time in every run. Every 10th frame was kept. Shipped demos `auto-demoMP0002` (Karnak coop, close-range combat) and `auto-demo0001` (Alley of Sphinxes) were run on Vulkan and OpenGL, original vs the 9 loose `.tex` of run C, under the official `gpu-lock.ps1 run` mode.
 - **Vulkan `GrabScreen` returns a flat grey frame** (all pixels 128, 530 frames). Frame dumps work only on OpenGL in this build. Vulkan was verified with comparison 1 (window capture).
@@ -119,11 +121,30 @@ HAT and DAT were not tested because their weights are only on Google Drive or Ba
 | Crop (frame) | Asset class | SSIM | LPIPS | DISTS | HF ratio enh/orig |
 |---|---|---|---|---|---|
 | Werebull at close range (MP0002 #940) | enemy skin, 4× | 0.901 | 0.116 | 0.097 | 1.04 |
-| first-person weapon view (MP0002 #1390) | weapon, 4× | 0.873 | 0.028 | 0.048 | 1.24 |
+| first-person weapon view (MP0002 #1390) | **not a replaced asset** (see §5c: identical under corrected settings); the difference was an artifact of the default settings | 0.873 | 0.028 | 0.048 | 1.24 |
 | Werebull at mid range (MP0002 #940) | enemy skin | 0.988 | 0.016 | 0.033 | 0.93 |
 | Alley view (demo0001 #270, largest change) | mixed | 0.998 | 0.004 | – | 0.99 |
 
 - Visual judgement (local crops). **At close range the 4× enemy skin shows coherent, sharper hide and crack detail with faithful colours, where the original is visibly blurry. Weapon panel edges are crisper.** At mid or long range the enhanced textures are indistinguishable (engine mip selection). No seams, alpha fringes or colour shifts were seen on the replaced surfaces. FLIP was not computed because no FLIP implementation is installed.
+
+### 5c. Addendum (2026-11-28): frame-exact comparison at full upload size
+
+Correction from E4 (EXP-016): with the shipped settings, §5b compared 16-bit, area-capped uploads. I re-ran the same demos and frames with HD upload settings.
+
+- **Setup.** E3's `+demo` SeriousSam.exe and Game.dll with **E4's patched Engine.dll** (`sprint2/tex4096-crash` `3a4d07cc`: FilterBitmap overflow fix plus an upload log for textures over 2048 px), copied into the private runtime. Startup script: `sam_iVideoSetup=3; tex_iNormalSize=11; tex_iNormalQuality=22;` plus `dem_fSyncRate=20; dem_iAnimFrame=0;`. Replacements were re-encoded with **flag bit 1 (`TEX_32BIT`) set**. A1's codec CLI has no flag option, so the driver sets the bit through the codec API (`dataclasses.replace(new, flags=flags | 2)` after `make_replacement`; `driver/export_tex32.py`); decode confirms the bit and an unchanged mex. Nine replacements were written, at the same sizes as §5. The originals in the archive upload under the same settings (32-bit), so both sides are comparable. Run via `gpu-lock.ps1 run` (FIFO), 00:45–00:54, OpenGL (Vulkan frame dumps are grey, §5b).
+- **Upload size verified.** E4's log line covers only textures over 2048 px, so a probe run loaded a 4096² wall replacement (nearest ×4 of the run-C output). With the HD settings the log reads `4096x4096 px, 1 mip(s) skipped, uploaded as 2048x2048 (area limit 4194304 px, … tex_iNormalSize=11)` on both OpenGL and Vulkan, and no `GLSET` line appears (`Initial.ini` was not executed). With default settings it reads `3 mip(s) skipped, uploaded as 512x512 (area limit 262144 px, … tex_iNormalSize=9)`. [SRC] `ClampTextureSize` skips no mip while the area is ≤ 4^`tex_iNormalSize` (EXP-016 §5). All set1 replacements are ≤ 2048² (4 Mpx), so **they are uploaded at full size** in the comparison runs. The probe file was removed before the comparison.
+- **Camera identity.** In `auto-demoMP0002`, 46 of 300 matched frames are pixel-identical (median changed area 3.5 %). For `auto-demo0001`, the frames after the demo end (real-time intro) are again mismatched and excluded.
+- **Corrected crop metrics** (same frames and crops as §5b; HF = Laplacian-variance ratio enhanced/original):
+
+| Crop (frame) | Asset | SSIM | LPIPS | DISTS | HF enh/orig | §5b (capped) SSIM / LPIPS / HF |
+|---|---|---|---|---|---|---|
+| Werebull, close (MP0002 #940) | enemy skin 1024² (orig 256²) | 0.905 | 0.139 | 0.114 | 1.07 | 0.901 / 0.116 / 1.04 |
+| Werebull, mid (MP0002 #940) | enemy skin | 0.991 | 0.013 | 0.034 | 0.96 | 0.988 / 0.016 / 0.93 |
+| first-person weapon view (MP0002 #1390) | not replaced | 1.000 | 0.000 | 0.000 | 1.00 | 0.873 / 0.028 / 1.24 (artifact) |
+
+- **Settings effect on the same frames.** HF of the original crop f1 → f2 is 0.70 (close) and 0.65 (mid); for the enhanced crop it is 0.72 and 0.67. The custom mode drops the shipped `tex_iFiltering=-2` sharpen filter, so both sides render softer than in §5b. The relative gain of the enhanced texture is similar.
+- **Visual judgement (corrected).** At close range the full-size 32-bit enemy skin shows clearly sharper, coherent hide and crack detail with faithful colour. The original at the same spot is smooth and blurry, and there are no seams or colour shifts. At mid range the difference is subtle (the mip level selects similar detail). **The §5b "crisper weapon panels" statement is retracted**: that weapon is not one of the replaced textures (identical under corrected settings). The §5b difference came from the default-settings path; [ASM] likely 16-bit dither or filtering variation, not verified. The tommygun body replacement did not appear at close range in the sampled frames.
+- Consequence for the vertical slice: raster HD needs a platform profile with `sam_iVideoSetup=3`, `tex_iNormalSize` ≥ 11 and `tex_iNormalQuality=22` (or `TEX_32BIT` on replacements). That is the configuration EXP-016 proposes; AI outputs are only visible at their resolution under it.
 
 ### 7. ADR-0009 layer 6: asset pack (local)
 
