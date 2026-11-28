@@ -75,6 +75,9 @@ External tools (primary project pages; versions **not** pinned or verified in Ph
 
 ## 5. Acceptance gates per roadmap phase
 
+> Test cadence (owner issue #26, 2026-11-28): the gates below are applied in full at milestone and release-candidate stage. Research, development and integration testing follows the staged [testing policy](../policies/testing-policy.md); the gates themselves are unchanged.
+
+
 "Verifier" means who signs off. "Auto" = scripted check producing a machine-readable report; "Local" = run on a contributor machine with user-owned game data; "Owner" = project owner approval. No gate may be marked passed without a linked report (issue, PR or `docs/reports/…` with commit hashes). Reports for local runs must contain only aggregate numbers and hashes, never game-derived images.
 
 | Phase | Exit criteria (measurable) | Verifier |
