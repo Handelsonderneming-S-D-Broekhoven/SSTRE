@@ -1,24 +1,84 @@
 # Roadmap
 
-**Current stage: M0, demonstration build** (0.1.0-preview2). Phase 0 was reviewed by the owner on 2026-11-27. No calendar or budget is approved; effort is estimated per work package in the [backlog](backlog.md).
+**Current stage: M0.1, Rendering Correctness & Legacy Visual Modernization**, leading to the presentation build **0.1.0-preview3** (and an optional **0.1.0-preview4** for menu work). M0 is done: 0.1.0-preview2 was delivered on 2026-11-28 (umbrella PRs #14–#18 merged). Phase 0 was reviewed by the owner on 2026-11-27. No calendar or budget is approved; effort is estimated per work package in the [backlog](backlog.md).
 
-## Priority order (owner directive, 2026-11-28, binding)
+## Priority order (owner directive, 2026-11-28 evening, binding)
 
-**Demonstration Build → Performance Optimization → PBR & Hex-Tiling → Geometry Enhancement → Native Controller Support → Multicontroller & Split-Screen → Console Ports.**
+**Preview2 → Rendering Correctness & Legacy Visual Modernization (M0.1) → Preview3 (→ optional Preview4 for menu work) → Performance Optimization → PBR & Hex-Tiling → Geometry Enhancement → Native Controller Support → Multicontroller & Split-Screen → Console Port Research.**
 
-The directive takes effect once preview2 is completed, validated and committed. Planning and documentation may start at once. CPU-only research, asset processing and tooling may run in parallel with any stage if they do not disturb measurements (GPU lock and quiet mode). The directive's "Phase 1" is stage M1, its "Phase 2" is M2 + M3, and its "Phase 3" is M4 + M5.
+The owner issued this directive after testing preview2. It inserts stage M0.1 and supersedes the stage order of the earlier 2026-11-28 directive ("Demonstration Build → Performance Optimization → …"); all other rules of that directive stay in force. Full M1 optimization does not start until Preview3 (or Preview4) is validated and committed. Profiling infrastructure (for example harness v2, POC-33) may continue in parallel, and performance observations made during M0.1 are recorded for [RD-014](research/RD-014-rt-performance.md). CPU-only research, asset processing and tooling may run in parallel with any stage if they do not disturb measurements (GPU lock and quiet mode). The earlier directive's "Phase 1" is stage M1, its "Phase 2" is M2 + M3, and its "Phase 3" is M4 + M5.
 
 | Stage | Objective | Entry criteria | Exit criteria (measurable) | Work packages | Status |
 |---|---|---|---|---|---|
-| **M0** Demonstration build | Integrated, playable preview: Classic-VK engine, optional RT, local HD layers, reproducibly AI-enhanced textures for the slice levels | sprint-2 pieces available | preview2 assembled locally; TFE `01_Hatshepsut` and TSE `1_0_InTheLastEpisode` and `1_1_Palenque` play in RT, Vulkan and OpenGL, and `1_2_Palenque` does not hang; engine patch series and docs merged after green CI; nothing questionable published (GATE-05) | sprint 2 ([backlog status](backlog.md#phase-1-sprint-status-2026-11-27)) | in progress |
-| **M1** RT and engine performance | ≈100 FPS mean with RT, "High" profile and the upscaled pack at 2560×1440 on an RTX 4070, without frame generation | M0 exit; benchmark harness v2 (POC-33) ready | (a) four-way benchmark A/B/C/D on ≥ 3 TFE and ≥ 3 TSE scenes incl. combat, with avg FPS, 1 % low, p50/p95/p99, GPU %, CPU % and VRAM, reported per mode (native, spatial, temporal, frame generation); (b) target met in the agreed mode, **or** the stop rule triggered and the owner has decided on the escalation memo; (c) 0 Vulkan validation errors in RT and raster on the test levels; (d) RTGL1 defects classified and fixed or documented; (e) no image change without an explicit setting (quality guard) | POC-33..46 | not started |
+| **M0** Demonstration build | Integrated, playable preview: Classic-VK engine, optional RT, local HD layers, reproducibly AI-enhanced textures for the slice levels | sprint-2 pieces available | preview2 assembled locally; TFE `01_Hatshepsut` and TSE `1_0_InTheLastEpisode` and `1_1_Palenque` play in RT, Vulkan and OpenGL, and `1_2_Palenque` does not hang; engine patch series and docs merged after green CI; nothing questionable published (GATE-05) | sprint 2 ([backlog status](backlog.md#phase-1-sprint-status-2026-11-27)) | **done**: 0.1.0-preview2 delivered 2026-11-28 ([EXP-017](experiments/EXP-017-engine-integration.md), [EXP-019](experiments/EXP-019-vertical-slice-assets.md)); PRs #14–#18 merged; the preview2 build is kept unchanged as the reference build |
+| **M0.1** Rendering correctness and legacy visual modernization | A visually correct, representative rendering baseline before performance work: universal legacy lighting reconstruction in RT, translucent light volumes, lightning and atmospheric effects, particles, general rendering defects, menu textures and responsive menu scaling | M0 exit; owner directive 2026-11-28 (evening); preview2 reference build kept | the [Preview3](#010-preview3) exit criteria P3-1..P3-13 pass; the menu criteria UI-1..UI-6 pass in Preview3, or in [Preview4](#010-preview4-optional) with the reason recorded; every S1/S2 entry of the [rendering defect register](rendering-defects.md) is `verified`, `closed`, or `deferred` by the lead with a reason | POC-75..93 ([backlog](backlog.md#stage-m01--rendering-correctness-and-legacy-visual-modernization)); dossiers [RD-016](research/RD-016-legacy-lighting-reconstruction.md), [RD-017](research/RD-017-legacy-effects-reconstruction.md), [RD-018](research/RD-018-menu-ui-modernization.md) | **in progress** (planning 2026-11-28) |
+| **M1** RT and engine performance | ≈100 FPS mean with RT, "High" profile and the upscaled pack at 2560×1440 on an RTX 4070, without frame generation | **Preview3, or Preview4 if opened, validated and committed** (its exit criteria pass, the build is assembled, docs are merged after green CI); benchmark harness v2 (POC-33) ready | (a) four-way benchmark A/B/C/D on ≥ 3 TFE and ≥ 3 TSE scenes incl. combat, with avg FPS, 1 % low, p50/p95/p99, GPU %, CPU % and VRAM, reported per mode (native, spatial, temporal, frame generation); (b) target met in the agreed mode, **or** the stop rule triggered and the owner has decided on the escalation memo; (c) 0 Vulkan validation errors in RT and raster on the test levels; (d) RTGL1 defects classified and fixed or documented; (e) no image change without an explicit setting (quality guard) | POC-33..46 | not started (POC-33 infrastructure may proceed) |
 | **M2** PBR and hex-tiling | PBR materials (normal, roughness, metallic, height, emissive), automated classification and QA, compression and packing, quality profiles; realtime stochastic hex-tiling as a generic RTGL1 feature, with baked, hybrid and low-end variants | M1 exit (optimized baseline D recorded) | (a) RD-008 §5 phase-5 criteria a–d; (b) hex-tiling criteria in RD-011 §7; (c) each feature benchmarked alone and combined against D (POC-53); none with disproportionate cost is on by default | POC-47..53 | not started |
 | **M3** Geometry enhancement | Less visible angularity of world geometry: normal smoothing, terminator correction, selective subdivision, optional displacement | M2 materials available (displacement needs height maps); techniques 1–2 may overlap M2 | RD-013 §7 criteria; collision, gameplay end state and UVs unchanged; all techniques optional; costs in POC-53 | POC-54..56 | not started |
 | **M4** Native controller support | PC fully usable without keyboard and mouse; Xbox, DS4/DualSense and generic pads; Steam Input; Steam Deck | M2/M3 implemented and validated (input design may start earlier, CPU only) | RD-012 §7 items 1–3; Steam Deck validated on hardware | POC-57..60 | not started |
 | **M5** Multicontroller and split-screen | Per-player assignment, mixed devices, 4-player split-screen; RT split-screen feasibility | M4 exit | RD-012 §7 item 4 | POC-61..62 | not started |
 | **M6** Console ports | **Research only** (ADR-0007): keep RD-009/RD-010 current and the interfaces portable | none | no console build is made; a port would need an IP-holder licence, a platform agreement and counsel answers (RD-007 Q14/Q19) | POC-63 | research |
 
-Cross-cutting rules (details in the [backlog](backlog.md#rules-for-all-stage-m1m5-packages)): no silent quality reductions; profile before optimizing; frame generation never counts toward a target; a diminishing-returns stop rule with escalation to the owner; TFE and TSE both; Vulkan and OpenGL raster keep working alongside optional RT; original gameplay and art direction preserved; licensing, clean-room and publication gates unchanged.
+Cross-cutting rules (details in the [backlog](backlog.md#rules-for-all-stage-m1m5-packages) and, for M0.1, [its rules](backlog.md#rules-for-stage-m01-packages)): no silent quality reductions; root cause before fixes, universal engine or asset-pipeline solutions before per-texture, per-entity or per-level workarounds; profile before optimizing; frame generation never counts toward a target; a diminishing-returns stop rule with escalation to the owner; TFE and TSE both; Vulkan and OpenGL raster keep working alongside optional RT; original gameplay and art direction preserved; licensing, clean-room and publication gates unchanged.
+
+## Preview milestones of stage M0.1
+
+These are the owner's acceptance criteria (directive §10) in measurable form. Thresholds marked [ASM] are proposals: track R1 calibrates them against run-to-run noise in POC-90 before the first acceptance run, and the lead records the final values here. Scenes and checkpoints come from the regression scene set (POC-89) and the comparison harness (POC-90). Captures and per-asset data stay local (GATE-05); public reports give level names, entity and blend classes, and numbers only.
+
+Definitions used below:
+
+- **Configurations**: the 7 comparison configurations of [RD-017](research/RD-017-legacy-effects-reconstruction.md) §4 (Classic-VK reference with original textures; SSTRE Vulkan, OpenGL and RT, each with original and with enhanced textures), plus **corrected RT**, the Preview3 candidate.
+- **Luminance**: relative luminance of the capture in linear light (Rec. 709 weights), 0–1. **Fixed exposure**: RT auto-exposure replaced by a documented constant, for diagnostics only. Criteria about playability use the normal gameplay exposure.
+- **Lit interior checkpoint**: an enclosed-space checkpoint whose Vulkan-raster reference capture has mean luminance ≥ 0.08 [ASM]. **Intentionally dark checkpoint**: one whose reference mean luminance is < 0.04 [ASM], or one the lead marks as dark in the scene set.
+- **Validation level set**: the 3 showcase levels (TFE `01_Hatshepsut`, TSE `1_0_InTheLastEpisode` and `1_1_Palenque`) plus ≥ 3 non-showcase levels per campaign, chosen by R1 and not tuned by any track. An unmodified community level is added where licensing and the publication gates allow it.
+- **Open blocking defect**: a [rendering defect register](rendering-defects.md) entry of severity S1 or S2 whose status is not `verified`, `closed`, `deferred` or `wont-fix`.
+- **Quality-guard threshold**: the perceptual-difference threshold of POC-45; until POC-45 lands, R1's POC-90 noise floor (same build twice) × 2 [ASM].
+
+### 0.1.0-preview3
+
+| | Criterion |
+|---|---|
+| **Entry** | POC-75..91 each done, or deferred by the lead to Preview4 or M1 with the reason recorded in the backlog; engine, RTGL1 and asset-pipeline changes merged on the integration branches after green CI; the POC-90 harness runs the full checkpoint list unattended for the 7 configurations + corrected RT |
+| **Contents** | integrated TFE and TSE RT; all preview2 functionality; fully upscaled showcase assets for Hatshepsut, Palenque and In the Last Episode; universal legacy lighting reconstruction; corrected translucent light volumes; corrected lightning and atmospheric effects; improved particle rendering and particle assets; further defect fixes; enhanced menu textures and responsive menu scaling (or Preview4); updated graphics profiles; reproducible runtime packaging (binary manifest, kept locally); updated technical documentation; comparison screenshots and benchmark results kept under the publication gates |
+| **Exit** | P3-1..P3-13 below pass; UI-1..UI-6 pass, or Preview4 is opened (POC-93); the build is assembled locally, its docs and the EXP reports are merged after green CI |
+
+| # | Directive criterion | Measurable form |
+|---|---|---|
+| P3-1 | Originally lit interiors no longer become unplayably dark only because RT is on | On every lit interior checkpoint of the validation level set, corrected RT at gameplay exposure has mean luminance ≥ 50 % of the Vulkan-raster reference, and ≤ 25 % of its pixels are below luminance 0.01 [ASM thresholds]; RDF-001 is `verified` |
+| P3-2 | Intentionally dark areas keep their intended atmosphere | On every intentionally dark checkpoint, corrected RT mean luminance is ≤ 2× the raster reference [ASM] and does not exceed the nearest lit checkpoint of the same level; the lead's side-by-side review of these checkpoints is recorded as pass |
+| P3-3 | Lighting reconstruction works across levels without manually positioned lights | P3-1 and P3-2 hold on ≥ 3 non-showcase levels per campaign with **0** added per-level light entries (no new cutscene lights or light whitelists in any RT tuning table), and with the temporary `1_2_Palenque` cave light override disabled for the run; POC-79 removes the override if it is redundant |
+| P3-4 | Legacy light-effect geometry is no longer drawn as white boxes in validated scenes | Every light-volume checkpoint (≥ 4 scenes on ≥ 2 levels per campaign where raster draws such volumes [ASM count]) is reviewed as pass; 0 open blocking defects of the light-volume class (RDF-002 and its children) |
+| P3-5 | Lightning no longer resembles a visibly outlined flashing texture | At the fixed lightning checkpoints in all 7 configurations + corrected RT, the lead's review is pass for corrected RT and for SSTRE raster with enhanced textures; the enhanced textures used by the lightning effect pass the P3-6 alpha metrics; RDF-003 is `verified` |
+| P3-6 | Enhanced special effects keep their original transparency and visual intent | For 100 % of effect- and particle-class textures in the enhanced pack, either (a) alpha coverage at the material's alpha-test or blend threshold is within ±2 percentage points of the original at every mip level, and mean RGB in fully transparent texels deviates from the original by ≤ 4/255 [ASM], or (b) the recipe fell back to the original asset with a recorded reason (POC-85) |
+| P3-7 | Legitimate transparent materials continue to render correctly | On the transparent-material checkpoints (windows, water, fog, glass, alpha-tested foliage, particles), corrected RT differs from preview2 RT by no more than the quality-guard threshold, or the difference is an intended correction listed in the release notes; 0 new open blocking defects in these classes |
+| P3-8 | Particle effects show no significant new rendering regressions | On the particle checkpoints in RT, Vulkan and OpenGL: 0 new open blocking defects against preview2; the number of emitted particles per checkpoint is unchanged (same demo, same engine counter) |
+| P3-9 | Existing Vulkan and OpenGL functionality stays intact | TFE and TSE × Vulkan and OpenGL: menu, level load and demo playback to the end pass 100 %; raster captures differ from preview2 by no more than the quality-guard threshold except listed intended changes; 0 new Vulkan validation errors against preview2 on the test levels |
+| P3-10 | All three showcase levels pass runtime and active gameplay validation | Each showcase level × RT, Vulkan and OpenGL: the level loads and ≥ 10 min [ASM] of active play including combat (or play to the level end) completes without crash, hang or watchdog kill; 0 RTGL1 API errors; no open S1 register entry on these levels |
+| P3-11 | Additional non-showcase levels pass representative lighting and effects tests | ≥ 3 non-showcase levels per campaign pass P3-1, P3-2, P3-4, P3-7 and P3-8 on their checkpoints |
+| P3-12 | Performance regressions are measured and documented | POC-91 report: preview2 vs Preview3 on the same scenes, RT and raster, under `-Quiet`, ≥ 5 valid runs per cell, with mean FPS, 1 % low and p99 per scene; the incremental cost of each substantial correction (on/off A/B) is listed; every regression beyond the cell's regression threshold is named with its cause and an M1 note |
+| P3-13 | Publication gates, licensing restrictions and CI requirements stay enforced | `scripts/validate_repo.py` and REUSE lint green in every repository touched; GATE-05 review of all public docs and commits (no asset paths, file hashes or texture names); no game data, restricted screenshots or binaries published; the build stays local (ADR-0006) |
+
+Menu criteria (in Preview3, or in Preview4 if opened):
+
+| # | Directive criterion | Measurable form |
+|---|---|---|
+| UI-1 | Enhanced menu assets are validated | 100 % of UI-class assets in the POC-86 inventory are either accepted by the UI recipe QA (glyph comparison against the original passes, no added outlines, transparency preserved) or fall back to the original; the enhanced UI layer stays opt-in under ADR-0009 |
+| UI-2 | The menu layout scales correctly across the specified resolutions | At 1280×720, 1280×800, 1920×1080, 2560×1440, 3440×1440 and 3840×2160, in RT, Vulkan and OpenGL, every screen of the POC-87 menu test list has 0 elements clipped or off-screen and 0 overlapping interactive regions, and the background aspect-ratio error is ≤ 1 % (from the menu layout dump) |
+| UI-3 | Ultrawide and Steam Deck aspect ratios are supported | UI-2 passes at 3440×1440 (21:9) and 1280×800 (16:10), with no stretched background or element (aspect error ≤ 1 %) |
+| UI-4 | Text stays sharp and readable | The smallest glyph cap height is ≥ 9 px at 1280×800 (target 12 px, as in POC-68); at every resolution, bitmap fonts are sampled at ≥ 1 font texel per screen pixel, or a distance-field or vector path is used |
+| UI-5 | Interactive regions stay aligned with visual elements | An automated click test on every item of the test list at all 6 resolutions: a click at the visual centre activates that item in 100 % of cases; hit box vs drawn box offset ≤ 2 px |
+| UI-6 | The menu stays suitable for future controller navigation | Every interactive item of the test list is reachable through the focus abstraction (POC-88) with directional input only; a design note maps focus, selection state and button prompts to the M4 input design ([RD-012](research/RD-012-input-local-multiplayer.md)) |
+
+### 0.1.0-preview4 (optional)
+
+Opened only if menu modernization or non-critical particle improvements would delay Preview3 substantially. The lead decides and records the reason under POC-93.
+
+| | Criterion |
+|---|---|
+| **Entry** | Preview3 validated and committed, with the deferred items listed |
+| **Exit** | UI-1..UI-6 pass (and any deferred particle items pass P3-8); P3-9, P3-12 and P3-13 are re-run on the Preview4 build and pass; the build is assembled and its docs are merged after green CI |
+
+The definitive M1 benchmark baseline is recorded on the last of Preview3 and Preview4.
 
 ## Foundation phases (Phase 0 plan)
 
@@ -32,7 +92,7 @@ The original phase table stays valid as a list of capabilities. Its order is now
 | 3 | AI toolkit prototype | PoC done for the slice (EXP-013); continues in parallel |
 | 4 | First full texture build | after M1 has set the VRAM and performance budget; CPU work may run in parallel |
 | 5 | PBR integration | = M2 |
-| 6 | Rendering and TSE compatibility | RT on TSE done for the slice (EXP-018); full coverage spread over M1–M3 |
+| 6 | Rendering and TSE compatibility | RT on TSE done for the slice (EXP-018); rendering correctness in M0.1 (RD-016..018); full coverage spread over M0.1–M3 |
 | 7 | PC alpha | after M4 (controller support is part of a usable PC build) |
 | 8 | Console feasibility and ports | = M6, research only |
 | 9 | Public stable release | after counsel clears the binary-distribution blockers (RD-007, RD-010) |
@@ -41,4 +101,5 @@ Notes:
 
 - Console work is optional and must not block a viable PC release. Xbox Series X|S, PS5 and Switch/Switch 2 are research targets, not promised ports. See [RD-006](research/RD-006-platforms.md), [RD-009](research/RD-009-ps5-homebrew.md) and [RD-010](research/RD-010-homebrew-distribution.md).
 - Future games are outside the current delivery scope.
+- From M0.1 on, visible rendering defects are tracked in the prioritized [rendering defect register](rendering-defects.md) (RDF-001…).
 - Gate criteria for the foundation phases are in [RD-008](research/RD-008-testing-release.md) §5. Proposed ADRs for the new stages are listed in the [backlog](backlog.md#proposed-adrs-for-the-leadowner).
