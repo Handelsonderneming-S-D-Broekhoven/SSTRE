@@ -35,12 +35,24 @@ Side exits: `deferred` (to Preview4 or a later stage, with reason), `wont-fix` (
 | [RDF-001](#rdf-001-interiors-almost-black-in-rt) | Interiors almost black in RT | TFE, TSE | RT | unknown (engine/RT layer suspected) | S1 | triaged | LIGHT (L1, L2) | POC-75..79 |
 | [RDF-002](#rdf-002-translucent-light-volumes-drawn-as-white-boxes) | Translucent light volumes drawn as white boxes | TFE, TSE [ASM] | RT | unknown (engine/RTGL1 suspected) | S2 | triaged | FXT (L3) | POC-80, POC-81 |
 | [RDF-003](#rdf-003-lightning-looks-like-an-outlined-flashing-texture) | Lightning looks like an outlined flashing texture | TSE [ASM: both] | unknown | unknown | S2 | triaged | FXT (FX1) + A3 | POC-82, POC-83, POC-85 |
-| [RDF-004](#rdf-004-sky-streaks-in-tse-1_1_palenque-rt) | Sky streaks in TSE `1_1_Palenque` RT | TSE | RT | engine | S3 | triaged | R1 → lead | POC-89 |
+| [RDF-004](#rdf-004-sky-streaks-in-tse-1_1_palenque-rt) | Sky streaks in TSE `1_1_Palenque` RT | TSE | RT | engine | S3 | investigating | engine-other (R1 proposal) → lead | POC-89 |
 | [RDF-005](#rdf-005-chainsaw-first-person-particles-not-drawn-in-rt) | Chainsaw first-person particles not drawn in RT | TSE | RT | engine | S3 | triaged | FXP (FX2) | POC-84 |
-| [RDF-006](#rdf-006-se1-fog-and-haze-not-shown-in-rt) | SE1 fog and haze not shown in RT | TSE (TFE to check) | RT | engine | S2 | triaged | LIGHT / FXT (lead to assign) | POC-75, POC-80 |
-| [RDF-007](#rdf-007-engine-screenshots-grey-in-vulkan) | Engine screenshots grey in Vulkan | TFE, TSE | Vulkan raster | engine | S4 | triaged | R1 (harness) → lead | POC-90 (POC-45) |
+| [RDF-006](#rdf-006-se1-fog-and-haze-not-shown-in-rt) | SE1 fog and haze not shown in RT | TFE, TSE | RT | engine (+RTGL1) | S2 | root-caused | FXT | POC-80, POC-83 |
+| [RDF-007](#rdf-007-engine-screenshots-grey-in-vulkan) | Engine screenshots grey in Vulkan | TFE, TSE | Vulkan raster, RT | engine | S4 | root-caused | engine-other (lead to assign) | POC-45 |
 | [RDF-008](#rdf-008-rt-options-listed-in-the-vulkan-rendering-options-menu) | RT options listed in the Vulkan rendering-options menu | TFE, TSE | Vulkan raster, OpenGL [ASM] | engine | S4 | triaged | UI1 | POC-87 |
-| [RDF-009](#rdf-009-sky-instead-of-distant-hillside-in-tse-1_1_palenque-rt) | Sky drawn instead of distant hillside in TSE `1_1_Palenque` RT | TSE | RT | engine | S3 | triaged | R1 → lead | POC-89 |
+| [RDF-009](#rdf-009-sky-instead-of-distant-hillside-in-tse-1_1_palenque-rt) | Sky drawn instead of distant hillside in TSE `1_1_Palenque` RT | TSE | RT | not a defect | — | wont-fix | none | POC-89 |
+| [RDF-010](#rdf-010-under-water-looks-like-open-air-in-tse-rt-no-water-medium) | Under water looks like open air in TSE RT | TSE | RT | engine | S3 | root-caused | FXT | POC-80 |
+| [RDF-011](#rdf-011-first-person-weapon-framed-differently-in-rt-weapon-fov-ignored) | First-person weapon framed differently in RT (weapon FOV ignored) | TFE, TSE | RT | engine | S2 | root-caused | WPN | POC-96 |
+| [RDF-012](#rdf-012-lens-flares-and-light-coronas-missing-in-vulkan-raster) | Lens flares and light coronas missing in Vulkan raster | TSE (TFE to check) | Vulkan raster | engine (inherited from Classic-VK) | S3 | triaged | FXT | POC-83 |
+| [RDF-013](#rdf-013-sunlit-outdoor-scenes-brighter-and-flatter-in-rt-than-in-raster) | Sunlit outdoor scenes brighter and flatter in RT | TSE | RT | engine | S3 | triaged | LIGHT | POC-76 |
+| [RDF-014](#rdf-014-weapon-viewmodel-clips-into-walls-layers-not-separated-framing-too-zoomed-out) | Weapon viewmodel clipping, layering and framing | TFE, TSE [ASM] | to establish | engine | S2 | triaged | WPN | POC-96 |
+| [RDF-015](#rdf-015-tse-chainsaw-model-shows-graphical-glitches) | TSE chainsaw model glitches | TSE | to establish | unknown | S3 | new | WPN | POC-97 |
+| [RDF-016](#rdf-016-ultrawide-aspect-ratios-match-no-aspect-adjuster-window) | Ultrawide aspect ratios match no adjuster window | TFE, TSE | all | engine | S2 | root-caused | WPN | POC-96 |
+| [RDF-017](#rdf-017-hud-scales-by-width-only-and-is-about-134-too-large-on-ultrawide) | HUD scales by width only (1.34× on ultrawide) | TFE, TSE | all | engine | S3 | root-caused | UI1 (follow-up) | POC-87 |
+| [RDF-018](#rdf-018-console-last-lines-overlap-the-corner-logo-in-the-menu-at-1440p) | Console last-lines overlap the menu corner logo at 1440p | TFE, TSE [ASM] | all | engine | S4 | triaged | UI1 (follow-up) | POC-87 |
+| [RDF-019](#rdf-019-tfe-weapon-shows-a-magentacyan-checker-texture-in-rt-test-override-shipped-in-preview2) | TFE weapon shows a checker test texture in RT (test override shipped) | TFE | RT | asset-processing (packaging) | S2 | fix-in-progress | Integration | POC-92 |
+| [RDF-020](#rdf-020-flashlight-hint-shown-in-tfe-rt-although-tfe-has-no-flashlight-binding) | Flashlight hint shown in TFE RT without a binding | TFE | RT | engine | S3 | triaged | engine-other | — |
+| [RDF-021](#rdf-021-blue-light-beam-effect-at-the-end-of-the-tse-3_3-corridor-missing-in-rt) | Blue light-beam effect missing in RT (TSE 3_3) | TSE | RT | engine | S3 | triaged | FXT (R1 proposal) | POC-80 |
 
 ## Entry template
 
@@ -77,7 +89,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 |---|---|
 | ID | RDF-001 |
 | Reported | 2026-11-28, owner manual test of 0.1.0-preview2 |
-| Reproduction | Play interiors that are adequately lit in Vulkan raster with RT on, in both campaigns; exact checkpoints to be defined by R1 in POC-89 (several per campaign, incl. non-showcase levels). Historic case: TSE `1_2_Palenque` spawn cave was black in RT until per-level cutscene lights were added (EXP-017 R3/R12) |
+| Reproduction | Play interiors that are adequately lit in Vulkan raster with RT on, in both campaigns; exact checkpoints to be defined by R1 in POC-89 (several per campaign, incl. non-showcase levels). Historic case: TSE `1_2_Palenque` spawn cave was black in RT until per-level cutscene lights were added (EXP-017 R3/R12). **R1 checkpoints (non-showcase, no manual lights):** `tse-corr-2_1m3` (torch-lit corridor: raster luma 33.9, RT 1.8, 97 % of pixels near-black, the torch flame is the only visible object; the weapon is black too), `tse-vol-2_4m1` (hall: raster 39.4, RT 10.7). The research sweep (`vk-enh` vs `rt-enh`) found the same in `tse-room-2_2m1`, `tse-part-2_2m20`, `tse-cave-3_1m20` and `tse-cave-3_2m18` (RT almost black; only emissive surfaces and particles visible), and in `tse-dark-1_3m20` (the red light colour of the room is lost: RT grey-brown). Outdoor and moonlit checkpoints (`tse-out-1_3m10`, `tse-snow-3_2m1`, `tse-night-3_1m1`) are lit. Local light sources (torches, lit windows) add nothing in RT. Details in EXP-025 §4. Fixed exposure −4 gives the same result (luma 1.7), so it is missing light, not exposure |
 | Campaign | TFE, TSE |
 | Renderer | RT; original and enhanced textures |
 | Affected class | world lighting: sector ambient, brush shadowmap illumination, light entities (classes to be listed by POC-75) |
@@ -86,7 +98,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Suspected root cause | [ASM] RT does not use sector ambient and shadowmap illumination, and filters out some light entities (helper or invisible lights, threshold, culling); possibly worsened by exposure. See [RD-016](research/RD-016-legacy-lighting-reconstruction.md) H1–H4 |
 | Confirmed root cause | not yet (POC-75) |
 | Proposed universal correction | RD-016 order: native light conversion → legacy ambient term → lightmap-assisted compensation → probes only if needed; no per-level lights; remove the 1_2 cave override when redundant |
-| Regression test | lit interior and intentionally dark checkpoints of the validation level set; P3-1, P3-2, P3-3 |
+| Regression test | lit interior and intentionally dark checkpoints of the validation level set; P3-1, P3-2, P3-3. R1 harness: `matrix.ps1 -Ids tse-corr-2_1m3,tse-vol-2_4m1,tfe-corr-03m8,tfe-room-04m6 -Configs cvk,rt-orig,fix` with LIGHT's Bin, metric RT luma vs `cvk` (target within ±25 % at fixed exposure, no area < 50 % of raster) |
 | Performance implications | to be measured per step (no point-light explosion; ambient term target ≤ 0.5 ms at 1440p [ASM]) |
 | Owner track / POC | LIGHT (L1, L2), POC-75..79 |
 | Status | triaged (2026-11-28) |
@@ -98,14 +110,14 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 |---|---|
 | ID | RDF-002 |
 | Reported | 2026-11-28, owner manual test of 0.1.0-preview2 |
-| Reproduction | Rooms with translucent geometry that represents light entering through openings or light shafts; RT on. Checkpoints to be defined in POC-89 |
-| Campaign | observed in the preview2 levels; TFE and TSE [ASM] |
-| Renderer | RT (raster looks as intended [ASM]); textures: to check both |
+| Reproduction | Rooms with translucent geometry that represents light entering through openings or light shafts; RT on. **R1 checkpoint `tse-vol-2_4m1`** (TSE `2_4_TowerOfBabylon`, marker 1): raster shows two soft yellow light shafts, RT (orig and enh identically) shows two opaque white-grey boxes over an otherwise black room — not a showcase level, so the defect is generic |
+| Campaign | observed in the preview2 levels and TSE `2_4` [EXP]; TFE [ASM] |
+| Renderer | RT; raster (Classic-VK, SSTRE Vulkan, OpenGL) as intended [EXP]; identical with original and enhanced textures, so not asset-processing [EXP] |
 | Affected class | translucent brush polygons / light-effect surfaces; exact blend mode and flags to be identified |
 | Kind | unknown; engine (blend translation) or RTGL1 (transparency handling) suspected |
 | Severity | S2: conspicuous, recurring |
 | Suspected root cause | [ASM] SE blend mode or translucency flag mistranslated to RTGL1, so the surface is lit and composited as a white volume. See [RD-017](research/RD-017-legacy-effects-reconstruction.md) H1 |
-| Confirmed root cause | not yet (POC-80) |
+| Confirmed root cause | not yet (POC-80). **R1 [SRC] pointers for FXT:** `RT_GetPassThroughType` maps every `BPOF_TRANSLUCENT` brush polygon to `RG_GEOMETRY_PASS_THROUGH_TYPE_ALPHA_TESTED` (`Engine/Raytracing/RTBrushes.cpp:116-122`), `RT_ShouldBeRasterized` returns false for brushes (`:82-86`), and `IGNORE_BRUSH_COLOR` (`:143`, `:283-287`) drops the polygon colour; so a translucent brush is traced as a lit, alpha-tested opaque surface. R1 regression checkpoint `tse-vol-2_4m1` (light shafts) |
 | Proposed universal correction | correct blend translation → semantic classification from flags/entity class (ADR-0016) → depth-correct compositing pass → optional volumetric replacement / HDR emissive with bloom |
 | Regression test | light-volume checkpoints (P3-4) and transparent-material checkpoints (P3-7) |
 | Performance implications | compositing pass cost to be measured; volumetrics configurable |
@@ -126,7 +138,7 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Kind | unknown: asset-processing, renderer or both |
 | Severity | S2: conspicuous effect in the presentation levels |
 | Suspected root cause | [ASM] RGB in zero-alpha texels or halos from enhancement made visible by additive blending/filtering, and/or missing emissive treatment in RT. See RD-017 H2, H3 |
-| Confirmed root cause | not yet (POC-82) |
+| Confirmed root cause | not yet (POC-82). Update 2026-11-28 (A3 via lead): **renderer side, not assets.** The texture is the original one and only looks right with additive blending; in RT, the tuning texture class `alpha_test_particles` (`Engine/Raytracing/CustomInfo.cpp:228`, checked at `:862`) forces alpha test on it. FXT owns the fix |
 | Proposed universal correction | generic effect semantics (POC-83) and alpha-aware effect-texture recipes with fallback (POC-85); no lightning-only workaround before the class check |
 | Regression test | lightning checkpoints in C1..C7 + corrected RT (P3-5); alpha metrics (P3-6) |
 | Performance implications | RT emissive path cost to be measured |
@@ -140,20 +152,20 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 |---|---|
 | ID | RDF-004 |
 | Reported | 2026-11-28, preview2 release notes (known issue) |
-| Reproduction | TSE `1_1_Palenque`, RT, look at the sky |
+| Reproduction | TSE `1_1_Palenque`, RT, level start (player under water): the sky seen **through the water surface** shows white/blue diagonal bands; checkpoint `tse-sky-1_1m0` |
 | Campaign | TSE |
 | Renderer | RT; visible with original and enhanced textures |
 | Affected class | sky (RT sky type / background geometry) |
 | Kind | engine (not the textures: classic textures show it too) |
 | Severity | S3 |
-| Suspected root cause | [ASM] RT sky handling (sky type or background-geometry tuning) for this world; possibly related to RDF-009 |
-| Confirmed root cause | not yet |
-| Proposed universal correction | to be determined; generic sky/background handling rather than a per-world table entry |
+| Suspected root cause | [ASM] RT sky handling (sky type or background-geometry tuning) for this world; possibly related to RDF-009. **R1 (2026-11-28):** same spot as RDF-009; the streaks are in the refracted sky. Refracted/reflected rays that miss geometry sample RTGL1's sky **cubemap**, which the engine creates at `rasterizedSkyCubemapSize = 256` per face (`Engine/Raytracing/SSRT.cpp:360`) and fills by rasterizing the background brushes per material layer with `DEPTH_TEST|DEPTH_WRITE` also for blended layers (`SceneBrushes.cpp:203-210`; RTGL1 `Rasterizer::DrawSkyToCubemap`). H1: low cubemap resolution stretched over a refracted, magnified view; H2: blended cloud layers writing depth make layer order matter in the cubemap. Primary-ray sky (drawn to the albedo buffer at screen resolution) is not affected in the outdoor checkpoints [EXP pending] |
+| Confirmed root cause | not yet: needs an A/B build (cubemap 1024; blended sky layers without depth write) |
+| Proposed universal correction | if H1: cubemap size as a quality setting (e.g. 512/1024); if H2: depth write off for blended sky layers (raster parity). Both generic |
 | Regression test | sky checkpoint in `1_1_Palenque` (POC-89) |
 | Performance implications | none expected |
-| Owner track / POC | R1 to triage, lead to assign |
-| Status | triaged (2026-11-28) |
-| Links | [EXP-018](experiments/EXP-018-rt-tse.md) |
+| Owner track / POC | **R1 proposal: engine-other (RT sky), lead to assign**; FXT if H2 (blend/depth state). POC-89 |
+| Status | investigating (2026-11-28, R1) |
+| Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
 ### RDF-005: Chainsaw first-person particles not drawn in RT
 
@@ -182,20 +194,20 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 |---|---|
 | ID | RDF-006 |
 | Reported | 2026-11-28, preview2 release notes (known issue) |
-| Reproduction | TSE levels with sector fog or haze, RT on, compare with Vulkan raster |
+| Reproduction | TSE levels with sector fog or haze, RT on, compare with Vulkan raster. R1 checkpoint `tse-haze-3_3m5` (TSE `3_3_CorridorOfDeath`): the yellow-green distance haze of raster is absent in RT |
 | Campaign | TSE; TFE to check (Serious-Engine-RT disables haze on several TFE worlds) |
 | Renderer | RT |
 | Affected class | sector fog and haze |
 | Kind | engine (RT layer) |
 | Severity | S2: atmospheric intent lost in many TSE areas |
 | Suspected root cause | [SRC] EXP-018 A1: RT haze darkened everything beyond ~20 m, so preview2 sets RT haze off by default; SE1 fog is not translated into an RT medium |
-| Confirmed root cause | partly (haze default); fog translation not yet investigated |
-| Proposed universal correction | translate SE fog/haze parameters into a configurable RT medium or compositing term with correct brightness (RD-016 Q11, RD-017 §6) |
-| Regression test | fog/haze checkpoints; far-field brightness check of EXP-018 A1 must not regress |
-| Performance implications | volumetric cost to be measured; configurable |
-| Owner track / POC | LIGHT or FXT (lead to assign), POC-75 / POC-80 |
-| Status | triaged (2026-11-28) |
-| Links | [EXP-018](experiments/EXP-018-rt-tse.md) |
+| Confirmed root cause | **[SRC] (R1): the RT layer renders no SE1 fog or haze at all.** The only consumer is a boolean "camera is in a fog/haze sector": `RT_CheckViewerInHaze` (`Engine/Raytracing/RTModelCulling.cpp:269-300`) calls `GetHaze`/`GetFog` into dummy `CHazeParameters`/`CFogParameters` that are discarded and sets `Scene::SetCameraIsInHaze`; `SSRT.cpp:652` then sets `typeOfMediaAroundCamera = RG_MEDIA_TYPE_WATER` (water extinction from `srt_vWaterExtinction` x `srt_fWaterDensityMultiplier`, not the sector's colour or distances). That is the blue cast / far darkening of EXP-018 A1. Haze (`hp_colColor`, `hp_fNear`, `hp_fFar`, `hp_fDensity`) and fog (`fp_colColor`, `fp_fH0..H3`, `fp_fFar`, `fp_fDensity`, `fp_vFogDir`) never reach RTGL1; `RTLights.cpp:647` keeps `fFogHazeFade = 1`. RTGL1 in this tree has no fog/volumetric parameter (`RTGL1.h:1054`: media VACUUM/WATER/GLASS only). TFE uses the same code [SRC]; RT vs raster captures in EXP-025 |
+| Proposed universal correction | (1) RTGL1 (generic, upstreamable): a cheap analytic distance + height fog term applied to primary-ray depth in compositing (colour, near/far or density, height band, direction), sky = far; (2) engine: per camera sector translate `CHazeParameters`/`CFogParameters` into it the way raster's `CRenderer::SetupFogAndHaze` does; (3) stop mapping haze to `RG_MEDIA_TYPE_WATER`. Behind a cvar; default on only after A/B (RD-016 Q11, RD-017 §6) |
+| Regression test | R1 scene set fog/haze checkpoints (EXP-025 §3: `tse-fog-*`, `tfe-fog-*`); RT vs `vk-orig` far-field luma; far-field brightness check of EXP-018 A1 must not regress |
+| Performance implications | analytic fog: one term per pixel, < 0.1 ms at 1440p [ASM]; volumetrics not needed for parity |
+| Owner track / POC | FXT (lead decision 2026-11-28); RTGL1 change coordinated by the lead, LIGHT consulted for exposure. POC-80/POC-83 |
+| Status | root-caused (2026-11-28, R1) |
+| Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
 
 ### RDF-007: Engine screenshots grey in Vulkan
 
@@ -205,17 +217,17 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Reported | 2026-11-28, preview2 release notes (known issue); also EXP-011 issue 8 |
 | Reproduction | Vulkan raster, take an engine screenshot |
 | Campaign | TFE, TSE |
-| Renderer | Vulkan raster |
-| Affected class | screen grab / read-back |
+| Renderer | Vulkan raster and RT |
+| Affected class | screen grab / read-back (engine screenshots, and every other `CDrawPort::GrabScreen` user, e.g. save-game and demo thumbnails) |
 | Kind | engine |
 | Severity | S4 for players; it blocks in-engine captures for the comparison harness (POC-90) and the quality guard (POC-45) |
 | Suspected root cause | [ASM] the Vulkan back-end's screen grab does not read back the presented image |
-| Confirmed root cause | not yet |
-| Proposed universal correction | a proper swapchain or render-target read-back in the Vulkan path |
+| Confirmed root cause | **[SRC] (R1): not implemented.** `CDrawPort::GrabScreen` (`Engine/Graphics/DrawPort.cpp:1188-1291`) fills the buffer with `memset(..., 128, ...)` (uniform grey) and only OpenGL (`pglReadPixels`) and D3D overwrite it; the `GAT_VK` and `GAT_RT` branches (`:1277-1289`) only print "not implemented" in debug builds |
+| Proposed universal correction | Vulkan: copy the last presented swapchain image (or the final colour target) to a host-visible buffer after the frame fence (`vkCmdCopyImageToBuffer`, BGRA->RGB); RT: RTGL1 has no read-back API in this tree, so either an RTGL1 "copy final image" entry point or a grab before present in the RT drawport |
 | Regression test | screenshot of a known frame matches an external capture within the quality guard |
 | Performance implications | none in normal play |
-| Owner track / POC | R1 (harness need) → lead to assign; POC-90 / POC-45 |
-| Status | triaged (2026-11-28) |
+| Owner track / POC | engine-other (lead decision 2026-11-28), track to be assigned by the lead (Vulkan back-end; not on the M0.1 critical path). The R1 harness does not need it: it captures the window with `PrintWindow`, which works in all 7 configurations. POC-45 |
+| Status | root-caused (2026-11-28, R1) |
 | Links | — |
 
 ### RDF-008: RT options listed in the Vulkan rendering-options menu
@@ -252,10 +264,262 @@ Copy for each new defect. Fields follow directive §7. Unknown fields say "unkno
 | Kind | engine (RT layer) |
 | Severity | S3 |
 | Suspected root cause | [ASM] background geometry or World Base handling that Serious-Engine-RT solved per TFE level; TSE has only generic defaults |
-| Confirmed root cause | not yet |
-| Proposed universal correction | generic background/World Base classification rather than per-world ignore lists |
+| Confirmed root cause | **[EXP] EXP-018 "Correction to R3": not a defect.** At the level start the player is under water; raster draws the scene above the surface without refraction, RT refracts through the water surface and shows sky. R1 re-check in EXP-025 (spawn view, `vk-orig` vs `rt-orig`) |
+| Proposed universal correction | none (physically correct RT behaviour) |
 | Regression test | distant-view checkpoint in `1_1_Palenque` |
 | Performance implications | none expected |
-| Owner track / POC | R1 to triage, lead to assign |
+| Owner track / POC | none |
+| Status | **wont-fix** (lead decision 2026-11-28): intended behaviour. Evidence: [EXP] EXP-018 R3 correction — bubbles in both raster and RT prove the camera is under water at the start; raster draws the above-water scene without refraction, RT refracts through the water surface (Snell's law), so sky and hanging plants appear where raster shows the hillside. The real defects at this spot are RDF-004 (streaks in the refracted sky) and RDF-010 (no water medium) |
+| Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
+
+### RDF-010: Under water looks like open air in TSE RT (no water medium)
+
+| Field | Value |
+|---|---|
+| ID | RDF-010 |
+| Reported | 2026-11-28, R1 (EXP-025), from preview2 captures of the `1_1_Palenque` start |
+| Reproduction | TSE `1_1_Palenque` level start (player under water), RT vs Vulkan raster; checkpoint `tse-sky-1_1m0`. TFE check: `tfe-water-09m5` |
+| Campaign | TSE (TFE to compare: TFE tables keep haze on per world) |
+| Renderer | RT; original and enhanced |
+| Affected class | camera inside a water/fog sector (SE1 sector fog/haze used as under-water tint) |
+| Kind | engine (RT layer) |
+| Severity | S3: under-water areas lose their tint and read as air; refraction shows a bright, streaky sky (RDF-004) |
+| Suspected root cause | [SRC] consequence of RDF-006: the RT layer only knows "camera in fog/haze sector" → `RG_MEDIA_TYPE_WATER`, and `CustomInfo::CanHazeBeApplied` (`Engine/Raytracing/CustomInfo.cpp:943-947`) returns the tuning `haze` flag, which preview2 sets to 0 for all TSE worlds (EXP-018 A1). So with haze off the camera is in vacuum even under water. Water sectors and haze sectors are not distinguished |
+| Confirmed root cause | [SRC] mechanism confirmed; [EXP] raster/RT capture pair at the `1_1` start (EXP-025 §4) |
+| Proposed universal correction | part of the RDF-006 fix: classify the camera sector from SE1 data (fog/haze parameters plus the water content type of the sector or the water brush) instead of one boolean; map real water to `RG_MEDIA_TYPE_WATER` with the sector's fog colour as extinction tint, and plain haze to the new fog term; no per-world `haze` switch |
+| Regression test | `tse-sky-1_1m0` (RT tint vs raster), `tfe-water-09m5`; EXP-018 A1 far-field check must not regress |
+| Performance implications | none (media type is already supported by RTGL1) |
+| Owner track / POC | FXT (lead decision 2026-11-28), together with RDF-006 |
+| Status | root-caused (2026-11-28, R1) |
+| Links | [EXP-018](experiments/EXP-018-rt-tse.md), [EXP-025](experiments/EXP-025-rendering-audit.md) |
+
+### RDF-011: First-person weapon framed differently in RT (weapon FOV ignored)
+
+| Field | Value |
+|---|---|
+| ID | RDF-011 |
+| Reported | 2026-11-28, R1 (EXP-025) |
+| Reproduction | any level, RT vs raster with the same frozen frame; e.g. `tse-out-1_3m10`, `tse-corr-2_1m3` |
+| Campaign | TFE, TSE |
+| Renderer | RT; original and enhanced |
+| Affected class | first-person weapon models (`CPlayerWeapons`, `RMF_WEAPON`) |
+| Kind | engine (RT layer) |
+| Severity | S2: visible in every RT frame; the weapon is smaller, more centred and at a different angle than in raster/the original |
+| Suspected root cause | — |
+| Confirmed root cause | **[SRC]** raster draws the weapon with its own projection: `FOVL() = wpn_fFOV[weapon] * _fWeaponFOVAdjuster`, clip and depth range (`EntitiesMP/PlayerWeapons.es:1043-1053`). In RT, `CModelObject::SetupModelRendering` fills `CFirstPersonModelInfo.fovH` from that projection (`Engine/Models/RenderModel.cpp:483-494`), but `SSRTMain/Scene::ProcessFirstPersonModel` (`Raytracing/SSRT.cpp:481`, `Scene.cpp:474-476`) never uses `fovH`; the weapon is placed in camera space and rendered through the **world** projection (`plr_fFOV`). Same code in TFE (`Entities/PlayerWeapons.es`) |
+| Proposed universal correction | apply the weapon projection: either scale the first-person geometry in view space by `tan(worldFOV/2) / tan(weaponFOV/2)` (x/y) before upload, or give RTGL1 a first-person projection (RTGL1 already has a first-person visibility class). Keep the first-person depth range so the weapon does not clip into walls |
+| Regression test | weapon silhouette overlap RT vs `vk-orig` on `tse-out-1_3m10` and `tfe-out-06m2` (frozen frame) |
+| Performance implications | none |
+| Owner track / POC | WPN (lead decision 2026-11-28), POC-96, together with RDF-014/016 |
+| Status | root-caused (2026-11-28, R1) |
+| Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
+
+### RDF-012: Lens flares and light coronas missing in Vulkan raster
+
+| Field | Value |
+|---|---|
+| ID | RDF-012 |
+| Reported | 2026-11-28, R1 (EXP-025) |
+| Reproduction | same frozen frame in OpenGL and Vulkan: sun flare in `tse-out-1_3m10`, torch corona in `tse-corr-2_1m3`; present in OpenGL, absent in Classic-VK reference and SSTRE Vulkan |
+| Campaign | TSE (TFE to check) |
+| Renderer | Vulkan raster (Classic-VK and SSTRE alike); RT skips raster flares by design (`DrawPort.cpp:1323`, RT has `srt_bLensFlares`) |
+| Affected class | light-source lens flares (`CLensFlareType`), visibility via depth point checks |
+| Kind | engine (Vulkan back-end), inherited from Classic-VK; not an SSTRE regression |
+| Severity | S3: sun and torch glare is part of the original look |
+| Suspected root cause | [ASM] the Vulkan branch of `UpdateDepthPointsVisibility` (`Engine/Graphics/DepthCheck.cpp:199+`, occlusion queries) reports flare points as hidden (query timing or depth-range mismatch), or `gfx_iLensFlareQuality` differs per API. [EXP] Forcing `gfx_iLensFlareQuality=3` in the Vulkan run gives the identical frame (luma 111.6, no flare), so the setting is not the cause; the depth-point visibility path remains the suspect |
+| Confirmed root cause | not yet |
+| Proposed universal correction | fix the Vulkan depth-point visibility path (read the depth value or use the query result of the previous frame consistently) |
+| Regression test | `tse-out-1_3m10`, `tse-corr-2_1m3`: flare pixels present in `vk-orig` like in `gl-orig` |
+| Performance implications | negligible |
+| Owner track / POC | FXT (lead decision 2026-11-28): flares are an effect class. Pre-existing Classic-VK defect, S3, not a Preview3 blocker |
 | Status | triaged (2026-11-28) |
-| Links | [EXP-018](experiments/EXP-018-rt-tse.md) |
+| Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
+
+### RDF-013: Sunlit outdoor scenes brighter and flatter in RT than in raster
+
+| Field | Value |
+|---|---|
+| ID | RDF-013 |
+| Reported | 2026-11-28, R1 (EXP-025) |
+| Reproduction | `tse-out-1_3m10`: mean luma raster 111.6, RT 141.9 (orig) / 136.5 (enh); paving looks washed out, contact darkening from shadowmaps missing. `tse-snow-3_2m1`: raster 98.4, RT 161.7 (snow near clipping) |
+| Campaign | TSE (TFE to check on `tfe-out-06m2`) |
+| Renderer | RT |
+| Affected class | sun-lit brush surfaces; exposure/tonemapping |
+| Kind | engine (RT layer: sun intensity / exposure defaults for untuned worlds) |
+| Severity | S3 |
+| Suspected root cause | [ASM] generic TSE defaults `srt_fSunIntensity = 4` and auto exposure with `min log luminance = -4` (`CustomInfo.cpp:130-134`) are not calibrated against the original's sector light; the dark-interior side of the same calibration is RDF-001 |
+| Confirmed root cause | not yet |
+| Proposed universal correction | calibrate sun/sky intensity and exposure from SE1 data (directional light colour, sector ambient) as part of RD-016; verify with `-FixedExposure` A/B |
+| Regression test | outdoor checkpoints: RT luma within ±15 % of `cvk` at fixed exposure |
+| Performance implications | none |
+| Owner track / POC | LIGHT (RD-016) (lead decision 2026-11-28), POC-76 |
+| Status | triaged (2026-11-28) |
+| Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
+
+### RDF-014: Weapon viewmodel clips into walls, layers not separated, framing too zoomed out
+
+| Field | Value |
+|---|---|
+| ID | RDF-014 |
+| Reported | 2026-11-28, owner issue #28 (relayed by the lead) |
+| Reproduction | walk up to a wall with a first-person weapon; compare weapon framing with the original (arm ends and stocks visible) |
+| Campaign | to be established (TFE, TSE [ASM]) |
+| Renderer | to be established; RT framing differs additionally, see RDF-011 |
+| Affected class | first-person weapon models (`CPlayerWeapons`, `RMF_WEAPON`), viewmodel projection and depth range |
+| Kind | engine |
+| Severity | S2: visible in normal play all the time |
+| Suspected root cause | under investigation (WPN). R1 note: raster uses a separate weapon projection (`wpn_fFOV` × `_fWeaponFOVAdjuster`, depth range 0–0.1, `EntitiesMP/PlayerWeapons.es:1043-1053`); RT ignores it (RDF-011, [SRC]); `_fWeaponFOVAdjuster` comes from the aspect adjusters (see RDF-016) |
+| Confirmed root cause | not yet |
+| Proposed universal correction | to be determined by WPN; one weapon projection per aspect ratio for all renderers |
+| Regression test | R1 checkpoints with a weapon near a wall (to be added) plus `tse-out-1_3m10`, `tfe-out-06m2` |
+| Performance implications | none expected |
+| Owner track / POC | WPN, POC-96 |
+| Status | triaged (2026-11-28) |
+| Links | RDF-011, RDF-016 |
+
+### RDF-015: TSE chainsaw model shows graphical glitches
+
+| Field | Value |
+|---|---|
+| ID | RDF-015 |
+| Reported | 2026-11-28, owner issue #31 (relayed by the lead) |
+| Reproduction | TSE, select the chainsaw; exact symptoms not yet established |
+| Campaign | TSE |
+| Renderer | to be established |
+| Affected class | first-person chainsaw weapon model (not its particles: those are RDF-005, FXP) |
+| Kind | unknown |
+| Severity | S3 (provisional, until the symptoms are known) |
+| Suspected root cause | not yet |
+| Confirmed root cause | not yet |
+| Proposed universal correction | to be determined |
+| Regression test | chainsaw first-person checkpoint (to be defined by WPN; harness `-Extra` can select the weapon) |
+| Performance implications | unknown |
+| Owner track / POC | WPN, POC-97 |
+| Status | new (2026-11-28) |
+| Links | RDF-005 (distinct) |
+
+### RDF-016: Ultrawide aspect ratios match no aspect adjuster window
+
+| Field | Value |
+|---|---|
+| ID | RDF-016 |
+| Reported | 2026-11-28, UI1 [SRC] (relayed by the lead) |
+| Reproduction | 3440×1440 (2.389) or 2560×1080 (2.370), any level |
+| Campaign | TFE, TSE |
+| Renderer | all |
+| Affected class | aspect-dependent in-game FOV and HUD adjusters |
+| Kind | engine |
+| Severity | S2 on ultrawide displays (wrong FOV and HUD values); none at 16:9/16:10 |
+| Suspected root cause | — |
+| Confirmed root cause | [SRC] (UI1) `SetAdjusters` (`SeriousSam/SeriousSam.cpp:573`) matches exact aspect windows only; the 21:9 window is 2.32–2.34, so 2.37 and 2.389 fall back to the defaults |
+| Proposed universal correction | derive the adjusters continuously from the aspect ratio (Hor+), or use nearest-window matching, for any aspect ratio |
+| Regression test | UI1 resolution list (POC-87) at 3440×1440 and 2560×1080; FOV/HUD values logged |
+| Performance implications | none |
+| Owner track / POC | WPN (lead decision 2026-11-28), POC-96, together with RDF-011/014 |
+| Status | root-caused (2026-11-28, UI1) |
+| Links | RDF-014, RDF-017, [EXP-024](experiments/EXP-024-responsive-menu.md) |
+
+### RDF-017: HUD scales by width only and is about 1.34× too large on ultrawide
+
+| Field | Value |
+|---|---|
+| ID | RDF-017 |
+| Reported | 2026-11-28, UI1 [SRC] (relayed by the lead) |
+| Reproduction | ultrawide resolution (e.g. 3440×1440), in-game HUD |
+| Campaign | TFE, TSE |
+| Renderer | all |
+| Affected class | in-game HUD layout |
+| Kind | engine |
+| Severity | S3 |
+| Suspected root cause | — |
+| Confirmed root cause | [SRC] (UI1) the HUD scale factor is computed from the width only |
+| Proposed universal correction | scale by min(width/640, height/480) (or height) with safe-area anchoring, ADR-0017 |
+| Regression test | UI1 resolution list (POC-87) |
+| Performance implications | none |
+| Owner track / POC | UI1 follow-up (lead decision 2026-11-28), POC-87 |
+| Status | root-caused (2026-11-28, UI1) |
+| Links | RDF-016, [EXP-024](experiments/EXP-024-responsive-menu.md) |
+
+### RDF-018: Console last-lines overlap the corner logo in the menu at 1440p
+
+| Field | Value |
+|---|---|
+| ID | RDF-018 |
+| Reported | 2026-11-28, UI1b (relayed by the lead) |
+| Reproduction | 2560×1440, main menu with console last-lines shown |
+| Campaign | to check both (TFE, TSE [ASM]) |
+| Renderer | all [ASM] |
+| Affected class | menu / console overlay layout |
+| Kind | engine (menu/console) |
+| Severity | S4 |
+| Suspected root cause | [ASM] the console last-lines and the menu corner logo are positioned independently, with no shared layout |
+| Confirmed root cause | not yet |
+| Proposed universal correction | lay out the console last-lines inside a menu safe area that excludes the logo (ADR-0017) |
+| Regression test | UI1 resolution list (POC-87) at 2560×1440 |
+| Performance implications | none |
+| Owner track / POC | UI1 follow-up, POC-87 |
+| Status | triaged (2026-11-28) |
+| Links | [EXP-024](experiments/EXP-024-responsive-menu.md) |
+
+### RDF-019: TFE weapon shows a magenta/cyan checker texture in RT (test override shipped in preview2)
+
+| Field | Value |
+|---|---|
+| ID | RDF-019 |
+| Reported | 2026-11-28, R1 research sweep (EXP-025) |
+| Reproduction | TFE, RT, tommygun selected; checkpoints `tfe-out-06m2`, `tfe-hall-06m5`, `tfe-water-09m5` |
+| Campaign | TFE |
+| Renderer | RT only (raster does not use the KTX2 overrides); present in both the enhanced and the Classic preview2 TFE runtimes |
+| Affected class | first-person weapon material (RT texture override set: albedo, normal, roughness/metal/emission) |
+| Kind | **asset-processing / packaging** (not engine) |
+| Severity | S2: the default TFE weapon looks broken in every RT frame of the preview build |
+| Suspected root cause | — |
+| Confirmed root cause | [EXP] the preview2 TFE runtimes contain three synthetic test override files for one weapon, created for the EXP-009 RT tests on 2026-11-27. They are byte-identical to the files E5 quarantined, and the same files are in the VS-A runtime templates that the preview was assembled from. File names and hashes are kept in R1's local notes (GATE-05) |
+| Proposed universal correction | remove the test overrides from the VS-A runtime templates and the packaging input; add a packaging gate that rejects any override file that the slice manifest did not produce (a manifest diff) |
+| Regression test | `tfe-out-06m2` `rt-enh` and `rt-orig`: weapon without checker pattern; packaging manifest check |
+| Performance implications | none |
+| Owner track / POC | Integration (POC-92, lead decision); the packaging check goes into the preview3 assembly script |
+| Status | fix-in-progress (2026-11-28): the lead quarantined the files in the VS-A and other track runtimes; preview2 stays unchanged as the reference |
+| Links | [EXP-025](experiments/EXP-025-rendering-audit.md), [EXP-009](experiments/EXP-009-rt-transplant-spike.md) |
+
+### RDF-020: Flashlight hint shown in TFE RT although TFE has no flashlight binding
+
+| Field | Value |
+|---|---|
+| ID | RDF-020 |
+| Reported | 2026-11-28, R1 research sweep (EXP-025) |
+| Reproduction | TFE, RT, a dark area (`tfe-corr-03m8`, `tfe-room-04m6`, `tfe-water-09m5`): the centre of the screen shows "Press a Flashlight button to toggle it" |
+| Campaign | TFE |
+| Renderer | RT |
+| Affected class | HUD hint (RT flashlight tutorial) |
+| Kind | engine |
+| Severity | S3: misleading prompt, because TFE has no flashlight control (preview2 known issue) |
+| Suspected root cause | [ASM] the RT flashlight tutorial hint (`srt_bFlashlightEnableTutorial`, `hud_bShowFlashlightHint`) is enabled in TFE although TFE has no Flashlight control |
+| Confirmed root cause | not yet |
+| Proposed universal correction | show the hint only if a control is bound to the flashlight action; add the TFE binding (the TSE `40416ad4` approach) |
+| Regression test | `tfe-corr-03m8` `rt-enh`: no hint without a binding |
+| Performance implications | none |
+| Owner track / POC | engine-other (lead decision 2026-11-28) |
+| Status | triaged (2026-11-28) |
+| Links | [EXP-025](experiments/EXP-025-rendering-audit.md) |
+
+### RDF-021: Blue light-beam effect at the end of the TSE 3_3 corridor missing in RT
+
+| Field | Value |
+|---|---|
+| ID | RDF-021 |
+| Reported | 2026-11-28, R1 research sweep (EXP-025) |
+| Reproduction | TSE `3_3_CorridorOfDeath`, marker 5 (`tse-haze-3_3m5`): raster (Classic-VK, SSTRE Vulkan) shows a bright blue light cone above the far gate; RT orig and enh show nothing there |
+| Campaign | TSE |
+| Renderer | RT; original and enhanced alike, so not asset-processing |
+| Affected class | translucent/additive light-beam effect (exact entity/blend class to be identified by FXT) |
+| Kind | engine (RT layer) |
+| Severity | S3: one prominent landmark effect; same family as RDF-002 (light volumes) |
+| Suspected root cause | [ASM] the beam is an additive translucent model or brush. In RT, additive models are rasterized (`RT_ShouldBeRasterized`, `Engine/Raytracing/RTModels.cpp:70-88`), and translucent brushes are traced as alpha-tested opaque (`RTBrushes.cpp:116-122`). Either path can drop or hide it. Possibly culled by sector depth or angular size (`RTModelCulling.cpp:113-127`, `:234`), because it is far away |
+| Confirmed root cause | not yet |
+| Proposed universal correction | part of the RDF-002 blend/semantic classification (ADR-0016) |
+| Regression test | `tse-haze-3_3m5` `rt-enh` vs `vk-enh`: beam visible |
+| Performance implications | none expected |
+| Owner track / POC | FXT (R1 proposal), POC-80 |
+| Status | triaged (2026-11-28) |
+| Links | RDF-002, [EXP-025](experiments/EXP-025-rendering-audit.md) |
