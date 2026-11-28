@@ -177,6 +177,19 @@ Record decisions separately from research: ADR-001 repository separation (accept
 
 Phases 1–3 may overlap after Phase 0. Earlier rendering/TSE spikes may be needed to validate engine selection. Console work is optional and must not block a viable PC release. No fixed calendar or budget is approved; estimate after POC. Future games are outside current delivery scope.
 
+### Post-demonstration stages (owner directive 2026-11-28)
+
+After the demonstration build (0.1.0-preview2) the order of work is: **Demonstration Build → Performance Optimization → PBR & Hex-Tiling → Geometry Enhancement → Native Controller Support → Multicontroller & Split-Screen → Console Ports.** The [roadmap](roadmap.md) maps these to stages M0–M6 with entry and exit criteria, and the [backlog](backlog.md) lists the work packages (POC-33..63). The phase table above stays valid as a list of capabilities; its order is governed by the stages.
+
+| Stage | Exit criterion (summary) |
+|---|---|
+| M1 Performance | Four-way RT benchmark (original Serious-Engine-RT; SSTRE RT with original assets; with the upscaled pack; optimized) at 2560×1440 on TFE and TSE incl. combat; ≈100 FPS on an RTX 4070 with RT, high settings and the upscaled pack, frame generation excluded, or the stop rule escalated to the owner; 0 Vulkan validation errors; no silent quality reductions ([RD-014](research/RD-014-rt-performance.md)) |
+| M2 PBR & hex-tiling | Coherent PBR maps with automated QA, packing and quality profiles; generic, optional hex-tiling in RTGL1; every feature benchmarked against the M1 baseline ([RD-011](research/RD-011-hex-tiling.md)) |
+| M3 Geometry | Optional normal smoothing, terminator correction, selective subdivision, displacement; collision and gameplay unchanged ([RD-013](research/RD-013-geometry-enhancement.md)) |
+| M4 Controller | PC fully usable without keyboard and mouse; Steam Input and Steam Deck validated ([RD-012](research/RD-012-input-local-multiplayer.md)) |
+| M5 Multicontroller | Per-player devices and 4-player split-screen; RT split-screen feasibility measured |
+| M6 Consoles | Research only ([RD-009](research/RD-009-ps5-homebrew.md), [RD-010](research/RD-010-homebrew-distribution.md), ADR-0007) |
+
 ### First POC backlog (after bootstrap)
 
 - Build RT and alternative engine candidates without modifying upstream first; document failures and exact revisions.
