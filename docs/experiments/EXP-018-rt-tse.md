@@ -235,3 +235,78 @@ Wall-clock time of this AI-agent run, from `G:\sstre-tmp\e5\logs\timelog.txt` an
 
 1. What quality bar applies to TSE RT (EXP-005 open question 1)? Placeholders are in place; tuning 13 worlds is the remaining M2 cost.
 2. Do the texture paths in the committed tuning tables (already public in the RT upstream source) pass GATE-05 for patch export, or should they move to a local file as well?
+
+## Addendum A1 (2026-11-28): TSE "dark beyond ~20 m" in RT, root cause and fix
+
+**Owner playtest finding:** in TSE under RT, beyond a radius of roughly 20 m around the player everything was pitch dark, so distant enemies and geometry were invisible.
+
+### Root cause
+
+**[SRC] The mechanism:**
+
+1. `RT_CheckViewerInHaze` (`Raytracing/RTModelCulling.cpp:268-300`) marks the camera as "in haze" when it is inside any brush sector whose entity reports SE1 **haze or fog** (`GetHaze(...) || GetFog(...)`).
+2. `Scene::IsCameraInHaze` (`Scene.cpp:211-213`) returns that flag only if the world allows haze (`CustomInfo::CanHazeBeApplied`, the tuning key `haze`). This is its only consumer.
+3. `SSRT.cpp:652` then sets `typeOfMediaAroundCamera = RG_MEDIA_TYPE_WATER`. The whole frame is rendered as if the camera were under water.
+4. RTGL1 attenuates every camera path by `exp(-distance * waterExtinction)` [SRC RTGL1 `Source/Shaders/Media.h:40-52`]. With the default extinction `(0.025, 0.016, 0.011) × water_density_multiplier 5` = 0.125 / 0.08 / 0.055 per metre:
+
+   | Distance | Transmittance (R / G / B) |
+   |---|---|
+   | 20 m | 8 / 20 / 33 % |
+   | 40 m | 0.7 / 4 / 11 % |
+
+   That is a bluish fade to black that matches the reported ~20 m radius.
+
+**Why TFE does not show it [SRC]:** Serious-Engine-RT's TFE tables disable haze on 7 outdoor worlds and keep it on the others only together with `haze_ignored_sectors` lists. The TSE table (R2) inherited RT's generic default, `haze = 1`, for every world, and TSE worlds use sector fog and haze widely.
+
+**Other candidates:**
+
+- [EXP] Missing exports are excluded for the tested views: with `haze = 0` the same geometry appears at full brightness.
+- [SRC] Ray length is special-cased only for TFE Luxor (`CustomInfo::GetRayLength`).
+- [ASM] Sector culling depth (8, the top of TFE's range) was not varied in this addendum. It cannot cause a distance *darkening*, only missing surfaces.
+
+### Experiments (session D 02:44–02:51, E 03:02–03:08, F 03:13–03:24, 2026-11-28)
+
+Paired captures at fixed views: Vulkan reference, RT with `haze = 1`, RT with `haze = 0`. Haze was toggled through the local tuning overlay. Same build, same position, 24 s after level start.
+
+| View | VK mean RGB | RT haze 1 mean RGB | RT haze 0 mean RGB | haze 1 vs haze 0 |
+|---|---|---|---|---|
+| `2_1_Ziggurrat` spawn (dry stone hall, far wall about 15–20 m) | 63/61/67 | **70/95/113**: blue cast, far wall dimmed | **120/130/137**: natural colour, far wall lit | MAD 36.5, 95 % of pixels differ |
+| `1_1_Palenque` spawn | 14/38/47 | 39/53/58 | 39/53/58 | no change (see below) |
+| `1_0_InTheLastEpisode` intro cutscene (session E) | — | — | — | brightness unchanged; the differences come from cutscene timing. The intro camera is not in a fog sector |
+
+| **Demo 3 (`3_1_GothicCastle`, `PlayDemo("auto-demo0003")`), 15 s, identical demo frame (same HUD and score)** | — | **48/51/58: cliffs and castle beyond ≈ 20 m pitch black**, only the near ground and the sky are lit (the reported symptom) | **83/82/81: cliffs, castle and distance fully lit** | MAD 32.1, 69 % of pixels differ |
+| Demo 3, 35 s | — | 7/9/9 | 25/24/18 | MAD 14.0 |
+| Demo 2 (`2_2_Persepolis`), 15 / 25 / 35 s | — | — | — | MAD 23.6 / 45.8 / 0.4. Brightness is similar, so the camera is mostly outside fog sectors |
+
+- The Vulkan demo frames are not time-aligned with RT: RT loads more slowly, so the same wall-clock second shows a different demo moment. The comparison that counts is RT haze 1 against RT haze 0, which is frame-identical (same RT load time).
+- **New failure, not caused by the fix:** demo 1 (`1_2_Palenque`) under RT logs a flood of `RTGL1 error 8 (RG_CANT_UPDATE_TRANSFORM)` and `Can't find static geometry with unique ID=…` [SRC `SceneBrushes.cpp:269`]. RT tries to move brushes it registered as static.
+  - With haze 1 the process hung and was killed at 163 s; with haze 0 it exited with code 1 at 15 s.
+  - Vulkan plays the same demo normally.
+  - This is a follow-up: moving brushes in TSE worlds that the RT exporter treats as static [ASM]. It was not seen in the slice levels' fixed views.
+
+- The **Ziggurrat A/B isolates the cause**: the only change is the `haze` flag, which has one consumer (the water-media switch). `haze = 0` removes the blue cast and the distance darkening.
+- **Correction to R3:** the Palenque "RT shows sky where raster shows the hillside" observation is **not** a geometry or culling defect.
+  - The player starts **under water** in the pool: bubbles are visible in both raster and RT.
+  - Raster draws the scene above the surface without refraction. RT refracts through the water surface, so it shows sky and hanging plants. This is RT behaving physically, not a bug.
+  - It also explains why the haze A/B makes no difference at that spot: the camera is genuinely in water there.
+- Test-method failures:
+  - The `cht_iGoToMarker=2` views respawn the player without NETRICSA, so the scripted ESC opened the game menu. Those 6 captures are unusable.
+  - The first demo attempt (session E) used a wrong `PlayDemo` argument; the correct form is the bare name, e.g. `PlayDemo("auto-demo0001")`.
+
+### Fix
+
+- `4e1053be` rt(data,tse): TSE `[defaults]` now sets **`haze = 0`**, and so do the two showcase worlds. It is a generic default, not a per-level hack, and needs no engine change. The TFE tables are unchanged.
+- **Consequence [ASM]:** SE1 sector fog and haze are not reproduced in RT at all for TSE. The raster look has distance fog; RT then has none.
+  - A proper mapping (SE1 fog/haze colour and distance → an RTGL1 volumetric or extinction parameter with media type "haze" instead of "water") is a follow-up engine item.
+  - Per-world opt-in stays possible with `haze = 1` plus `haze_ignored_sectors`, as in TFE.
+- **Slice levels:** `1_0_InTheLastEpisode` and `1_1_Palenque` now have explicit entries with `haze = 0`, and the comments record the findings above. Both stay at `tuned = 0` (not play-tested).
+
+### Effort (agent wall-clock)
+
+About 15 min of source analysis and fix, plus about 25 min of locked runs (sessions D, E and F: 33 runs), plus about 45 min of lock queue waiting (excluded).
+
+### Follow-ups (from A1)
+
+1. Map SE1 fog and haze to an RT effect that is not water, for example a light extinction or volumetric term derived from `CHazeParameters` and `CFogParameters`, so TSE regains its distance fog without the darkness.
+2. `1_2_Palenque`: `RG_CANT_UPDATE_TRANSFORM` (movable brushes exported as static), then an exit or hang under RT during demo playback.
+3. Harness: views from `cht_iGoToMarker` skip NETRICSA, so the scripted ESC must be omitted for them.
