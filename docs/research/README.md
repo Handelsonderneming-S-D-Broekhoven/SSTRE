@@ -1,6 +1,6 @@
 # Research dossiers
 
-Canonical research dossiers: RD-001..008 from Phase 0, RD-009..014 added on 2026-11-28 for the post-demonstration stages ([roadmap](../roadmap.md)), RD-015 added on 2026-11-28 for pre-hardware Steam Deck testing. Each one follows the format in the [project plan](../project-plan.md) §6. It separates observed facts, with sources, from assumptions, and ends with a recommendation, the decisions it depends on, and next steps. A dossier is evidence for a decision, not the decision itself. Decisions are recorded in [ADRs](../adr/).
+Canonical research dossiers: RD-001..008 from Phase 0, RD-009..014 added on 2026-11-28 for the post-demonstration stages ([roadmap](../roadmap.md)), RD-015 added on 2026-11-28 for pre-hardware Steam Deck testing, RD-016..018 added on 2026-11-28 (evening) for stage M0.1 Rendering Correctness & Legacy Visual Modernization. Each one follows the format in the [project plan](../project-plan.md) §6. It separates observed facts, with sources, from assumptions, and ends with a recommendation, the decisions it depends on, and next steps. A dossier is evidence for a decision, not the decision itself. Decisions are recorded in [ADRs](../adr/).
 
 | ID | Topic | Feeds |
 |---|---|---|
@@ -19,5 +19,8 @@ Canonical research dossiers: RD-001..008 from Phase 0, RD-009..014 added on 2026
 | [RD-013](RD-013-geometry-enhancement.md) | Geometry enhancement: normal smoothing, terminator fix, subdivision, displacement | backlog M3, proposed render-only-geometry ADR |
 | [RD-014](RD-014-rt-performance.md) | RT and engine performance: measurement design, profiling tools, hypotheses, stop rule | backlog M1, proposed performance-target ADR |
 | [RD-015](RD-015-steam-deck-pre-hardware-testing.md) | Steam Deck testing before hardware: emulation and approximation options, what only hardware can validate | ADR-0007 Tier 2, backlog POC-64..74 |
+| [RD-016](RD-016-legacy-lighting-reconstruction.md) | Universal legacy lighting reconstruction in RT: lost and wrongly converted light contributions, native conversion, legacy ambient, lightmap-assisted compensation, probes (draft) | proposed ADR-0015, backlog POC-75..79 |
+| [RD-017](RD-017-legacy-effects-reconstruction.md) | Legacy atmospheric, translucent and particle effects: translucent light volumes, lightning and special effects, particles, effect-texture recipes (draft) | proposed ADR-0016, backlog POC-80..85 |
+| [RD-018](RD-018-menu-ui-modernization.md) | Menu asset enhancement and responsive, resolution-independent UI; SDF fonts; controller-ready focus (draft) | proposed ADR-0017, backlog POC-86..88 |
 
 Status vocabulary: **draft** (written, not reviewed) → **reviewed** (lead-reviewed) → **superseded**.
